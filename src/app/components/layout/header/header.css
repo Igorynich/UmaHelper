@@ -1,0 +1,56 @@
+.uma-header {
+  height: 8rem;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../../../assets/library_hero.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px 16px;
+}
+
+.header-top-row, .header-bottom-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.header-bottom-row {
+  position: relative;
+}
+
+.nav-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-container {
+  position: absolute;
+  right: 16px;
+}
+
+.uma-header button, .header-title {
+  color: #FCE4EC;
+}
+
+.header-title {
+  font-size: 1.8rem; /* Also make title a bit bigger */
+  font-weight: bold;
+}
+
+.auth-button {
+  font-size: 1.1rem;
+}
+
+.auth-button mat-icon {
+  font-size: 2rem;
+  height: 2rem;
+  width: 2rem;
+}
+
+.nav-button {
+  font-size: 1.5rem;
+  margin: 0 10px;
+}
+

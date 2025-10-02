@@ -1,0 +1,28 @@
+.construction-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  text-align: center;
+  color: #555;
+  font-family: 'Roboto', sans-serif;
+  margin: 20px;
+}
+
+.construction-container h2 {
+  font-size: 2em;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.construction-container p {
+  font-size: 1.2em;
+}
+
+.construction-image {
+  margin-bottom: 20px;
+}
