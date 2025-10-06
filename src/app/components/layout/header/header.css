@@ -1,33 +1,30 @@
 .uma-header {
-  height: 8rem;
+height: 8.5rem;
   background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../../../assets/library_hero.jpg');
   background-size: cover;
   background-position: center;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: space-between;
-  padding: 8px 16px;
-}
-
-.header-top-row, .header-bottom-row {
-  display: flex;
   align-items: center;
-  width: 100%;
-}
-
-.header-bottom-row {
+  padding: 8px 16px;
   position: relative;
 }
 
-.nav-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
+.chibi-container {
+  background-size: 600px 355px;
+  border: 1px solid rgba(117, 229, 11, 0.96);
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  transform: translate(-50%, -50%);
 }
 
-.auth-container {
-  position: absolute;
-  right: 16px;
+.nav-container {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-self: flex-end;
 }
 
 .uma-header button, .header-title {

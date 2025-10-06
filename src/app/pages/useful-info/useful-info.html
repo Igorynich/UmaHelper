@@ -1,1 +1,12 @@
-<app-under-construction></app-under-construction>
+<div class="useful-info-container">
+  @for (link of links; track link.url) {
+    <mat-card class="useful-info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <a [href]="link.url" target="_blank" rel="noopener noreferrer">{{ link.title }}</a>
+        </mat-card-title>
+        <mat-card-subtitle>{{ link.description }}</mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+  }
+</div>

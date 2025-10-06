@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { UnderConstruction } from '../../components/common/under-construction/under-construction';
+import { NewsService } from '../../services/news.service';
 
 @Component({
   selector: 'app-news',
@@ -8,5 +9,8 @@ import { UnderConstruction } from '../../components/common/under-construction/un
   styleUrl: './news.css'
 })
 export class News {
+  private newsService = inject(NewsService);
 
+  constructor() {
+  }
 }

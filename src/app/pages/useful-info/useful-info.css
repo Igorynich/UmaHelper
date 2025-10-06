@@ -1,0 +1,18 @@
+.useful-info-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.useful-info-card {
+  max-width: 800px;
+  width: 100%;
+  background-color: #FFF0F5;
+}
+
+mat-card-subtitle {
+  font-size: smaller;
+  color: black;
+}
