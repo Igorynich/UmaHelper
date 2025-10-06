@@ -1,0 +1,23 @@
+.edit-container {
+  max-width: 800px;
+  margin: 1rem auto;
+  padding: 1rem;
+}
+
+.title-field {
+  width: 100%;
+}
+
+.NgxEditor__Wrapper {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 1rem;
+  min-height: 300px;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

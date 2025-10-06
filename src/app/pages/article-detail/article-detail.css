@@ -1,0 +1,10 @@
+.article-container {
+  max-width: 800px;
+  margin: 1rem auto;
+  padding: 1rem;
+}
+
+mat-card-actions {
+  justify-content: flex-end;
+  margin-top: 1rem;
+}

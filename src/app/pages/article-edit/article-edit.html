@@ -1,0 +1,24 @@
+<div class="edit-container">
+  @if (article()) {
+    <h1>Edit Article</h1>
+  } @else {
+    <h1>Create Article</h1>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <mat-form-field class="title-field">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title">
+    </mat-form-field>
+
+    <div class="NgxEditor__Wrapper">
+      <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"></ngx-editor-menu>
+      <ngx-editor [editor]="editor" formControlName="text"></ngx-editor>
+    </div>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
+      <a mat-button [routerLink]="article() ? ['/news', article()?.id] : '/news'">Cancel</a>
+    </div>
+  </form>
+</div>
