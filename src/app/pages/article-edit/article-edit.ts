@@ -10,6 +10,7 @@ import { NgxEditorModule } from 'ngx-editor';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { AbilityService } from '../../services/ability.service';
 
 @Component({
   selector: 'app-article-edit',
@@ -31,6 +32,7 @@ export class ArticleEditComponent implements OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private newsService = inject(NewsService);
+  private abilityService = inject(AbilityService);
 
   article = signal<Article | undefined>(undefined);
   editor: Editor;
@@ -74,6 +76,11 @@ export class ArticleEditComponent implements OnDestroy {
     if (this.form.valid) {
       const articleValue = this.article();
       if (articleValue) {
+        // Existing article: check for update permission
+        if (!this.abilityService.ability().can('update', 'Article')) {
+          console.warn('Permission denied: Cannot update article.');
+          return;
+        }
         const updatedArticle: Article = {
           ...articleValue,
           title: this.form.value.title || '',
@@ -83,7 +90,11 @@ export class ArticleEditComponent implements OnDestroy {
           this.router.navigate(['/news', articleValue.id]);
         });
       } else {
-        // Create new article
+        // New article: check for create permission
+        if (!this.abilityService.ability().can('create', 'Article')) {
+          console.warn('Permission denied: Cannot create article.');
+          return;
+        }
         this.newsService.addArticle({
           title: this.form.value.title || '',
           text: this.form.value.text || ''

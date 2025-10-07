@@ -13,7 +13,7 @@
     <button mat-button class="nav-button" routerLink="/useful-info">Useful Info</button>
   </div>
   <div class="auth-container">
-    @if (authService.user$ | async; as user) {
+    @if (authService.user(); as user) {
       <button mat-icon-button class="auth-button" [matMenuTriggerFor]="userMenu">
         <mat-icon>account_circle</mat-icon>
       </button>

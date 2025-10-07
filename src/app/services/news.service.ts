@@ -12,21 +12,42 @@ export class NewsService {
       title: 'First Article',
       created: '2025-10-01',
       edited: '2025-10-01',
-      text: '<p>This is the full text of the first article. It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using, Content here, content here, making it look like readable English.</p>'
+      text: `
+        <h2>Exploring the Scenery</h2>
+        <p>This is the full text of the first article. It is a long established fact that a <strong>reader</strong> will be distracted by the readable content of a page when looking at its layout.</p>
+        <img src="assets/crane.jpg" alt="A majestic crane" style="width:100%; max-width: 500px; display: block; margin: 1rem 0; border-radius: 8px;">
+        <p>The point of using <i>Lorem Ipsum</i> is that it has a more-or-less normal distribution of letters, as opposed to using, 'Content here, content here', making it look like readable English. For more information, you can visit the <a href="https://angular.dev" target="_blank">official Angular documentation</a>.</p>
+        <p style="color: #3f51b5; font-family: 'Georgia', serif; font-size: 1.1rem;">This paragraph uses a different color and font to stand out.</p>
+      `
     },
     {
       id: '2',
       title: 'Second Article',
       created: '2025-10-02',
       edited: '2025-10-02',
-      text: '<p>This is the full text of the second article. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for lorem ipsum will uncover many web sites still in their infancy.</p>'
+      text: `
+        <h2>A Look at Modern Technology</h2>
+        <p>This is the full text of the second article. Many desktop publishing packages and web page editors now use <strong>Lorem Ipsum</strong> as their default model text.</p>
+        <blockquote>A search for 'lorem ipsum' will uncover many web sites still in their infancy.</blockquote>
+        <p>Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).</p>
+      `
     },
     {
       id: '3',
       title: 'Third Article',
       created: '2025-10-03',
       edited: '2025-10-03',
-      text: '<p>This is the full text of the third article. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).</p>'
+      text: `
+        <h2>The Library of Knowledge</h2>
+        <p>This is the full text of the third article. There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable.</p>
+        <img src="assets/library_hero.jpg" alt="A grand library" style="width:100%; max-width: 500px; display: block; margin: 1rem 0; border-radius: 8px;">
+        <p>If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text. All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary.</p>
+        <p>
+          <span style="color: green; font-weight: bold;">This text is green and bold.</span>
+          <br>
+          <span style="font-family: 'Courier New', monospace; background-color: #f0f0f0; padding: 2px 4px; border-radius: 4px;">This text looks like code.</span>
+        </p>
+      `
     },
     {
       id: '4',

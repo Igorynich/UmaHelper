@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
-import { AsyncPipe, NgStyle } from '@angular/common';
+import { NgStyle } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
 import { filter } from 'rxjs';
 
@@ -23,7 +23,6 @@ interface Chibi {
     MatIconModule,
     MatMenuModule,
     RouterLink,
-    AsyncPipe,
     NgStyle
   ],
   templateUrl: './header.html',

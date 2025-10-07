@@ -6,7 +6,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 
 import { NewsService } from '../../services/news.service';
-import { DeleteConfirmationDialogComponent } from '../../components/common/delete-confirmation-dialog/delete-confirmation-dialog';
+import { ConfirmationDialog } from '../../components/common/confirmation-dialog/confirmation-dialog';
+import { AbilityService } from '../../services/ability.service';
 
 @Component({
   selector: 'app-news',
@@ -23,6 +24,7 @@ import { DeleteConfirmationDialogComponent } from '../../components/common/delet
 export class News {
   private newsService = inject(NewsService);
   private dialog = inject(MatDialog);
+  abilityService = inject(AbilityService);
 
   articles = this.newsService.getArticles();
 
@@ -41,7 +43,13 @@ export class News {
   }
 
   deleteArticle(id: string) {
-    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent);
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Article',
+        message: 'Are you sure you want to delete this article? This action cannot be undone.',
+        confirmButtonText: 'Delete'
+      }
+    });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {

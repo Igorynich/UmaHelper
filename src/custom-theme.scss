@@ -1,22 +1,21 @@
 @use '@angular/material' as mat;
 
-html {
-  @include mat.theme((
-    color: (
-      primary: mat.define-palette(mat.$pink-palette, 500),
-      tertiary: mat.define-palette(mat.$blue-palette, 500),
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
-}
+// Define a Material 3 theme with the pink and blue palettes.
+$theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$rose-palette,
+    tertiary: mat.$violet-palette,
+  )
+));
 
+// Apply the theme to all components.
+@include mat.all-component-themes($theme);
+
+// Apply the theme's generated CSS variables to the body for a consistent background and text color.
 body {
-  color-scheme: light;
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+  background-color: var(--mat-sys-color-surface);
+  color: var(--mat-sys-color-on-surface);
+  font: var(--mat-sys-typescale-body-medium);
   margin: 0;
-
-  --mat-form-field-filled-container-color: #fff;
 }
