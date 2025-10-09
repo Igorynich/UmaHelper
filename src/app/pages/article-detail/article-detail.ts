@@ -1,12 +1,14 @@
-import { Component, computed, inject, signal, WritableSignal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NewsService } from '../../services/news.service';
-import { Article } from '../../interfaces/article';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import {AbilityService} from '../../services/ability.service';
+import { DomSanitizer } from '@angular/platform-browser';
+import { AbilityService } from '../../services/ability.service';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs/operators';
+import {of} from 'rxjs';
 
 @Component({
   selector: 'app-article-detail',
@@ -21,18 +23,17 @@ export class ArticleDetailComponent {
   private sanitizer = inject(DomSanitizer);
   abilityService = inject(AbilityService);
 
-  article: WritableSignal<Article | undefined> = signal(undefined);
+  article = toSignal(
+    this.route.paramMap.pipe(
+      switchMap(params => {
+        const articleId = params.get('id');
+        return articleId ? this.newsService.getArticle(articleId) : of(undefined);
+      })
+    )
+  );
+
   safeArticleContent = computed(() => {
     const text = this.article()?.text;
     return text ? this.sanitizer.bypassSecurityTrustHtml(text) : '';
   });
-
-  constructor() {
-    const articleId = this.route.snapshot.paramMap.get('id');
-    if (articleId) {
-      this.newsService.getArticle(articleId).subscribe(article => {
-        this.article.set(article);
-      });
-    }
-  }
 }

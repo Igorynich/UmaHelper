@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { RouterLink } from '@angular/router';
@@ -9,10 +10,13 @@ import { NewsService } from '../../services/news.service';
 import { ConfirmationDialog } from '../../components/common/confirmation-dialog/confirmation-dialog';
 import { AbilityService } from '../../services/ability.service';
 
+import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-news',
   standalone: true,
   imports: [
+    CommonModule,
     RouterLink,
     MatCardModule,
     MatButtonModule,
@@ -26,15 +30,19 @@ export class News {
   private dialog = inject(MatDialog);
   abilityService = inject(AbilityService);
 
-  articles = this.newsService.getArticles();
+  articles = toSignal(this.newsService.getArticles(), { initialValue: [] });
 
   pageIndex = signal(0);
   pageSize = signal(5);
 
   paginatedArticles = computed(() => {
+    const articles = this.articles();
+    if (!articles) {
+      return [];
+    }
     const startIndex = this.pageIndex() * this.pageSize();
     const endIndex = startIndex + this.pageSize();
-    return this.articles().slice(startIndex, endIndex);
+    return articles.slice(startIndex, endIndex);
   });
 
   handlePageEvent(event: PageEvent) {
@@ -53,7 +61,7 @@ export class News {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.newsService.deleteArticle(id);
+        this.newsService.deleteArticle(id).subscribe();
       }
     });
   }

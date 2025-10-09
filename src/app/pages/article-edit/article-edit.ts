@@ -83,8 +83,8 @@ export class ArticleEditComponent implements OnDestroy {
           console.warn('Permission denied: Cannot update article.');
           return;
         }
-        const updatedArticle: Article = {
-          ...articleValue,
+        const updatedArticle: Pick<Article, 'id' | 'title' | 'text'> = {
+          id: articleValue.id,
           title: this.form.value.title || '',
           text: this.form.value.text || ''
         };

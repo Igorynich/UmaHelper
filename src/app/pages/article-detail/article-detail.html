@@ -6,7 +6,7 @@
     <mat-card-content [innerHTML]="safeArticleContent()">
     </mat-card-content>
     <mat-card-footer>
-      <p>Created: {{ article()?.created }} | Edited: {{ article()?.edited }}</p>
+      <p>Created: {{ article()?.created?.toDate() | date }} | Edited: {{ article()?.edited?.toDate() | date }} | Author: {{ article()?.author?.displayName }}</p>
     </mat-card-footer>
     <mat-card-actions>
         @if (abilityService.ability().can(abilityService.AbilityAction.Update, abilityService.AbilitySubject.Article)) {
