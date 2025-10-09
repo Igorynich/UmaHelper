@@ -2,6 +2,7 @@ import { Injectable, inject, signal, effect } from '@angular/core';
 import { Auth, authState, signInWithPopup, signOut, GoogleAuthProvider, User } from '@angular/fire/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbilityService } from './ability.service';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +10,7 @@ import { AbilityService } from './ability.service';
 export class AuthService {
   private auth: Auth = inject(Auth);
   private abilityService = inject(AbilityService);
+  private router = inject(Router);
 
   readonly user = toSignal(authState(this.auth));
 
@@ -27,6 +29,8 @@ export class AuthService {
   }
 
   logout() {
-    return signOut(this.auth);
+    signOut(this.auth).then(() => {
+      this.router.navigate(['/']);
+    });
   }
 }

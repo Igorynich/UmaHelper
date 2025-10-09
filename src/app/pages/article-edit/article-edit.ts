@@ -10,17 +10,18 @@ import { NgxEditorModule } from 'ngx-editor';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { AuthService } from '../../services/auth.service';
 import { AbilityService } from '../../services/ability.service';
 
 @Component({
   selector: 'app-article-edit',
   standalone: true,
   imports: [
-    RouterLink, 
-    MatCardModule, 
-    MatButtonModule, 
-    CommonModule, 
-    NgxEditorModule, 
+    RouterLink,
+    MatCardModule,
+    MatButtonModule,
+    CommonModule,
+    NgxEditorModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule
@@ -33,6 +34,7 @@ export class ArticleEditComponent implements OnDestroy {
   private router = inject(Router);
   private newsService = inject(NewsService);
   private abilityService = inject(AbilityService);
+  private authService = inject(AuthService);
 
   article = signal<Article | undefined>(undefined);
   editor: Editor;
@@ -77,7 +79,7 @@ export class ArticleEditComponent implements OnDestroy {
       const articleValue = this.article();
       if (articleValue) {
         // Existing article: check for update permission
-        if (!this.abilityService.ability().can('update', 'Article')) {
+        if (!this.abilityService.ability().can(this.abilityService.AbilityAction.Update, this.abilityService.AbilitySubject.Article)) {
           console.warn('Permission denied: Cannot update article.');
           return;
         }
@@ -91,13 +93,19 @@ export class ArticleEditComponent implements OnDestroy {
         });
       } else {
         // New article: check for create permission
-        if (!this.abilityService.ability().can('create', 'Article')) {
+        if (!this.abilityService.ability().can(this.abilityService.AbilityAction.Create, this.abilityService.AbilitySubject.Article)) {
           console.warn('Permission denied: Cannot create article.');
+          return;
+        }
+        const user = this.authService.user();
+        if (!user) {
+          console.warn('Permission denied: User not logged in.');
           return;
         }
         this.newsService.addArticle({
           title: this.form.value.title || '',
-          text: this.form.value.text || ''
+          text: this.form.value.text || '',
+          authorId: user.uid
         }).subscribe((newArticle) => {
           this.router.navigate(['/news', newArticle.id]);
         });

@@ -3,15 +3,33 @@ import { News } from './pages/news/news';
 import { Trainees } from './pages/trainees/trainees';
 import { SupportCards } from './pages/support-cards/support-cards';
 import { UsefulInfo } from './pages/useful-info/useful-info';
+import { abilityGuard } from './guards/ability.guard';
+import { AbilityAction, AbilitySubject } from './interfaces/ability';
 
 export const routes: Routes = [
   {
     path: 'news',
     children: [
       { path: '', component: News },
-      { path: 'new', loadComponent: () => import('./pages/article-edit/article-edit').then(m => m.ArticleEditComponent) },
+      {
+        path: 'new',
+        loadComponent: () => import('./pages/article-edit/article-edit').then(m => m.ArticleEditComponent),
+        canActivate: [abilityGuard],
+        data: {
+          action: AbilityAction.Create,
+          subject: AbilitySubject.Article
+        }
+      },
       { path: ':id', loadComponent: () => import('./pages/article-detail/article-detail').then(m => m.ArticleDetailComponent) },
-      { path: ':id/edit', loadComponent: () => import('./pages/article-edit/article-edit').then(m => m.ArticleEditComponent) },
+      {
+        path: ':id/edit',
+        loadComponent: () => import('./pages/article-edit/article-edit').then(m => m.ArticleEditComponent),
+        canActivate: [abilityGuard],
+        data: {
+          action: AbilityAction.Update,
+          subject: AbilitySubject.Article
+        }
+      },
     ]
   },
   { path: 'trainees', component: Trainees },

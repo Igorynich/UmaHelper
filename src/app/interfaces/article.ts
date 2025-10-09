@@ -4,4 +4,5 @@ export interface Article {
   created: string;
   edited: string;
   text: string;
+  authorId: string;
 }
