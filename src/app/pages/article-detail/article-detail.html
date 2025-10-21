@@ -1,20 +1,24 @@
-@if (article()) {
-  <mat-card class="article-container">
-    <mat-card-header>
-      <mat-card-title>{{ article()?.title }}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content [innerHTML]="safeArticleContent()">
-    </mat-card-content>
-    <mat-card-footer>
-      <p>Created: {{ article()?.created?.toDate() | date }} | Edited: {{ article()?.edited?.toDate() | date }} | Author: {{ article()?.author?.displayName }}</p>
-    </mat-card-footer>
-    <mat-card-actions>
+<div class="page-container">
+  @if (article()) {
+    <mat-card class="content-card">
+      <div class="content-wrapper">
+        <mat-card-header>
+          <mat-card-title>{{ article()?.title }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content [innerHTML]="safeArticleContent()">
+        </mat-card-content>
+        <mat-card-footer>
+          <p>Created: {{ article()?.created?.toDate() | date }} | Edited: {{ article()?.edited?.toDate() | date }} | Author: {{ article()?.author?.displayName }}</p>
+        </mat-card-footer>
+      </div>
+      <mat-card-actions>
         @if (abilityService.ability().can(abilityService.AbilityAction.Update, abilityService.AbilitySubject.Article)) {
           <button mat-button color="primary" [routerLink]="['/news', article()?.id, 'edit']">Edit</button>
         }
         <a mat-button routerLink="/news">Back to News</a>
-    </mat-card-actions>
-  </mat-card>
-} @else {
-  <p>Article not found.</p>
-}
+      </mat-card-actions>
+    </mat-card>
+  } @else {
+    <p>Article not found.</p>
+  }
+</div>

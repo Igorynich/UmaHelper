@@ -1,31 +1,33 @@
 <div class="news-container">
-  <div class="header-actions">
-    @if (abilityService.ability().can(abilityService.AbilityAction.Create, abilityService.AbilitySubject.Article)) {
-      <a mat-raised-button color="primary" routerLink="/news/new">Create Article</a>
+  <div class="news-content">
+    <div class="header-actions">
+      @if (abilityService.ability().can(abilityService.AbilityAction.Create, abilityService.AbilitySubject.Article)) {
+        <a mat-raised-button color="primary" routerLink="/news/new">Create Article</a>
+      }
+    </div>
+    @for (article of paginatedArticles(); track article.id) {
+      <mat-card class="news-article">
+        <mat-card-header>
+          <mat-card-title>{{ article.title }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="article-body" [innerHTML]="article.text"></div>
+        </mat-card-content>
+        <mat-card-footer>
+          <p>Created: {{ article.created.toDate() | date }} | Edited: {{ article.edited.toDate() | date }} | Author: {{ article.author.displayName }}</p>
+          <div>
+            <a mat-button [routerLink]="['/news', article.id]">More...</a>
+            @if (abilityService.ability().can(abilityService.AbilityAction.Update, abilityService.AbilitySubject.Article)) {
+              <button mat-button color="primary" [routerLink]="['/news', article.id, 'edit']">Edit</button>
+            }
+            @if (abilityService.ability().can(abilityService.AbilityAction.Delete, abilityService.AbilitySubject.Article)) {
+              <button mat-button color="warn" (click)="deleteArticle(article.id)">Delete</button>
+            }
+          </div>
+        </mat-card-footer>
+      </mat-card>
     }
   </div>
-  @for (article of paginatedArticles(); track article.id) {
-    <mat-card class="news-article">
-      <mat-card-header>
-        <mat-card-title>{{ article.title }}</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="article-body" [innerHTML]="article.text"></div>
-      </mat-card-content>
-      <mat-card-footer>
-        <p>Created: {{ article.created.toDate() | date }} | Edited: {{ article.edited.toDate() | date }} | Author: {{ article.author.displayName }}</p>
-        <div>
-          <a mat-button [routerLink]="['/news', article.id]">More...</a>
-          @if (abilityService.ability().can(abilityService.AbilityAction.Update, abilityService.AbilitySubject.Article)) {
-            <button mat-button color="primary" [routerLink]="['/news', article.id, 'edit']">Edit</button>
-          }
-          @if (abilityService.ability().can(abilityService.AbilityAction.Delete, abilityService.AbilitySubject.Article)) {
-            <button mat-button color="warn" (click)="deleteArticle(article.id)">Delete</button>
-          }
-        </div>
-      </mat-card-footer>
-    </mat-card>
-  }
 
   <mat-paginator [length]="articles().length"
                  [pageSize]="pageSize()"

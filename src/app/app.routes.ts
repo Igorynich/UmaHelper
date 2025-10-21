@@ -9,6 +9,7 @@ import { AbilityAction, AbilitySubject } from './interfaces/ability';
 export const routes: Routes = [
   {
     path: 'news',
+    data: { title: 'News' },
     children: [
       { path: '', component: News },
       {
@@ -17,23 +18,25 @@ export const routes: Routes = [
         canActivate: [abilityGuard],
         data: {
           action: AbilityAction.Create,
-          subject: AbilitySubject.Article
+          subject: AbilitySubject.Article,
+          title: 'Create Article'
         }
       },
-      { path: ':id', loadComponent: () => import('./pages/article-detail/article-detail').then(m => m.ArticleDetailComponent) },
+      { path: ':id', loadComponent: () => import('./pages/article-detail/article-detail').then(m => m.ArticleDetailComponent), data: { title: 'Article' } },
       {
         path: ':id/edit',
         loadComponent: () => import('./pages/article-edit/article-edit').then(m => m.ArticleEditComponent),
         canActivate: [abilityGuard],
         data: {
           action: AbilityAction.Update,
-          subject: AbilitySubject.Article
+          subject: AbilitySubject.Article,
+          title: 'Edit Article'
         }
       },
     ]
   },
-  { path: 'trainees', component: Trainees },
-  { path: 'support-cards', component: SupportCards },
-  { path: 'useful-info', component: UsefulInfo },
+  { path: 'trainees', component: Trainees, data: { title: 'Trainees' } },
+  { path: 'support-cards', component: SupportCards, data: { title: 'Support Cards' } },
+  { path: 'useful-info', component: UsefulInfo, data: { title: 'Useful Info' } },
   { path: '', redirectTo: '/news', pathMatch: 'full' }
 ];

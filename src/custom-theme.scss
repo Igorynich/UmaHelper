@@ -1,16 +1,36 @@
 @use '@angular/material' as mat;
+@use 'sass:map';
+
+@function get-color($palette, $shade) {
+  @return map.get($palette, $shade);
+}
+
+@mixin text-on-primary($shade) {
+  color: get-color($primary-palette, $shade) !important;
+}
+
+$primary-palette: mat.$rose-palette;
 
 // Define a Material 3 theme with the pink and blue palettes.
 $theme: mat.define-theme((
   color: (
     theme-type: light,
-    primary: mat.$rose-palette,
+    primary: $primary-palette,
     tertiary: mat.$violet-palette,
   )
 ));
 
 // Apply the theme to all components.
+
 @include mat.all-component-themes($theme);
+
+// $color-config: map.get($theme, color);
+$primary-color-80: get-color($primary-palette, 80);
+$primary-color-90: get-color($primary-palette, 90);
+
+.text-on-primary {
+  @include text-on-primary(90);
+}
 
 // Apply the theme's generated CSS variables to the body for a consistent background and text color.
 body {

@@ -9,6 +9,7 @@ import { switchMap } from 'rxjs/operators';
 import { AbilityService } from './ability.service';
 import { User } from '../interfaces/user';
 import { Role } from '../interfaces/role.enum';
+import { SpinnerService } from './spinner';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +19,7 @@ export class AuthService {
   private firestore: Firestore = inject(Firestore);
   private abilityService = inject(AbilityService);
   private router = inject(Router);
+  private spinnerService = inject(SpinnerService);
 
   private readonly user$: Observable<User | null> = authState(this.auth).pipe(
     switchMap(user => {
@@ -40,6 +42,7 @@ export class AuthService {
   }
 
   loginWithGoogle() {
+    this.spinnerService.show();
     signInWithPopup(this.auth, new GoogleAuthProvider()).then(async userCredential => {
       const firebaseUser = userCredential.user;
       const userRef = doc(this.firestore, 'users', firebaseUser.uid);
@@ -54,12 +57,13 @@ export class AuthService {
         };
         await setDoc(userRef, newUser);
       }
-    });
+    }).finally(() => this.spinnerService.hide());
   }
 
   logout() {
+    this.spinnerService.show();
     signOut(this.auth).then(() => {
       this.router.navigate(['/']);
-    });
+    }).finally(() => this.spinnerService.hide());
   }
 }

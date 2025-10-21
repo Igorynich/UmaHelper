@@ -1,13 +1,17 @@
-.useful-info-container {
+:host {
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
+}
+
+.page-container {
+  flex: 1;
+  padding: 1rem;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .useful-info-card {
-  max-width: 800px;
   width: 100%;
   background-color: #FFF0F5;
 }

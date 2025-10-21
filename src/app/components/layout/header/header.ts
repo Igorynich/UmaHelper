@@ -3,10 +3,10 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { Router, RouterLink, NavigationEnd } from '@angular/router';
+import { Router, RouterLink, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { NgStyle } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
-import { filter } from 'rxjs';
+import { filter, map, mergeMap } from 'rxjs';
 
 interface Chibi {
   x: number;
@@ -31,6 +31,9 @@ interface Chibi {
 export class Header {
   protected authService = inject(AuthService);
   private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
+
+  currentPageTitle = signal('');
 
   private chibis: Chibi[] = [
     // TODO: Replace with actual coordinates and dimensions
@@ -51,8 +54,18 @@ export class Header {
 
   constructor() {
     this.router.events.pipe(
-      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
-    ).subscribe(() => {
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map(() => {
+        let route = this.activatedRoute;
+        while (route.firstChild) {
+          route = route.firstChild;
+        }
+        return route;
+      }),
+      filter(route => route.outlet === 'primary'),
+      mergeMap(route => route.data)
+    ).subscribe(data => {
+      this.currentPageTitle.set(data['title']);
       // const randomIndex = Math.floor(Math.random() * this.chibis.length);
       const randomIndex = 1;
       this.currentChibi.set(this.chibis[randomIndex]);

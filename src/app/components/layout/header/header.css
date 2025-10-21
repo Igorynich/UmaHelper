@@ -1,11 +1,10 @@
 .uma-header {
-height: 8.5rem;
+  height: 8.5rem;
   background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../../../assets/library_hero.jpg');
   background-size: cover;
   background-position: center;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
   align-items: center;
   padding: 8px 16px;
   position: relative;
@@ -20,20 +19,31 @@ height: 8.5rem;
   transform: translate(-50%, -50%);
 }
 
-.nav-container {
-  flex-grow: 1;
+.nav-container-desktop {
   display: flex;
   justify-content: center;
   align-self: flex-end;
 }
 
-.uma-header button, .header-title {
-  color: #FCE4EC;
+.nav-container-mobile {
+  display: none; /* Hidden by default */
+  align-items: center;
+  gap: 8px;
+}
+
+.page-title {
+  font-size: 1.2rem;
+  font-weight: 500;
 }
 
 .header-title {
   font-size: 1.8rem; /* Also make title a bit bigger */
   font-weight: bold;
+}
+
+.auth-container {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .auth-button {
@@ -51,3 +61,20 @@ height: 8.5rem;
   margin: 0 10px;
 }
 
+@media (max-width: 1023px) {
+  .uma-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .header-title {
+    display: none; /* Hide main title on mobile */
+  }
+
+  .nav-container-desktop {
+    display: none; /* Hide desktop nav */
+  }
+
+  .nav-container-mobile {
+    display: flex; /* Show mobile nav */
+  }
+}

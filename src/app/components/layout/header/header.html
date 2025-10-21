@@ -5,16 +5,33 @@
     'height.px': currentChibi().height,
     'background-position': '-' + currentChibi().x + 'px -' + currentChibi().y + 'px'
   }"></div>
-  <span class="header-title">UmaHelper</span>
-  <div class="nav-container">
-    <button mat-button class="nav-button" routerLink="/news">News</button>
-    <button mat-button class="nav-button" routerLink="/trainees">Trainees</button>
-    <button mat-button class="nav-button" routerLink="/support-cards">Support Cards</button>
-    <button mat-button class="nav-button" routerLink="/useful-info">Useful Info</button>
+  <span class="header-title text-on-primary">UmaHelper</span>
+
+  <!-- Desktop Navigation -->
+  <div class="nav-container-desktop">
+    <button mat-button class="nav-button text-on-primary" routerLink="/news">News</button>
+    <button mat-button class="nav-button text-on-primary" routerLink="/trainees">Trainees</button>
+    <button mat-button class="nav-button text-on-primary" routerLink="/support-cards">Support Cards</button>
+    <button mat-button class="nav-button text-on-primary" routerLink="/useful-info">Useful Info</button>
   </div>
+
+  <!-- Mobile Navigation -->
+  <div class="nav-container-mobile">
+    <button mat-icon-button class="text-on-primary" [matMenuTriggerFor]="mobileMenu">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="page-title text-on-primary">{{ currentPageTitle() }}</span>
+    <mat-menu #mobileMenu="matMenu">
+      <a mat-menu-item routerLink="/news">News</a>
+      <a mat-menu-item routerLink="/trainees">Trainees</a>
+      <a mat-menu-item routerLink="/support-cards">Support Cards</a>
+      <a mat-menu-item routerLink="/useful-info">Useful Info</a>
+    </mat-menu>
+  </div>
+
   <div class="auth-container">
     @if (authService.user(); as user) {
-      <button mat-icon-button class="auth-button" [matMenuTriggerFor]="userMenu">
+      <button mat-icon-button class="auth-button text-on-primary" [matMenuTriggerFor]="userMenu">
         <mat-icon>account_circle</mat-icon>
       </button>
       <mat-menu #userMenu="matMenu">
@@ -22,7 +39,7 @@
         <button mat-menu-item (click)="authService.logout()">Logout</button>
       </mat-menu>
     } @else {
-      <button mat-raised-button class="auth-button" (click)="authService.loginWithGoogle()">Login with Google</button>
+      <button mat-raised-button class="auth-button text-on-primary" (click)="authService.loginWithGoogle()">Login with Google</button>
     }
   </div>
 </mat-toolbar>

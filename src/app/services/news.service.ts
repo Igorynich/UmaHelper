@@ -1,8 +1,9 @@
 import { inject, Injectable, Injector, runInInjectionContext } from '@angular/core';
 import { Article, ArticleData } from '../interfaces/article';
 import { combineLatest, from, Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, tap } from 'rxjs/operators';
 import {
+  addDoc,
   collection,
   collectionData,
   deleteDoc,
@@ -10,9 +11,10 @@ import {
   docData,
   Firestore,
   serverTimestamp,
-  updateDoc, addDoc
+  updateDoc
 } from '@angular/fire/firestore';
 import { UserService } from './user.service';
+import { SpinnerService } from './spinner';
 
 @Injectable({
   providedIn: 'root'
@@ -21,8 +23,10 @@ export class NewsService {
   private firestore: Firestore = inject(Firestore);
   private injector = inject(Injector);
   private userService = inject(UserService);
+  private spinnerService = inject(SpinnerService);
 
   getArticles(): Observable<Article[]> {
+    this.spinnerService.show();
     return runInInjectionContext(this.injector, () => {
       const articlesCollection = collection(this.firestore, 'articles');
       return (collectionData(articlesCollection, { idField: 'id' }) as Observable<ArticleData[]>).pipe(
@@ -46,12 +50,14 @@ export class NewsService {
           return combineLatest(authorObservables).pipe(
             map(articlesWithAuthor => articlesWithAuthor.filter((a): a is Article => a !== null))
           );
-        })
+        }),
+        tap(() => this.spinnerService.hide())
       );
     });
   }
 
   getArticle(id: string): Observable<Article | undefined> {
+    this.spinnerService.show();
     return runInInjectionContext(this.injector, () => {
       const articleDoc = doc(this.firestore, `articles/${id}`);
       return (docData(articleDoc, { idField: 'id' }) as Observable<ArticleData | undefined>).pipe(
@@ -68,12 +74,14 @@ export class NewsService {
               return { ...rest, author } as Article;
             })
           );
-        })
+        }),
+        tap(() => this.spinnerService.hide())
       );
     });
   }
 
   addArticle(article: Omit<Article, 'id' | 'created' | 'edited' | 'author'> & { authorId: string }): Observable<Article> {
+    this.spinnerService.show();
     const articlesCollection = collection(this.firestore, 'articles');
     const newArticle = {
       ...article,
@@ -83,17 +91,24 @@ export class NewsService {
     return from(addDoc(articlesCollection, newArticle)).pipe(
       switchMap(docRef => this.getArticle(docRef.id).pipe(
         map(newlyAddedArticle => newlyAddedArticle!)
-      ))
+      )),
+      tap(() => this.spinnerService.hide())
     );
   }
 
   updateArticle(article: Pick<Article, 'id' | 'title' | 'text'>): Observable<void> {
+    this.spinnerService.show();
     const articleDoc = doc(this.firestore, `articles/${article.id}`);
-    return from(updateDoc(articleDoc, { ...article, edited: serverTimestamp() }));
+    return from(updateDoc(articleDoc, { ...article, edited: serverTimestamp() })).pipe(
+      tap(() => this.spinnerService.hide())
+    );
   }
 
   deleteArticle(id: string): Observable<void> {
+    this.spinnerService.show();
     const articleDoc = doc(this.firestore, `articles/${id}`);
-    return from(deleteDoc(articleDoc));
+    return from(deleteDoc(articleDoc)).pipe(
+      tap(() => this.spinnerService.hide())
+    );
   }
 }
