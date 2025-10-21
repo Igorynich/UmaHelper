@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
-import { UnderConstruction } from '../../components/common/under-construction/under-construction';
 
 @Component({
   selector: 'app-trainees',
-  imports: [UnderConstruction],
+  imports: [],
   templateUrl: './trainees.html',
   styleUrl: './trainees.css'
 })

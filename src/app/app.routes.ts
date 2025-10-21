@@ -1,8 +1,4 @@
 import { Routes } from '@angular/router';
-import { News } from './pages/news/news';
-import { Trainees } from './pages/trainees/trainees';
-import { SupportCards } from './pages/support-cards/support-cards';
-import { UsefulInfo } from './pages/useful-info/useful-info';
 import { abilityGuard } from './guards/ability.guard';
 import { AbilityAction, AbilitySubject } from './interfaces/ability';
 
@@ -11,7 +7,7 @@ export const routes: Routes = [
     path: 'news',
     data: { title: 'News' },
     children: [
-      { path: '', component: News },
+      { path: '', loadComponent: () => import('./pages/news/news').then(m => m.News) },
       {
         path: 'new',
         loadComponent: () => import('./pages/article-edit/article-edit').then(m => m.ArticleEditComponent),
@@ -35,8 +31,19 @@ export const routes: Routes = [
       },
     ]
   },
-  { path: 'trainees', component: Trainees, data: { title: 'Trainees' } },
-  { path: 'support-cards', component: SupportCards, data: { title: 'Support Cards' } },
-  { path: 'useful-info', component: UsefulInfo, data: { title: 'Useful Info' } },
+  { path: 'trainees', redirectTo: '/under-construction', pathMatch: 'full' },
+  { path: 'support-cards', redirectTo: '/under-construction', pathMatch: 'full' },
+  { path: 'useful-info', loadComponent: () => import('./pages/useful-info/useful-info').then(m => m.UsefulInfo), data: { title: 'Useful Info' } },
+  {
+    path: 'conditions',
+    loadComponent: () => import('./pages/conditions-page/conditions-page.component').then(m => m.ConditionsPageComponent),
+    data: { title: 'Conditions' }
+  },
+  { path: 'skills', redirectTo: '/under-construction', pathMatch: 'full' },
+  {
+    path: 'under-construction',
+    loadComponent: () => import('./pages/under-construction-page/under-construction-page.component').then(m => m.UnderConstructionPageComponent),
+    data: { title: 'Under Construction' }
+  },
   { path: '', redirectTo: '/news', pathMatch: 'full' }
 ];
