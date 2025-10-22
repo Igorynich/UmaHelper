@@ -1,5 +1,34 @@
+export enum Rarity {
+  Common = 1,
+  Rare = 3,
+  SuperRare = 5,
+}
+
+export enum EffectType {
+  Stamina = 9,
+  TargetVelocity = 22,
+  Velocity = 27,
+  Acceleration = 31,
+}
+
+export enum Activation {
+  Off = 0,
+  On = 1,
+}
+
+export enum SkillType {
+  FinalCorner = 'f_c',
+  FinalStraight = 'f_s',
+  Corner = 'cor',
+  Straight = 'str',
+  MiddleLeg1 = 'l_1',
+  MiddleLeg2 = 'l_2',
+  MiddleLeg3 = 'l_3',
+  None = 'nac',
+}
+
 export interface Effect {
-  type: number;
+  type: EffectType;
   value: number;
 }
 
@@ -11,7 +40,7 @@ export interface ConditionGroup {
 }
 
 export interface GeneVersion {
-  activation: number;
+  activation: Activation;
   condition_groups: ConditionGroup[];
   cost: number;
   desc_en: string;
@@ -24,16 +53,12 @@ export interface GeneVersion {
   name_ko: string;
   name_tw: string;
   parent_skills: number[];
-  rarity: number;
+  rarity: Rarity;
 }
 
 export interface LocDetails {
   char: number[];
-  condition_groups?: ConditionGroup[];
-  gene_version?: {
-    condition_groups: ConditionGroup[];
-  };
-  type?: string[];
+  type?: SkillType[];
 }
 
 export interface Loc {
@@ -43,7 +68,7 @@ export interface Loc {
 }
 
 export interface Skill {
-  activation: number;
+  activation: Activation;
   char: number[];
   condition_groups: ConditionGroup[];
   desc_en: string;
@@ -60,6 +85,10 @@ export interface Skill {
   name_en: string;
   name_ko: string;
   name_tw: string;
-  rarity: number;
-  type: string[];
+  rarity: Rarity;
+  type: SkillType[];
+  // some dogshit nested arrays
+  sup_e?: any;
+  sup_hint?: any;
+  evo_cond? :any;
 }

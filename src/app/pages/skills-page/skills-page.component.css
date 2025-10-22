@@ -1,0 +1,32 @@
+:host {
+  flex: 1;
+  display: flex;
+}
+
+.page-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.skills-content {
+  flex-grow: 1;
+}
+
+mat-card {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.snackbar-success {
+  background-color: #4CAF50; /* Green */
+  color: white;
+}
+
+.snackbar-error {
+  background-color: #f44336; /* Red */
+  color: white;
+}

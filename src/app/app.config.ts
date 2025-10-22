@@ -12,6 +12,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 import { routes } from './app.routes';
 import { FIREBASE_CONFIG } from './firebase.config';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,7 +28,8 @@ export const appConfig: ApplicationConfig = {
       MatPaginatorModule,
       MatCardModule,
       MatButtonModule,
-      MatDialogModule
+      MatDialogModule,
+      MatSnackBarModule
     )
   ]
 };

@@ -1,38 +1,228 @@
 <div class="page-container">
   <mat-card>
-    <h2>Conditions: Basics</h2>
-    <p>Conditions... are almost always bad. You will sooner than later get more negative conditions than positive, and that means a trip to the infirmary.</p>
-    <p>Almost all of these occur as a result of rng during events, or from failing a training. However, not all statuses are created equal, and I've decided to categorize them into the good, bad, and ugly (as all 3 category guides are legally required to do). I have also put little explanations and warnings behind them.</p>
-    <p>Caution; This is not an exhaustive list of all conditions, and only uses the ones I have experienced and grown accustomed to.</p>
+    <div class="conditions-content">
+      <h2>Conditions</h2>
+      <p>In Career Mode, Umamusume can acquire various Conditions that affect gameplay both positively and negatively. Positive conditions are displayed orange on the trainee's full stats screen, while negative conditions are displayed blue.</p>
 
-    <h3>The good</h3>
-    <p>It's obvious when a condition is good. They slap a massive label on screen, and you get to smile. Not all are amazing, but they never are something to frown at.</p>
-    <ul>
-      <li><b>Charming ○:</b> The best, in my experience. it increases the gain of friendship by 2 points. A minor boost, but the difference between 7 and 9 is worlds apart in my opinion.</li>
-      <li><b>Practice Perfect ○/◎:</b> Not a spectacular increase in fail chances, only 2/4% respectively for the condition's tier. still, it can be good, especially when it happens as a result of fixing a practice poor.</li>
-      <li><b>*Sharp (Fast Learner in EN):</b> seems absurdy amazing, with the promise of a 10% skill cost reduction. I do not know if it can go over the 40% hint discount maximum, but either way it's still an amazing condition.</li>
-      <li><b>*Hot Topic:</b> Considering how hard it is to raise Akikawa and Otonashi's friendships, as they recieve lower values (in my experience), this condition's fairly good.</li>
-    </ul>
-    <p><i>*I have yet to encounter Sharp or Hot Topic in game, and am using the uma musume wiki.</i></p>
+      <p>Positive conditions typically cannot be removed, with the exception of Practice Perfect ○, which is always removed upon the acquisition of Practice Poor. Negative conditions can be removed by visiting the Infirmary, getting the Shrine Visit during Recreation, or experiencing certain events with Hayakawa Tazuna (Tracen Reception) as a Support Card.</p>
 
-    <h3>The Bad</h3>
-    <p>Now, i've harped on this before, but it's important to not fret over EVERY condition. not everything needs instant fixing, and sometimes it's better to go with a friendship training, or even get a +10 skill or recreation out of the way depending on the timing and career, over a really minor debuff.</p>
-    <ul>
-      <li><b>Practice Poor:</b> This is most evident with "practice poor". despite its scary name, it still doesn't do much on its own. it increases all fail chances by 2%. that's really it.</li>
-      <li><b>Insomnia:</b> not a game breaker, but proves to be an annoyance. Randomly, you will lose a bit of energy, nothing major but still enough to occasionally throw a wrench in your plans. Best to get rid of it asap, but if you're under a time crunch you can delay it with a turn or two of training. This training also can be removed by good rng when resting (gaining 70 energy in one rest).</li>
-      <li><b>Migraine:</b> depending on your current mood, it can be extremely bad. Without the Great mood's 1.2x modifier to stats, I weep. But if your stats are already overblown, and you're not afraid of a more iffy win, then even a normal mood is fine for a race with migraine.</li>
-      <li><b>*Dry Skin:</b> another weird condition, this one will randomly decrease your mood if the condition still lasts. I haven't experenced this one in the game yet, but it's not something I would fear too much, especially if it's close to race day. Mood buffs from training and from random events can sometimes just negate it completely.</li>
-    </ul>
+      <h3>Positive Conditions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Condition</th>
+            <th>Exclusivity</th>
+            <th>Effect</th>
+            <th>Acquisition</th>
+            <th>Removal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Charming ○</td>
+            <td></td>
+            <td>Increases bond gain with supports by 2</td>
+            <td>
+              <ul>
+                <li>Random events</li>
+                <li>Succeed Charm chakra during Acupuncturist event</li>
+              </ul>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Fast Learner</td>
+            <td></td>
+            <td>Reduces cost of learning skills by 10%</td>
+            <td>Random events</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Practice Perfect ○</td>
+            <td></td>
+            <td>Reduces chance to fail stat training by 2%</td>
+            <td>
+              <ul>
+                <li>Master Trainer event</li>
+                <li>Random chance when picking the second option during a Training Failed event</li>
+              </ul>
+            </td>
+            <td>Automatically removed when Practice Poor is acquired</td>
+          </tr>
+          <tr>
+            <td>Practice Perfect ◎</td>
+            <td>Mejiro Ryan, Narita Taishin</td>
+            <td>Reduces chance to fail stat training by 4%</td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Hot Topic</td>
+            <td></td>
+            <td>Increases bond gain with Yayoi Akikawa and Etsuko Otonashi by 40%</td>
+            <td>Random events</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Shining Brightly</td>
+            <td>Super Creek</td>
+            <td>Reduces the chance to fail stat training</td>
+            <td>Place top 3 in the Kikuka Sho</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Fan Promise</td>
+            <td>Smart Falcon</td>
+            <td>Win a race in the listed location to receive stat bonuses and mood increase</td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>ポジティブ思考</td>
+            <td></td>
+            <td>Prevents a mood decrease of any level once</td>
+            <td>Events from certain Support Cards</td>
+            <td>Automatically removed during an event that would have typically lowered the trainee's mood</td>
+          </tr>
+          <tr>
+            <td>幸運体質</td>
+            <td></td>
+            <td>Prevents obtaining a negative condition once</td>
+            <td>Events from certain Support Cards</td>
+            <td>Automatically removed during an event that would have typically given the trainee a negative condition</td>
+          </tr>
+        </tbody>
+      </table>
 
-    <h3>The Ugly</h3>
-    <ul>
-      <li><b>Slow Metabolism:</b> This completely stops any increase in speed. With speed being the most crucial stat, this is effectively an open threat to any victory you might want to achieve. However, if your speed is high, then you can demolish this trait by training other stats instead.</li>
-      <li><b>Slacker:</b> This is the game ender of conditions, solely for the fact that it can sometimes not go away in one visit to the infirmary. This is especially terrible if it happens in june of the 2nd or 3rd year, as it can completely obliterate any chance of summer camp training. The only upside is that training with Etsuko can slap this condition away as well.</li>
-      <li><b>*Non-Distance Reduction (debuff):</b> According to Goddessofthewind, this skill moderately reduces performance on any race with a distance that isn't divisible by 400m. For some campaigns, this is atrocious, while for others (like vodka) this isn't as bad. still, a moderate debuff for the occasional 2200m med is going to end a run if you aren't overprepared.</li>
-    </ul>
-
-    <h3>Conclusion</h3>
-    <p>Fear the Ugly, be wary of the Bad, and embrace the Good.</p>
-    <p>Origin: <a href="https://www.reddit.com/r/UmaMusume/comments/1lug709/conditions_and_you_a_brief_guide/" target="_blank" rel="noopener noreferrer">https://www.reddit.com/r/UmaMusume/comments/1lug709/conditions_and_you_a_brief_guide/</a></p>
+      <h3>Negative Conditions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Condition</th>
+            <th>Exclusivity</th>
+            <th>Effect</th>
+            <th>Acquisition</th>
+            <th>Removal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Practice Poor</td>
+            <td></td>
+            <td>Increases the chance to fail stat training by 2%</td>
+            <td>
+              <ul>
+                <li>Training Failure event</li>
+                <li>Fail Health chakra during Acupuncturist event</li>
+                <li>Fail Charm chakra during Acupuncturist event</li>
+              </ul>
+            </td>
+            <td>
+              <ul>
+                <li>Infirmary</li>
+                <li>Automatically removed when Practice Perfect is acquired</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>Migraine</td>
+            <td></td>
+            <td>Mood cannot increase</td>
+            <td>Migraine Blues event</td>
+            <td>Infirmary</td>
+          </tr>
+          <tr>
+            <td>Dry Skin</td>
+            <td></td>
+            <td>Random chance to lower mood by one stage as long as the condition persists</td>
+            <td>Racing for 3 or more consecutive turns</td>
+            <td>Infirmary</td>
+          </tr>
+          <tr>
+            <td>Night Owl</td>
+            <td></td>
+            <td>Random chance to lower energy by 10 as long as the condition persists</td>
+            <td>
+              <ul>
+                <li>Randomly when Rest results in Sleep Deprived event</li>
+                <li>Fail Strength chakra during Acupuncturist event</li>
+              </ul>
+            </td>
+            <td>
+              <ul>
+                <li>Infirmary</li>
+                <li>Gain 70 energy through rest</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>Slow Metabolism</td>
+            <td></td>
+            <td>Speed stat cannot be increased</td>
+            <td>Food-related Trainee events</td>
+            <td>
+              <ul>
+                <li>Infirmary</li>
+                <li>Stat Training</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>Slacker</td>
+            <td></td>
+            <td>Trainee may not show up for stat training and waste the turn</td>
+            <td>Random events</td>
+            <td>
+              <ul>
+                <li>Infirmary</li>
+                <li>Train with Etsuko</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td>Under the Weather</td>
+            <td>Super Creek</td>
+            <td>Increases the chance to fail trainings by 5%</td>
+            <td>Place top 3 in the Sumire Stakes</td>
+            <td>Place top 3 in the Kikuka Sho</td>
+          </tr>
+          <tr>
+            <td>まだまだ準備中</td>
+            <td>Meisho Doto</td>
+            <td>Random chance to lower energy by 5 after a race long as the condition persists</td>
+            <td>Complete debut race</td>
+            <td>Complete debut race</td>
+          </tr>
+          <tr>
+            <td>春待つ蕾</td>
+            <td>Sakura Laurel</td>
+            <td>Random chance to lower energy by 5 after a race long as the condition persists</td>
+            <td>Complete debut race</td>
+            <td>Complete November of classic year</td>
+          </tr>
+          <tr>
+            <td>ガラスの脚</td>
+            <td>Mejiro Ardan</td>
+            <td>A race streak for two or more will drain an additional 10 energy</td>
+            <td>Complete debut race</td>
+            <td>Participate in the objective race Tenno Sho (Autumn)</td>
+          </tr>
+          <tr>
+            <td>怪しい雲行き</td>
+            <td>Copano Rickey</td>
+            <td>Unknown effect</td>
+            <td>Always acquired at the beginning of June, classic year</td>
+            <td>Participate in the objective race February Stakes</td>
+          </tr>
+          <tr>
+            <td>前程万哩</td>
+            <td>Gran Alegria</td>
+            <td>Decreases aptitude for Medium races</td>
+            <td>Place top 5 in the NHK Mile Cup</td>
+            <td>Place 1st in the Hanshin Cup</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </mat-card>
 </div>

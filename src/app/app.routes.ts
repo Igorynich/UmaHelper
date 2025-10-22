@@ -39,7 +39,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/conditions-page/conditions-page.component').then(m => m.ConditionsPageComponent),
     data: { title: 'Conditions' }
   },
-  { path: 'skills', redirectTo: '/under-construction', pathMatch: 'full' },
+  { path: 'skills', loadComponent: () => import('./pages/skills-page/skills-page.component').then(m => m.SkillsPageComponent), data: { title: 'Skills' } },
   {
     path: 'under-construction',
     loadComponent: () => import('./pages/under-construction-page/under-construction-page.component').then(m => m.UnderConstructionPageComponent),

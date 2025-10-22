@@ -10,3 +10,4 @@ import { MatCardModule } from '@angular/material/card';
   styleUrl: './conditions-page.component.css',
 })
 export class ConditionsPageComponent {}
+
