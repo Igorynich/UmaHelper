@@ -35,14 +35,24 @@ export const routes: Routes = [
   { path: 'support-cards', redirectTo: '/under-construction', pathMatch: 'full' },
   { path: 'useful-info', loadComponent: () => import('./pages/useful-info/useful-info').then(m => m.UsefulInfo), data: { title: 'Useful Info' } },
   {
+    path: 'admin',
+    loadComponent: () => import('./pages/admin/admin').then(m => m.AdminComponent),
+    canActivate: [abilityGuard],
+    data: {
+      action: AbilityAction.Manage,
+      subject: AbilitySubject.All,
+      title: 'Admin'
+    }
+  },
+  {
     path: 'conditions',
-    loadComponent: () => import('./pages/conditions-page/conditions-page.component').then(m => m.ConditionsPageComponent),
+    loadComponent: () => import('./pages/conditions/conditions').then(m => m.ConditionsComponent),
     data: { title: 'Conditions' }
   },
-  { path: 'skills', loadComponent: () => import('./pages/skills-page/skills-page.component').then(m => m.SkillsPageComponent), data: { title: 'Skills' } },
+  { path: 'skills', loadComponent: () => import('./pages/skills/skills').then(m => m.SkillsComponent), data: { title: 'Skills' } },
   {
     path: 'under-construction',
-    loadComponent: () => import('./pages/under-construction-page/under-construction-page.component').then(m => m.UnderConstructionPageComponent),
+    loadComponent: () => import('./components/common/under-construction/under-construction').then(m => m.UnderConstruction),
     data: { title: 'Under Construction' }
   },
   { path: '', redirectTo: '/news', pathMatch: 'full' }

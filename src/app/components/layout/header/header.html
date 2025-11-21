@@ -36,6 +36,9 @@
       </button>
       <mat-menu #userMenu="matMenu">
         <button mat-menu-item disabled>Hello, {{ user.displayName }}</button>
+        @if (abilityService.ability().can(AbilityAction.Manage, AbilitySubject.All)) {
+          <button mat-menu-item routerLink="/admin" >Adminka</button>
+        }
         <button mat-menu-item (click)="authService.logout()">Logout</button>
       </mat-menu>
     } @else {

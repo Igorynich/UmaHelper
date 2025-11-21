@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 
 @Component({
-  selector: 'app-conditions-page',
+  selector: 'app-conditions',
   standalone: true,
   imports: [CommonModule, MatCardModule],
-  templateUrl: './conditions-page.component.html',
-  styleUrl: './conditions-page.component.css',
+  templateUrl: './conditions.html',
+  styleUrl: './conditions.css',
 })
-export class ConditionsPageComponent {}
+export class ConditionsComponent {}
 

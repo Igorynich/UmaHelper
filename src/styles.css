@@ -9,3 +9,13 @@ html, body {
 }
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.skill-tooltip {
+  white-space: pre-wrap;
+  background-color: #616161;
+  color: white;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 14px;
+  max-width: 800px;
+}

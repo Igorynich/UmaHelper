@@ -12,6 +12,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 import { routes } from './app.routes';
 import { FIREBASE_CONFIG } from './firebase.config';
+import { IMAGEKIT_CONFIG } from './imagekit.config';
+import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 
 export const appConfig: ApplicationConfig = {
@@ -29,7 +31,8 @@ export const appConfig: ApplicationConfig = {
       MatCardModule,
       MatButtonModule,
       MatDialogModule,
-      MatSnackBarModule
+      MatSnackBarModule,
+      ImagekitioAngularModule.forRoot(IMAGEKIT_CONFIG)
     )
   ]
 };

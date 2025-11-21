@@ -8,12 +8,17 @@ import { NgStyle } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
 import { filter, map, mergeMap } from 'rxjs';
 
+import { AbilityService } from '../../../services/ability.service';
+import { NgIf } from '@angular/common';
+
 interface Chibi {
   x: number;
   y: number;
   width: number;
   height: number;
 }
+
+import { AbilityAction, AbilitySubject } from '../../../interfaces/ability';
 
 @Component({
   selector: 'app-header',
@@ -30,6 +35,7 @@ interface Chibi {
 })
 export class Header {
   protected authService = inject(AuthService);
+  protected abilityService = inject(AbilityService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
 
@@ -51,6 +57,9 @@ export class Header {
   ];
 
   currentChibi = signal<Chibi>(this.chibis[0]);
+
+  protected readonly AbilityAction = AbilityAction;
+  protected readonly AbilitySubject = AbilitySubject;
 
   constructor() {
     this.router.events.pipe(

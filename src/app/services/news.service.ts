@@ -10,6 +10,8 @@ import {
   doc,
   docData,
   Firestore,
+  orderBy,
+  query,
   serverTimestamp,
   updateDoc
 } from '@angular/fire/firestore';
@@ -29,7 +31,8 @@ export class NewsService {
     this.spinnerService.show();
     return runInInjectionContext(this.injector, () => {
       const articlesCollection = collection(this.firestore, 'articles');
-      return (collectionData(articlesCollection, { idField: 'id' }) as Observable<ArticleData[]>).pipe(
+      const q = query(articlesCollection, orderBy('created', 'desc'));
+      return (collectionData(q, { idField: 'id' }) as Observable<ArticleData[]>).pipe(
         switchMap((articles: ArticleData[]) => {
           if (articles.length === 0) {
             return of([]);

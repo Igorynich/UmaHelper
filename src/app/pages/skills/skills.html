@@ -1,0 +1,25 @@
+<div class="skills-container">
+  <div class="header-actions">
+    <h2>Skills ({{ filteredSkills().length }})</h2>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Filter by name</mat-label>
+      <input matInput [formControl]="filterControl">
+      <button *ngIf="filterControl.value" matSuffix mat-icon-button aria-label="Clear" (click)="clearFilter()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+  <div class="skills-list">
+    @for (skill of filteredSkills(); track skill.id) {
+      <mat-card class="skill-card">
+        <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
+        </ik-image>
+        <div class="skill-name">{{ skill.name_en }}</div>
+        <div class="skill-desc">{{ skill.desc_en }}</div>
+        <button mat-icon-button (click)="openSkillDialog(skill)">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+      </mat-card>
+    }
+  </div>
+</div>

@@ -1,0 +1,21 @@
+<div mat-dialog-title class="skill-dialog-header">
+  <ik-image [path]="'/skills/' + data.skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]"></ik-image>
+  <h2>{{ data.skill.name_en }}</h2>
+</div>
+<mat-dialog-content>
+  <ul>
+    @for (key of filteredProps; track key) {
+      <li><strong>{{ key | skillKeyTranslator | titlecase }}: </strong> <span [innerHTML]="typeof $any(data.skill)[key] === 'object' ? ($any(data.skill)[key] | json) : ($any(data.skill)[key] | skillFieldTranslator:key)"></span></li>
+    }
+    @if (processedConditionGroups().length > 0) {
+      @for (conditionGroup of processedConditionGroups(); track $index) {
+        @if (processedConditionGroups().length > 1) {
+          <h3 class="skill-trigger-header">Trigger {{ $index + 1 }}</h3>
+        }
+        @for (item of conditionGroup; track item.key) {
+          <li><strong>{{ item.key | skillKeyTranslator | titlecase}}: </strong> <span [innerHTML]="item.value | skillFieldTranslator:item.key"></span></li>
+        }
+      }
+    }
+  </ul>
+</mat-dialog-content>

@@ -1,0 +1,48 @@
+:host {
+  flex: 1;
+  display: flex;
+}
+
+.skills-container {
+  flex: 1;
+  padding: 1rem;
+}
+
+.skills-list {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header-actions {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 1rem;
+}
+
+.filter-field {
+  width: 100%;
+  max-width: 300px; /* Adjust as needed */
+}
+
+.skill-card {
+  display: grid;
+  grid-template-columns: auto 1fr 2fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background-color: #FFF0F5;
+  border-radius: 5px;
+}
+
+.skill-name {
+  font-weight: 500;
+}
+
+.skill-desc {
+  font-size: 0.8rem;
+  white-space: normal;
+}

@@ -6,30 +6,29 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AdminService, UploadProgress } from '../../services/admin.service';
-import { AbilityService } from '../../services/ability.service';
-import { AbilityAction, AbilitySubject } from '../../interfaces/ability';
 import { ConfirmationDialog } from '../../components/common/confirmation-dialog/confirmation-dialog';
-import { SpinnerComponent } from '../../components/common/spinner/spinner';
+
+import { ImagekitioAngularModule } from 'imagekitio-angular';
 
 @Component({
-  selector: 'app-skills-page',
+  selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule],
-  templateUrl: './skills-page.component.html',
-  styleUrl: './skills-page.component.css',
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule, ImagekitioAngularModule],
+  templateUrl: './admin.html',
+  styleUrls: ['./admin.css']
 })
-export class SkillsPageComponent {
+export class AdminComponent {
   private adminService = inject(AdminService);
-  private abilityService = inject(AbilityService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
   isLoading = signal(false);
   uploadProgress = signal<UploadProgress | null>(null);
-
-  canManageSkills = computed(() =>
-    this.abilityService.ability().can(AbilityAction.Manage, AbilitySubject.All)
-  );
+  skillImages = signal([
+    { name: 'skill1.jpg', path: '/skills/skill1.jpg' },
+    { name: 'skill2.jpg', path: '/skills/skill2.jpg' },
+    { name: 'skill3.jpg', path: '/skills/skill3.jpg' },
+  ]);
 
   onUploadSkills() {
     this.dialog

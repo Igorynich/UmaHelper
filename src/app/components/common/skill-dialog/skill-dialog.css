@@ -1,0 +1,14 @@
+.skill-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.skill-dialog-header h2 {
+  margin: 0;
+}
+
+.skill-trigger-header {
+  margin: 0.5em 0;
+}

@@ -11,6 +11,23 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Do NOT use the `@HostBinding` and `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` or `@Directive` decorator instead
 - Use `NgOptimizedImage` for all static images.
   - `NgOptimizedImage` does not work for inline base64 images.
+
+## Naming Conventions
+- **File Naming:**
+  - Use kebab-case for file names (e.g., `user-profile.ts`, `user-profile.html`, `user-profile.css`).
+  - Omit the `.component` suffix from component TypeScript, HTML, and CSS files (e.g., `user-profile.ts` instead of `user-profile.component.ts`).
+  - File names should match the TypeScript identifier within (e.g., `user-profile.ts` exports `UserProfileComponent`).
+- **Component Class Naming:**
+  - Use PascalCase (e.g., `UserProfileComponent`).
+  - Omit the `Component` suffix from the class name if the file name already implies it (e.g., `UserProfile` in `user-profile.ts`). *However, for clarity and consistency with existing project patterns, it's often better to retain the `Component` suffix in the class name.*
+- **Selector Naming:**
+  - Use kebab-case (e.g., `app-user-profile`).
+  - Use a consistent prefix (e.g., `app-`).
+
+## Import Management
+- **Verification:** After any code modification, explicitly verify that all necessary imports are present and correct, and that no unused imports remain.
+- **Standalone Components:** For standalone components, ensure all required modules, components, and pipes are explicitly listed in the `imports` array of the `@Component` decorator.
+- **Order and Formatting:** Maintain consistent import order and formatting (e.g., alphabetical, grouped by source).
 ## Components
 - Keep components small and focused on a single responsibility
 - Use `input()` and `output()` functions instead of decorators

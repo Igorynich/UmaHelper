@@ -1,7 +1,7 @@
 export enum Rarity {
-  Common = 1,
-  Rare = 3,
-  SuperRare = 5,
+  Normal = 1,
+  Rare = 2,
+  Unique = 3
 }
 
 export enum EffectType {
@@ -12,8 +12,8 @@ export enum EffectType {
 }
 
 export enum Activation {
-  Off = 0,
-  On = 1,
+  Guaranteed = 0,
+  WitCheck = 1,
 }
 
 export enum SkillType {
@@ -35,6 +35,7 @@ export interface Effect {
 export interface ConditionGroup {
   base_time: number;
   condition: string;
+  cd?: number;
   effects: Effect[];
   precondition?: string;
 }
@@ -91,4 +92,8 @@ export interface Skill {
   sup_e?: any;
   sup_hint?: any;
   evo_cond? :any;
+  // possibly wrong version or smth
+  pre_evo?: any;
+  evo?: any;
+  versions?: any;
 }
