@@ -19,9 +19,14 @@ export class SkillsService {
   // 400 should be
   getSkills(): Observable<Skill[]> {
     const skillsCollection = collection(this.firestore, 'skills');
-    return (collectionData(skillsCollection, { idField: 'id' }) as Observable<Skill[]>).pipe(
+    return (collectionData(skillsCollection) as Observable<Skill[]>).pipe(
       map(skills => skills.filter(skill => /*!skill.pre_evo && !skill.evo*/ skill.name_en && !this.excludedSkillNames.includes(skill.enname)))
     );
+  }
+
+  getRawSkills(): Observable<Skill[]> {
+    const skillsCollection = collection(this.firestore, 'skills');
+    return (collectionData(skillsCollection) as Observable<Skill[]>);
   }
 
   private isCurrentVersion(skillVersions: number[]): boolean {

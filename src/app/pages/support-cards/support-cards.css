@@ -5,8 +5,33 @@
 
 .page-container {
   flex: 1;
-  padding: 1rem;
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.name-filter-field {
+  width: 300px; /* Make name filter wider */
+}
+
+.operator-field {
+  width: 100px;
+}
+
+.selected-types-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.selected-type-image {
+  display: inline-block;
 }

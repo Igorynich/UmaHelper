@@ -1,0 +1,9 @@
+<div mat-dialog-title class="dialog-title">
+  <h2>{{ data.char_name }}</h2>
+  <button mat-icon-button (click)="close()" class="close-button">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+<mat-dialog-content class="dialog-content">
+  <img [src]="data.characterImageUrl" [alt]="data.char_name">
+</mat-dialog-content>

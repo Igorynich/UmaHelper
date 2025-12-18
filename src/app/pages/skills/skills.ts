@@ -61,7 +61,7 @@ export class SkillsComponent {
         console.log('Skills', skills);
         this.spinnerService.hide();
         skills.forEach(skill => {         // Debug
-          this.openSkillDialog(skill, true);
+          // this.openSkillDialog(skill, true);
         });
       }),
     ).subscribe();

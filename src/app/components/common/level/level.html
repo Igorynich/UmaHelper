@@ -1,0 +1,22 @@
+<div class="level-container">
+  <div class="level-number-row">
+    <span>LV</span>
+    <span class="level-number">{{ currentLevel() }}</span>
+  </div>
+  <div class="level-controls-row">
+    <mat-icon class="level-control-icon" (click)="changeLevel(-5)" matTooltip="-5">keyboard_double_arrow_left</mat-icon>
+    <mat-icon class="level-control-icon" (click)="changeLevel(-1)" matTooltip="-1"
+              [class.disabled]="currentLevel() - 1 < minLevel()">keyboard_arrow_left</mat-icon>
+    <div class="diamond-rating">
+      @for (level of availableLevels(); track $index) {
+        <mat-icon class="level-indicator-icon" (click)="setLevel($index)"
+                  [class]="rectangleColors()[$index]"
+                  [matTooltip]="'Set to ' + level"
+        >rectangle</mat-icon>
+      }
+    </div>
+    <mat-icon class="level-control-icon" (click)="changeLevel(1)" matTooltip="+1"
+              [class.disabled]="currentLevel() + 1 > maxLevel()">keyboard_arrow_right</mat-icon>
+    <mat-icon class="level-control-icon" (click)="changeLevel(5)" matTooltip="+5">keyboard_double_arrow_right</mat-icon>
+  </div>
+</div>

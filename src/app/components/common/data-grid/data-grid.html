@@ -1,0 +1,105 @@
+<div class="data-grid-container mat-elevation-z8">
+  <div class="data-grid-toolbar">
+    <button mat-icon-button [matMenuTriggerFor]="columnMenu">
+      <mat-icon>view_column</mat-icon>
+    </button>
+    <mat-menu #columnMenu="matMenu">
+      @for (column of columns(); track column.key) {
+      <div (click)="$event.stopPropagation()">
+        <mat-checkbox
+          [checked]="isColumnVisible(column.key)"
+          (change)="toggleColumn(column.key)">
+          {{ column.header }}
+        </mat-checkbox>
+      </div>
+      }
+    </mat-menu>
+    <div class="active-sorts">
+      @for (sort of activeSorts(); track sort.key) {
+        <div class="active-sort">
+          <span>{{ getColumnHeader(sort.key) }}: {{ sort.direction === 'asc' ? 'Asc' : 'Desc' }}</span>
+          <button mat-icon-button (click)="removeSort(sort.key)">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      }
+      @if (activeSorts().length > 1) {
+        <button mat-icon-button color="warn" (click)="clearSorts()" matTooltip="Clear All Sorts">
+          <mat-icon>clear_all</mat-icon>
+        </button>
+      }
+    </div>
+  </div>
+  <table mat-table class="data-grid-table" [dataSource]="dataSource" matSort (matSortChange)="handleSort($event)">
+    @for (column of columns(); track column.key) {
+    <ng-container [matColumnDef]="column.key" [stickyEnd]="column.stickyEnd">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header [id]="column.key" [arrowPosition]="'before'"
+          [matTooltip]="column.tooltip || ''" [style.width]="column.width">
+        <div class="header-content-wrapper">{{ column.header }}</div>
+      </th>
+      <td mat-cell *matCellDef="let row" [style.width]="column.width">
+        @if (column.key === displayedColumns()[0] && (row.rarity | rarityClass) === 'rarity-ssr') {
+          <div class="ssr-background-layer"></div>
+        }
+        <div class="cell-content-wrapper">
+          @if (column.type === 'level') {
+          <app-level
+            [currentLevel]="row[column.key] || rarityLevelMap()[row.rarity].default"
+            [maxLevel]="rarityLevelMap()[row.rarity].max"
+            (levelChange)="onLevelChanged(row, $event)"
+          ></app-level>
+          } @else if (column.type === 'unique') {
+          @if (row.uniqueDisplayData) {
+          <div [class.locked-effect]="row.uniqueDisplayData.isCardUniqueLocked">
+            <span>{{ row.uniqueDisplayData.levelDisplay }}</span>
+            @for (effect of row.uniqueDisplayData.effectsDisplay; track $index) {
+            <div>{{ effect.shortName }}: {{ effect.value }}</div>
+            }
+          </div>
+          } @else {
+          -
+          }
+          } @else if (column.type === 'rarity') {
+            {{ row[column.key] | rarity }}
+          } @else if (column.type === 'type') {
+            <img [src]="'assets/types/' + row[column.key].toLowerCase() + '.png'"
+                 [alt]="row[column.key]"
+                 width="24"
+            >
+          } @else if (column.type === 'actions') {
+            <mat-icon color="primary" (click)="onActionClick('add', row)" matTooltip="Add Action">+</mat-icon>
+            <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action">-</mat-icon>
+          } @else if (column.type === 'characterImage') {
+            @if ($any(row).characterImageUrl) {
+              <img
+                (click)="onImageClick(row)"
+                [src]="$any(row).characterImageUrl"
+                [alt]="$any(row).char_name"
+                class="character-image character-image-hover"
+                matTooltip="View details"
+                width="48"
+                height="56"
+              >
+            }
+            <span>{{ $any(row).char_name }}</span>
+          }
+          @else {
+          @if (isLockedEffectData(row[column.key])) {
+          <span [class.locked-effect]="row[column.key].isLocked">{{ row[column.key].value }}</span>
+          } @else if (isUniqueEffectData(row[column.key])) {
+          <span [class.unique-effect]="row[column.key].hasUnique"
+                [matTooltip]="row[column.key].tooltip">{{ row[column.key].value }}</span>
+          } @else {
+          {{ row[column.key] }}
+          }
+          }
+        </div>
+      </td>
+    </ng-container>
+    }
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns()" [class]="row.rarity | rarityClass"></tr>
+  </table>
+  <mat-paginator [pageSize]="pageSize()" [pageSizeOptions]="[10, 20, 50, 100]" showFirstLastButtons></mat-paginator>
+</div>

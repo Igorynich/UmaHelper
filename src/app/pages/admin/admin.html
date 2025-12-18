@@ -1,43 +1,155 @@
 <div class="news-container">
   <div class="news-content">
+    <h1 class="main-header">Skill Data Management</h1>
+
     <mat-card class="admin-card">
       <mat-card-header>
-        <mat-card-title>Upload skill from skills.json file</mat-card-title>
+        <mat-card-title>Load Skills from File</mat-card-title>
+        <mat-card-subtitle>Select a local JSON file containing skill data.</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="action-container">
-          <h3>Upload Skills</h3>
-          <button mat-raised-button color="primary" (click)="onUploadSkills()" [disabled]="isLoading()">
-            Upload Skills
+        <div class="button-row">
+          <input type="file" #skillFileInput style="display: none" (change)="onFileSelected($event, 'skills')" accept=".json">
+          <button mat-raised-button color="primary" (click)="skillFileInput.click()">
+            <mat-icon>folder_open</mat-icon> Load Skill File
           </button>
-          @if (isLoading()) {
-            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-          }
-          @if (uploadProgress(); as progress) {
-            <div>
-              <p>Completed: {{ progress.completed }} / {{ progress.total }}</p>
-              <p>Successful: {{ progress.successful }}</p>
-              <p>Failed: {{ progress.failed }}</p>
-            </div>
+          @if (loadedSkills()) {
+            <button mat-raised-button color="warn" (click)="clearSkillData()">
+              <mat-icon>clear</mat-icon> Clear Loaded Data
+            </button>
           }
         </div>
+        @if (skillFileName()) {
+          <p>File loaded: <strong>{{ skillFileName() }}</strong> ({{ loadedSkills()?.length }} skills)</p>
+        }
       </mat-card-content>
     </mat-card>
+
     <mat-card class="admin-card">
       <mat-card-header>
-        <mat-card-title>Skill Images</mat-card-title>
+        <mat-card-title>Actions</mat-card-title>
+        <mat-card-subtitle>Compare or upload the loaded skill data to Firebase.</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="image-list">
-          @for (image of skillImages(); track image) {
-            <div class="image-item">
-              <ik-image [path]="image.path" [transformation]="[{'height': '100', 'width': '100'}]">
-              </ik-image>
-              <p>{{ image.name }}</p>
-            </div>
-          }
+        <div class="button-row">
+          <button mat-raised-button color="accent" (click)="onCompareSkills()" [disabled]="isSkillLoading() || !loadedSkills()">
+            Step 1: Compare Loaded Skills
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="onUploadSkills()"
+            [disabled]="isSkillLoading() || !loadedSkills()"
+          >
+            Bulk Upload Loaded Skills
+          </button>
         </div>
+        @if (skillComparisonResult(); as result) {
+        <div class="comparison-results">
+          <p>Comparison complete: Found {{ result.added.length }} new skills and {{ result.changed.length }} changed skills.</p>
+          <button
+            mat-raised-button
+            color="warn"
+            (click)="onUploadSkillChanges()"
+            [disabled]="isSkillLoading() || !hasSkillChanges()"
+          >
+            Step 2: Upload Changes ({{ result.added.length + result.changed.length }} items)
+          </button>
+        </div>
+        }
       </mat-card-content>
     </mat-card>
+
+    <!-- Shared Progress Bar Section -->
+    @if (isSkillLoading() && skillUploadProgress()) {
+    <div class="progress-card">
+      <p>
+        Processing skills: {{ skillUploadProgress()?.completed }} / {{ skillUploadProgress()?.total }} ({{
+          skillUploadProgress()?.successful
+        }}
+        successful, {{ skillUploadProgress()?.failed }} failed)
+      </p>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="(skillUploadProgress()!.completed / skillUploadProgress()!.total) * 100"
+      ></mat-progress-bar>
+    </div>
+    }
+
+    <h1 class="main-header">Support Card Data Management</h1>
+
+    <mat-card class="admin-card">
+      <mat-card-header>
+        <mat-card-title>Load Support Cards from File</mat-card-title>
+        <mat-card-subtitle>Select a local JSON file containing support card data.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="button-row">
+          <input type="file" #supportCardFileInput style="display: none" (change)="onFileSelected($event, 'support-cards')" accept=".json">
+          <button mat-raised-button color="primary" (click)="supportCardFileInput.click()">
+            <mat-icon>folder_open</mat-icon> Load Support Card File
+          </button>
+          @if (loadedSupportCards()) {
+            <button mat-raised-button color="warn" (click)="clearSupportCardData()">
+              <mat-icon>clear</mat-icon> Clear Loaded Data
+            </button>
+          }
+        </div>
+        @if (supportCardFileName()) {
+          <p>File loaded: <strong>{{ supportCardFileName() }}</strong> ({{ loadedSupportCards()?.length }} support cards)</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="admin-card">
+      <mat-card-header>
+        <mat-card-title>Actions</mat-card-title>
+        <mat-card-subtitle>Compare or upload the loaded support card data to Firebase.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="button-row">
+          <button mat-raised-button color="accent" (click)="onCompareSupportCards()" [disabled]="isSupportCardLoading() || !loadedSupportCards()">
+            Step 1: Compare Loaded Support Cards
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="onUploadSupportCards()"
+            [disabled]="isSupportCardLoading() || !loadedSupportCards()"
+          >
+            Bulk Upload Loaded Support Cards
+          </button>
+        </div>
+        @if (supportCardComparisonResult(); as result) {
+        <div class="comparison-results">
+          <p>Comparison complete: Found {{ result.added.length }} new support cards and {{ result.changed.length }} changed support cards.</p>
+          <button
+            mat-raised-button
+            color="warn"
+            (click)="onUploadSupportCardChanges()"
+            [disabled]="isSupportCardLoading() || !hasSupportCardChanges()"
+          >
+            Step 2: Upload Changes ({{ result.added.length + result.changed.length }} items)
+          </button>
+        </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Shared Progress Bar Section -->
+    @if (isSupportCardLoading() && supportCardUploadProgress()) {
+    <div class="progress-card">
+      <p>
+        Processing support cards: {{ supportCardUploadProgress()?.completed }} / {{ supportCardUploadProgress()?.total }} ({{
+          supportCardUploadProgress()?.successful
+        }}
+        successful, {{ supportCardUploadProgress()?.failed }} failed)
+      </p>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="(supportCardUploadProgress()!.completed / supportCardUploadProgress()!.total) * 100"
+      ></mat-progress-bar>
+    </div>
+    }
   </div>
 </div>

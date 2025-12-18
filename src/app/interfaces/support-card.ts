@@ -1,3 +1,6 @@
+import { Rarity } from './display-support-card';
+import {SupportCardType} from './support-card-type.enum';
+
 export interface SupportCardHintOther {
   /**
    * Type of the hint.
@@ -22,6 +25,21 @@ export interface SupportCardHints {
    * Example: [200162, 200232]
    */
   hint_skills: number[];
+}
+
+export interface UniqueEffect {
+  type: number;
+  value: number;
+  value_1?: number;
+  value_2?: number;
+  value_3?: number;
+  value_4?: number;
+}
+
+export interface UniqueProperty {
+  effects: UniqueEffect[];
+  level: number;
+  unique_desc?: string;
 }
 
 export interface SupportCard {
@@ -78,7 +96,7 @@ export interface SupportCard {
    * Rarity of the support card.
    * Example: 1
    */
-  rarity: number;
+  rarity: Rarity;
   /**
    * Release date of the support card.
    * Example: "2021-02-24"
@@ -88,17 +106,17 @@ export interface SupportCard {
    * English release date of the support card.
    * Example: "2025-06-26"
    */
-  release_en: string;
+  release_en?: string;
   /**
    * Korean release date of the support card.
    * Example: "2022-06-20"
    */
-  release_ko: string;
+  release_ko?: string;
   /**
    * Traditional Chinese release date of the support card.
    * Example: "2022-06-27"
    */
-  release_zh_tw: string;
+  release_zh_tw?: string;
   /**
    * Unique identifier for the support card.
    * Example: 10001
@@ -108,7 +126,11 @@ export interface SupportCard {
    * Type of the support card.
    * Example: "guts"
    */
-  type: string;
+  type: SupportCardType;
+  /**
+   * Optional unique property for some support cards.
+   */
+  unique?: UniqueProperty;
   /**
    * URL friendly name of the support card.
    * Example: "10001-special-week"

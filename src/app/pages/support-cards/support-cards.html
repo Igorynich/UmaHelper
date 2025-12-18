@@ -1,3 +1,73 @@
 <div class="page-container">
-  
+  <h2>Support Cards</h2>
+
+  <form [formGroup]="filterForm" class="filter-container">
+    <mat-form-field class="name-filter-field">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" placeholder="Enter card name">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Rarity</mat-label>
+      <mat-select formControlName="rarity" multiple>
+        @for (rarityValue of [Rarity.SSR, Rarity.SR, Rarity.R]; track rarityValue) {
+          <mat-option [value]="rarityValue">{{ rarityValue | rarity }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Type</mat-label>
+      <mat-select formControlName="type" multiple>
+        <mat-select-trigger>
+          <div class="selected-types-container">
+            @for (cardType of filterForm.get('type')?.value || []; track cardType) {
+              <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24" class="selected-type-image">
+            }
+          </div>
+        </mat-select-trigger>
+        @for (cardType of Object.values(SupportCardType); track cardType) {
+          <mat-option [value]="cardType">
+            <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24">
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Effect</mat-label>
+      <mat-select formControlName="effectId">
+        <mat-option value="">All</mat-option>
+        @for (effect of allEffects(); track effect.id) {
+          <mat-option [value]="effect.id" [title]="effect.tooltip">{{ effect.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="operator-field">
+      <mat-label>Operator</mat-label>
+      <mat-select formControlName="operator">
+        @for (op of operatorOptions; track op.value) {
+          <mat-option [value]="op.value">{{ op.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Value</mat-label>
+      <input matInput type="number" formControlName="value" placeholder="Enter value">
+    </mat-form-field>
+
+    <button mat-raised-button type="button" (click)="resetFilters()">Reset Filters</button>
+  </form>
+
+  <app-data-grid
+    [data]="filteredData()"
+    [columns]="visibleColumns()"
+    [multiSort]="true"
+    [rarityLevelMap]="rarityLevelMap"
+    [pageSize]="20"
+    (levelChanged)="onLevelChanged($event)"
+    (imageClick)="openImageModal($event)"
+  ></app-data-grid>
 </div>

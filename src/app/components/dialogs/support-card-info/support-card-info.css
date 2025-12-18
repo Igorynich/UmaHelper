@@ -1,0 +1,91 @@
+.dialog-title {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center;
+  position: relative; /* For positioning the close button */
+  padding: 1rem 3rem; /* Add padding to prevent overlap with close button */
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.dialog-title h2 {
+  color: black;
+  font-weight: bold;
+}
+
+.dialog-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.dialog-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.close-button {
+  /* Aggressive Reset */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-width: auto !important;
+  line-height: normal !important;
+
+  /* Custom Styling */
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #333;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  color: #000 !important;
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+.close-button .mat-icon {
+  margin: 0;
+  padding: 0;
+}
+
+::ng-deep .mdc-dialog__surface {
+  background-color: white;
+  position: relative;
+  z-index: 1;
+}
+
+::ng-deep .mdc-dialog__surface::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  border: none !important; /* Remove any default border */
+}
+
+::ng-deep .rarity-ssr-dialog .mdc-dialog__surface::before {
+  background: linear-gradient(124deg, rgba(255, 39, 16, 0.3), rgba(255, 153, 0, 0.3), rgba(255, 233, 0, 0.3), rgba(0, 255, 0, 0.3), rgba(0, 199, 255, 0.3), rgba(121, 0, 255, 0.3));
+}
+
+::ng-deep .rarity-sr-dialog .mdc-dialog__surface::before {
+  background-color: rgba(255, 215, 0, 0.4); /* Gold */
+}
+
+::ng-deep .rarity-r-dialog .mdc-dialog__surface::before {
+  background-color: rgba(192, 192, 192, 0.4); /* Silver */
+}
