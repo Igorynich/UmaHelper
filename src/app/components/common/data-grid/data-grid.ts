@@ -73,6 +73,7 @@ export class DataGrid<T> implements AfterViewInit {
 
   levelChanged = output<{ row: T; level: number }>();
   imageClick = output<T>();
+  setAllToMax = output();
 
   protected readonly allColumnKeys = computed(() => this.columns().map((c) => c.key));
   protected readonly visibleColumns = signal<string[]>([]);
@@ -167,6 +168,11 @@ export class DataGrid<T> implements AfterViewInit {
 
   protected onImageClick(row: T): void {
     this.imageClick.emit(row);
+  }
+
+  protected onSetAllToMax(event: Event): void {
+    event.stopPropagation();
+    this.setAllToMax.emit();
   }
 
   protected onActionClick(action: string, row: T): void {

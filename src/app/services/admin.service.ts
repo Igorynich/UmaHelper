@@ -42,30 +42,11 @@ export class AdminService {
   private supportCardService = inject(SupportCardService);
 
   uploadSkills(skills: Skill[]): Observable<UploadProgress> {
-    const skillsCollection = collection(this.firestore, 'skills');
-    let completed = 0;
-    let successful = 0;
-    let failed = 0;
-    const total = skills.length;
-
-    return from(skills).pipe(
-      concatMap(skill => {
-        const skillToUpload = this.prepareSkillForUpload(skill);
-        const skillDoc = doc(skillsCollection, skillToUpload.id.toString());
-        return from(setDoc(skillDoc, skillToUpload)).pipe(
-          tap({
-            next: () => {
-              successful++;
-              completed++;
-            },
-            error: () => {
-              failed++;
-              completed++;
-            },
-          }),
-          map(() => ({ completed, total, successful, failed }))
-        );
-      })
+    return this._uploadCollection(
+      skills,
+      'skills',
+      (item) => this.prepareSkillForUpload(item),
+      (item) => item.id.toString()
     );
   }
 
@@ -88,10 +69,8 @@ export class AdminService {
             added.push(localSkill);
           } else {
             const firebaseSkill = firebaseSkillMap.get(id);
-            const preparedLocalSkill = this.prepareSkillForUpload(localSkill);
-            const preparedFirebaseSkill = this.prepareSkillForUpload(firebaseSkill);
 
-            const differences = this.deepDiff(preparedFirebaseSkill, preparedLocalSkill);
+            const differences = this.deepDiff(firebaseSkill, localSkill);
             if (Object.keys(differences).length > 0) {
               changed.push({ skillId: id, changes: differences, newSkill: localSkill });
             }
@@ -108,36 +87,7 @@ export class AdminService {
       ...changes.added,
       ...changes.changed.map(c => c.newSkill)
     ];
-
-    const total = skillsToUpload.length;
-    if (total === 0) {
-      return of({ completed: 0, total: 0, successful: 0, failed: 0 });
-    }
-
-    const skillsCollection = collection(this.firestore, 'skills');
-    let completed = 0;
-    let successful = 0;
-    let failed = 0;
-
-    return from(skillsToUpload).pipe(
-      concatMap(skill => {
-        const skillToUpload = this.prepareSkillForUpload(skill);
-        const skillDoc = doc(skillsCollection, skillToUpload.id.toString());
-        return from(setDoc(skillDoc, skillToUpload)).pipe(
-          tap({
-            next: () => {
-              successful++;
-              completed++;
-            },
-            error: () => {
-              failed++;
-              completed++;
-            },
-          }),
-          map(() => ({ completed, total, successful, failed }))
-        );
-      })
-    );
+    return this.uploadSkills(skillsToUpload);
   }
 
   compareSupportCards(localSupportCards: SupportCard[]): Observable<SupportCardComparison> {
@@ -177,56 +127,48 @@ export class AdminService {
       ...changes.added,
       ...changes.changed.map(c => c.newSupportCard)
     ];
-
-    const total = supportCardsToUpload.length;
-    if (total === 0) {
-      return of({ completed: 0, total: 0, successful: 0, failed: 0 });
-    }
-
-    const supportCardsCollection = collection(this.firestore, 'support_cards');
-    let completed = 0;
-    let successful = 0;
-    let failed = 0;
-
-    return from(supportCardsToUpload).pipe(
-      concatMap(supportCard => {
-        const supportCardToUpload = this.prepareSupportCardForUpload(supportCard);
-        const supportCardDoc = doc(supportCardsCollection, supportCardToUpload.support_id.toString());
-        return from(setDoc(supportCardDoc, supportCardToUpload)).pipe(
-          tap({
-            next: () => {
-              successful++;
-              completed++;
-            },
-            error: () => {
-              failed++;
-              completed++;
-            },
-          }),
-          map(() => ({ completed, total, successful, failed }))
-        );
-      })
-    );
+    return this.uploadSupportCards(supportCardsToUpload);
   }
 
   uploadSupportCards(supportCards: SupportCard[]): Observable<UploadProgress> {
-    const supportCardsCollection = collection(this.firestore, 'support_cards');
+    return this._uploadCollection(
+      supportCards,
+      'support_cards',
+      (item) => this.prepareSupportCardForUpload(item),
+      (item) => item.support_id.toString()
+    );
+  }
+
+  private _uploadCollection<T>(
+    items: T[],
+    collectionName: string,
+    prepareFn: (item: T) => any,
+    idSelector: (item: T) => string
+  ): Observable<UploadProgress> {
+    if (!items || items.length === 0) {
+      return of({ completed: 0, total: 0, successful: 0, failed: 0 });
+    }
+
+    const collectionRef = collection(this.firestore, collectionName);
     let completed = 0;
     let successful = 0;
     let failed = 0;
-    const total = supportCards.length;
+    const total = items.length;
 
-    return from(supportCards).pipe(
-      concatMap(supportCard => {
-        const supportCardToUpload = this.prepareSupportCardForUpload(supportCard);
-        const supportCardDoc = doc(supportCardsCollection, supportCardToUpload.support_id.toString());
-        return from(setDoc(supportCardDoc, supportCardToUpload)).pipe(
+    return from(items).pipe(
+      concatMap(item => {
+        const itemToUpload = prepareFn(item);
+        const docId = idSelector(item);
+        const docRef = doc(collectionRef, docId);
+
+        return from(setDoc(docRef, itemToUpload)).pipe(
           tap({
             next: () => {
               successful++;
               completed++;
             },
-            error: () => {
+            error: (err) => {
+              console.error(`Failed to upload item ${docId}:`, err);
               failed++;
               completed++;
             },
@@ -237,9 +179,22 @@ export class AdminService {
     );
   }
 
-  private prepareSkillForUpload(skill: any): any {
-    const { gene_version, loc, sup_e, sup_hint, evo_cond, ...skillToUpload } = skill;
-    return skillToUpload;
+  private prepareSkillForUpload(skill: Skill): Partial<Skill> {
+    const allowedKeys: (keyof Skill)[] = [
+      'id', 'activation', 'char', 'condition_groups', 'cost', 'desc_en', 'desc_ko',
+      'desc_tw', 'endesc', 'enname', 'iconid', 'jpdesc', 'jpname', 'name_en',
+      'name_ko', 'name_tw', 'rarity', 'type'
+    ];
+
+    return allowedKeys.reduce((acc, key) => {
+      const value = skill[key];
+      if (value !== undefined) {
+        // The 'as any' is needed here because TypeScript can't quite follow
+        // the dynamic assignment to the accumulator 'acc'.
+        (acc as any)[key] = value;
+      }
+      return acc;
+    }, {} as Partial<Skill>);
   }
 
   private prepareSupportCardForUpload(supportCard: SupportCard): any {
@@ -293,7 +248,7 @@ export class AdminService {
     } catch (error) {
       if (error instanceof ZodError) {
         console.error('Zod Validation Error:', error); // Log the full ZodError object
-        throw new Error(`Data validation failed: ${error.issues.map((e: z.ZodIssue) => `[${e.path.join('.')}] ${e.message}`).join(', ')}`);
+        throw new Error(`Data validation failed: ${error.issues.map(e => `[${e.path.join('.')}] ${e.message}`).join(', ')}`);
       }
       throw error;
     }

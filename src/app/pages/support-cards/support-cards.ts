@@ -392,7 +392,20 @@ export class SupportCards {
       data: cardData,
       maxWidth: '90vw',
       maxHeight: '90vh',
-      panelClass: 'custom-dialog-container', // Optional: for custom styling
+    });
+  }
+
+  protected onSetAllFilteredToMax(): void {
+    const filtered = this.filteredData();
+    if (filtered.length === 0) return;
+
+    this.levelChanges.update(currentChanges => {
+      const newChanges = new Map(currentChanges);
+      for (const card of filtered) {
+        const maxLevel = this.rarityLevelMap[card.rarity].max;
+        newChanges.set(card.support_id, maxLevel);
+      }
+      return newChanges;
     });
   }
 }

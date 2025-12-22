@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { Rarity, EffectType, Activation, SkillType } from './skill';
+import { Activation, Rarity, SkillEffect } from './skill';
 
 const EffectSchema = z.object({
-  type: z.enum(EffectType),
+  type: z.number(), // Likely an enum (SkillEffect), but allows any number for flexibility.
   value: z.number(),
+  value_scale: z.number().optional(),
 });
 
 const ConditionGroupSchema = z.object({
@@ -14,58 +15,23 @@ const ConditionGroupSchema = z.object({
   precondition: z.string().optional(),
 });
 
-const GeneVersionSchema = z.object({
-  activation: z.enum(Activation),
-  condition_groups: z.array(ConditionGroupSchema),
-  cost: z.number(),
-  desc_en: z.string(),
-  desc_ko: z.string(),
-  desc_tw: z.string(),
-  iconid: z.number(),
-  id: z.number(),
-  inherited: z.boolean(),
-  name_en: z.string(),
-  name_ko: z.string(),
-  name_tw: z.string(),
-  parent_skills: z.array(z.number()),
-  rarity: z.enum(Rarity),
-});
-
-const LocDetailsSchema = z.object({
-  char: z.array(z.number()),
-  type: z.array(z.nativeEnum(SkillType)).optional(),
-});
-
-const LocSchema = z.object({
-  en: LocDetailsSchema,
-  ko: LocDetailsSchema,
-  zh_tw: LocDetailsSchema,
-});
-
 export const SkillSchema = z.object({
   activation: z.enum(Activation),
-  char: z.array(z.number()),
+  char: z.array(z.number()).optional(),
   condition_groups: z.array(ConditionGroupSchema),
-  desc_en: z.string(),
-  desc_ko: z.string(),
-  desc_tw: z.string(),
+  cost: z.number().optional(),
+  desc_en: z.string().optional(),
+  desc_ko: z.string().optional(),
+  desc_tw: z.string().optional(),
   endesc: z.string(),
   enname: z.string(),
-  gene_version: GeneVersionSchema.optional(),
   iconid: z.number(),
   id: z.number(),
   jpdesc: z.string(),
   jpname: z.string(),
-  loc: LocSchema.optional(),
-  name_en: z.string(),
-  name_ko: z.string(),
-  name_tw: z.string(),
+  name_en: z.string().optional(),
+  name_ko: z.string().optional(),
+  name_tw: z.string().optional(),
   rarity: z.enum(Rarity),
-  type: z.array(z.enum(SkillType)),
-  sup_e: z.any().optional(),
-  sup_hint: z.any().optional(),
-  evo_cond: z.any().optional(),
-  pre_evo: z.any().optional(),
-  evo: z.any().optional(),
-  versions: z.any().optional(),
+  type: z.array(z.string()),
 });

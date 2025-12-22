@@ -42,9 +42,23 @@
   padding: 0 1rem;
 }
 
-.header-content-wrapper,
-.cell-content-wrapper {
-  text-align: center;
+.header-content-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.header-button {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 :host ::ng-deep .mat-sort-header-container {

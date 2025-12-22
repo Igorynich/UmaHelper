@@ -1,39 +1,33 @@
-import {Pipe, PipeTransform} from '@angular/core';
-import {Activation, Rarity, EffectType} from '../interfaces/skill';
+import { Pipe, PipeTransform } from '@angular/core';
+import { Activation, Effect, Rarity, SkillEffect } from '../interfaces/skill';
 
 @Pipe({
   name: 'skillFieldTranslator',
   standalone: true,
 })
 export class SkillFieldTranslatorPipe implements PipeTransform {
-
-  private effectTypeMap: { [key: number]: string } = {
-    1: 'Speed Stat', // Assuming 1 maps to Speed Stat Up as per user's example
-    2: 'Stamina Stat',
-    3: 'Power Stat',
-    4: 'Guts Stat',
-    5: 'Wits Stat',
-    6: 'Change Strategy',
-    8: 'Field of View',
-    9: 'Stamina',
-    10: 'Start Reaction Time',
-    13: 'Rush Time',
-    14: 'Start Delay',
-    21: 'Current Speed',    // decrease?
-    22: 'Current Speed',    // increase
-    27: 'Target Speed',
-    28: 'Lane Movement Speed',
-    29: 'Rush Chance',
-    31: 'Acceleration',
-    35: 'Change Lane',
-    501: 'Carnival Point Gain',
-    502: 'All Stats Increased During Carnival',
-    503: 'Mood Maxed During Carnival',
-    // Add other mappings from EffectType enum if needed, e.g.:
-    // [EffectType.Stamina]: 'Stamina',
-    // [EffectType.TargetVelocity]: 'Target Velocity',
-    // [EffectType.Velocity]: 'Velocity',
-    // [EffectType.Acceleration]: 'Acceleration',
+  private effectTypeMap: Record<SkillEffect, string> = {
+    [SkillEffect.SpeedStat]: 'Speed Stat',
+    [SkillEffect.StaminaStat]: 'Stamina Stat',
+    [SkillEffect.PowerStat]: 'Power Stat',
+    [SkillEffect.GutsStat]: 'Guts Stat',
+    [SkillEffect.WitsStat]: 'Wits Stat',
+    [SkillEffect.ChangeStrategy]: 'Change Strategy',
+    [SkillEffect.FieldOfView]: 'Field of View',
+    [SkillEffect.Stamina]: 'Stamina',
+    [SkillEffect.StartReactionTime]: 'Start Reaction Time',
+    [SkillEffect.RushTime]: 'Rush Time',
+    [SkillEffect.StartDelay]: 'Start Delay',
+    [SkillEffect.CurrentSpeedDecrease]: 'Current Speed',
+    [SkillEffect.CurrentSpeedIncrease]: 'Current Speed',
+    [SkillEffect.TargetSpeed]: 'Target Speed',
+    [SkillEffect.LaneMovementSpeed]: 'Lane Movement Speed',
+    [SkillEffect.RushChance]: 'Rush Chance',
+    [SkillEffect.Acceleration]: 'Acceleration',
+    [SkillEffect.ChangeLane]: 'Change Lane',
+    [SkillEffect.CarnivalPointGain]: 'Carnival Point Gain',
+    [SkillEffect.AllStatsIncreasedDuringCarnival]: 'All Stats Increased During Carnival',
+    [SkillEffect.MoodMaxedDuringCarnival]: 'Mood Maxed During Carnival',
   };
 
   private conditionKeyMap: { [key: string]: string } = {
@@ -297,7 +291,7 @@ export class SkillFieldTranslatorPipe implements PipeTransform {
         return value ? String(value) : '-';
       case 'effects':
         if (Array.isArray(value)) {
-          return value.map(effect => {
+          return (value as Effect[]).map(effect => {
             if (!this.effectTypeMap[effect.type]) {
               this.toTranslate.add(effect);
               console.error(this.toTranslate);

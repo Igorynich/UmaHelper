@@ -7,11 +7,28 @@ export enum Rarity {
   E3 = 6
 }
 
-export enum EffectType {
+export enum SkillEffect {
+  SpeedStat = 1,
+  StaminaStat = 2,
+  PowerStat = 3,
+  GutsStat = 4,
+  WitsStat = 5,
+  ChangeStrategy = 6,
+  FieldOfView = 8,
   Stamina = 9,
-  TargetVelocity = 22,
-  Velocity = 27,
+  StartReactionTime = 10,
+  RushTime = 13,
+  StartDelay = 14,
+  CurrentSpeedDecrease = 21,
+  CurrentSpeedIncrease = 22,
+  TargetSpeed = 27,
+  LaneMovementSpeed = 28,
+  RushChance = 29,
   Acceleration = 31,
+  ChangeLane = 35,
+  CarnivalPointGain = 501,
+  AllStatsIncreasedDuringCarnival = 502,
+  MoodMaxedDuringCarnival = 503,
 }
 
 export enum Activation {
@@ -19,7 +36,7 @@ export enum Activation {
   WitCheck = 1,
 }
 
-export enum SkillType {
+/*export enum SkillType {
   FinalCorner = 'f_c',
   FinalStraight = 'f_s',
   Corner = 'cor',
@@ -28,11 +45,12 @@ export enum SkillType {
   MiddleLeg2 = 'l_2',
   MiddleLeg3 = 'l_3',
   None = 'nac',
-}
+}*/
 
 export interface Effect {
-  type: EffectType;
+  type: SkillEffect;
   value: number;
+  value_scale?: number; // TODO: This is likely an enum, but its values are unknown.
 }
 
 export interface ConditionGroup {
@@ -43,60 +61,23 @@ export interface ConditionGroup {
   precondition?: string;
 }
 
-export interface GeneVersion {
-  activation: Activation;
-  condition_groups: ConditionGroup[];
-  cost: number;
-  desc_en: string;
-  desc_ko: string;
-  desc_tw: string;
-  iconid: number;
-  id: number;
-  inherited: boolean;
-  name_en: string;
-  name_ko: string;
-  name_tw: string;
-  parent_skills: number[];
-  rarity: Rarity;
-}
-
-export interface LocDetails {
-  char: number[];
-  type?: SkillType[];
-}
-
-export interface Loc {
-  en: LocDetails;
-  ko: LocDetails;
-  zh_tw: LocDetails;
-}
-
 export interface Skill {
   activation: Activation;
-  char: number[];
+  char?: number[];
   condition_groups: ConditionGroup[];
-  desc_en: string;
-  desc_ko: string;
-  desc_tw: string;
+  cost?: number;
+  desc_en?: string;
+  desc_ko?: string;
+  desc_tw?: string;
   endesc: string;
   enname: string;
-  gene_version?: GeneVersion;
   iconid: number;
   id: number;
   jpdesc: string;
   jpname: string;
-  loc?: Loc;
-  name_en: string;
-  name_ko: string;
-  name_tw: string;
+  name_en?: string;
+  name_ko?: string;
+  name_tw?: string;
   rarity: Rarity;
-  type: SkillType[];
-  // some dogshit nested arrays
-  sup_e?: any;
-  sup_hint?: any;
-  evo_cond? :any;
-  // possibly wrong version or smth
-  pre_evo?: any;
-  evo?: any;
-  versions?: any;
+  type: string[];
 }

@@ -35,7 +35,14 @@
     <ng-container [matColumnDef]="column.key" [stickyEnd]="column.stickyEnd">
       <th mat-header-cell *matHeaderCellDef mat-sort-header [id]="column.key" [arrowPosition]="'before'"
           [matTooltip]="column.tooltip || ''" [style.width]="column.width">
-        <div class="header-content-wrapper">{{ column.header }}</div>
+        <div class="header-content-wrapper">
+          <span>{{ column.header }}</span>
+          @if (column.key === 'level') {
+            <button mat-icon-button (click)="onSetAllToMax($event)" matTooltip="Set all to max level" class="header-button">
+              <mat-icon>trending_up</mat-icon>
+            </button>
+          }
+        </div>
       </th>
       <td mat-cell *matCellDef="let row" [style.width]="column.width">
         @if (column.key === displayedColumns()[0] && (row.rarity | rarityClass) === 'rarity-ssr') {
