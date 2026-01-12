@@ -1,34 +1,13 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { Activation, Effect, Rarity, SkillEffect } from '../interfaces/skill';
+import { effectTypeMap } from '../maps/skill-effect.map';
 
 @Pipe({
   name: 'skillFieldTranslator',
   standalone: true,
 })
 export class SkillFieldTranslatorPipe implements PipeTransform {
-  private effectTypeMap: Record<SkillEffect, string> = {
-    [SkillEffect.SpeedStat]: 'Speed Stat',
-    [SkillEffect.StaminaStat]: 'Stamina Stat',
-    [SkillEffect.PowerStat]: 'Power Stat',
-    [SkillEffect.GutsStat]: 'Guts Stat',
-    [SkillEffect.WitsStat]: 'Wits Stat',
-    [SkillEffect.ChangeStrategy]: 'Change Strategy',
-    [SkillEffect.FieldOfView]: 'Field of View',
-    [SkillEffect.Stamina]: 'Stamina',
-    [SkillEffect.StartReactionTime]: 'Start Reaction Time',
-    [SkillEffect.RushTime]: 'Rush Time',
-    [SkillEffect.StartDelay]: 'Start Delay',
-    [SkillEffect.CurrentSpeedDecrease]: 'Current Speed',
-    [SkillEffect.CurrentSpeedIncrease]: 'Current Speed',
-    [SkillEffect.TargetSpeed]: 'Target Speed',
-    [SkillEffect.LaneMovementSpeed]: 'Lane Movement Speed',
-    [SkillEffect.RushChance]: 'Rush Chance',
-    [SkillEffect.Acceleration]: 'Acceleration',
-    [SkillEffect.ChangeLane]: 'Change Lane',
-    [SkillEffect.CarnivalPointGain]: 'Carnival Point Gain',
-    [SkillEffect.AllStatsIncreasedDuringCarnival]: 'All Stats Increased During Carnival',
-    [SkillEffect.MoodMaxedDuringCarnival]: 'Mood Maxed During Carnival',
-  };
+  private effectTypeMap: Record<SkillEffect, string> = effectTypeMap;
 
   private conditionKeyMap: { [key: string]: string } = {
     'running_style': 'Running Strategy',

@@ -13,6 +13,7 @@ import { SupportCard } from '../../interfaces/support-card';
 import { SkillSchema } from '../../interfaces/skill.schema';
 import { SupportCardSchema } from '../../interfaces/support-card.schema';
 import { ImagekitioAngularModule } from 'imagekitio-angular';
+import { EventUploadDialog } from '../../components/dialogs/event-upload-dialog/event-upload-dialog';
 
 @Component({
   selector: 'app-admin',
@@ -324,5 +325,12 @@ export class AdminComponent {
           });
         }
       });
+  }
+
+  openEventUploadDialog() {
+    this.dialog.open(EventUploadDialog, {
+      width: '800px',
+      maxWidth: '95vw',
+    });
   }
 }

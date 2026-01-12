@@ -12,17 +12,128 @@
   font-weight: bold;
 }
 
-.dialog-content {
+.dialog-content-wrapper {
+  display: flex;
+  padding: 1rem;
+  gap: 1.5rem; /* Space between image and info sections */
+  max-height: 80vh; /* Limit height of content area */
+}
+
+.image-section {
+  flex: 0 0 250px; /* Fixed width for the image */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align image to top */
+}
+
+.image-section img {
+  max-width: 100%;
+  height: auto; /* Maintain aspect ratio */
+  object-fit: contain;
+}
+
+.info-section {
+  flex: 1; /* Take remaining space */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto; /* Allow scrolling for info content */
+}
+
+.info-block {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.info-block h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.info-block .description {
+  font-style: italic;
+  color: #666;
+  font-size: 0.9em;
+  margin-bottom: 0.5rem;
+}
+
+.skills-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.stat-gains {
+  margin-top: 1rem;
+  border-top: 1px dashed #ccc;
+  padding-top: 1rem;
+}
+
+.stat-gains h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.stat-gains ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.stat-gain-card {
+  display: grid;
+  grid-template-columns: auto 1fr; /* Icon then text info */
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background-color: #FFF0F5; /* Consistent with skill-card */
+  border-radius: 5px;
+  box-sizing: border-box;
+  margin-top: 1rem; /* Adjust as needed for spacing */
+}
+
+.stat-gain-card .skill-icon-wrapper {
+  width: 40px;
+  height: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
 }
 
-.dialog-content img {
-  max-width: 100%;
-  max-height: 80vh;
-  object-fit: contain;
+.stat-gain-card .skill-icon-wrapper .mat-icon {
+  font-size: 32px; /* Larger icon */
+  width: 32px;
+  height: 32px;
+  color: #66bb6a; /* A pleasant green */
+}
+
+.stat-gain-card .skill-info {
+  /* No specific flex/grid needed here, just default block behavior */
+}
+
+.stat-gain-card .skill-name {
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.stat-gain-card ul {
+  margin: 0;
+  padding-left: 0; /* Remove default ul padding */
+  list-style: none; /* Remove bullet points */
+}
+
+.stat-gain-card .stat-gain-item {
+  font-size: 0.9em;
+  color: #333;
+}
+
+.skill-reward-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem; /* Small gap between skill name and its value */
 }
 
 .close-button {
@@ -30,10 +141,6 @@
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  min-width: auto !important;
-  line-height: normal !important;
 
   /* Custom Styling */
   position: absolute;

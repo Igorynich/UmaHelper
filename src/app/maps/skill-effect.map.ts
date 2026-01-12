@@ -1,0 +1,26 @@
+import { SkillEffect } from '../interfaces/skill';
+
+export const effectTypeMap: Record<SkillEffect, string> = {
+  [SkillEffect.SpeedStat]: 'Speed Stat',
+  [SkillEffect.StaminaStat]: 'Stamina Stat',
+  [SkillEffect.PowerStat]: 'Power Stat',
+  [SkillEffect.GutsStat]: 'Guts Stat',
+  [SkillEffect.WitsStat]: 'Wits Stat',
+  [SkillEffect.ChangeStrategy]: 'Change Strategy',
+  [SkillEffect.FieldOfView]: 'Field of View',
+  [SkillEffect.Stamina]: 'Stamina',
+  [SkillEffect.StartReactionTime]: 'Start Reaction Time',
+  [SkillEffect.RushTime]: 'Rush Time',
+  [SkillEffect.StartDelay]: 'Start Delay',
+  [SkillEffect.CurrentSpeedDecrease]: 'Current Speed',
+  [SkillEffect.CurrentSpeedIncrease]: 'Current Speed',
+  [SkillEffect.TargetSpeed]: 'Target Speed',
+  [SkillEffect.LaneMovementSpeed]: 'Lane Movement Speed',
+  [SkillEffect.RushChance]: 'Rush Chance',
+  [SkillEffect.SkillPoints]: 'Skill Points',
+  [SkillEffect.Acceleration]: 'Acceleration',
+  [SkillEffect.ChangeLane]: 'Change Lane',
+  [SkillEffect.CarnivalPointGain]: 'Carnival Point Gain',
+  [SkillEffect.AllStatsIncreasedDuringCarnival]: 'All Stats Increased During Carnival',
+  [SkillEffect.MoodMaxedDuringCarnival]: 'Mood Maxed During Carnival',
+};

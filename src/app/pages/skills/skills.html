@@ -11,15 +11,7 @@
   </div>
   <div class="skills-list">
     @for (skill of filteredSkills(); track skill.id) {
-      <mat-card class="skill-card">
-        <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
-        </ik-image>
-        <div class="skill-name">{{ skill.name_en }}</div>
-        <div class="skill-desc">{{ skill.desc_en }}</div>
-        <button mat-icon-button (click)="openSkillDialog(skill)">
-          <mat-icon>more_vert</mat-icon>
-        </button>
-      </mat-card>
+      <app-skill-display [skill]="skill"></app-skill-display>
     }
   </div>
 </div>

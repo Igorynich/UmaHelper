@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { collection, collectionData, Firestore } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { collection, collectionData, doc, Firestore, getDoc } from '@angular/fire/firestore';
+import { from, Observable } from 'rxjs';
 import { SupportCard } from '../interfaces/support-card';
 import { map } from 'rxjs/operators';
 
@@ -14,6 +14,21 @@ export class SupportCardService {
     const supportCardsCollection = collection(this.firestore, 'support_cards');
     return (collectionData(supportCardsCollection) as Observable<any[]>).pipe(
       map(supportCards => supportCards.map(sc => this.prepareSupportCardForDisplay(sc)))
+    );
+  }
+
+  getSupportCardById(id: string): Observable<SupportCard | null> {
+    const supportCardDocRef = doc(this.firestore, `support_cards/${id}`);
+    return from(getDoc(supportCardDocRef)).pipe(
+      map(docSnap => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          // Assuming prepareSupportCardForDisplay is what you want to do
+          return this.prepareSupportCardForDisplay(data) as SupportCard;
+        } else {
+          return null;
+        }
+      })
     );
   }
 

@@ -139,6 +139,11 @@ export class AdminService {
     );
   }
 
+  uploadEvents(cardId: string, events: any): Observable<void> {
+    const eventDocRef = doc(this.firestore, `events/${cardId}`);
+    return from(setDoc(eventDocRef, events));
+  }
+
   private _uploadCollection<T>(
     items: T[],
     collectionName: string,

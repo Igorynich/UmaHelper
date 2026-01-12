@@ -5,7 +5,7 @@ import { DisplaySupportCard, Rarity } from '../../interfaces/display-support-car
 import { effectMap } from '../../maps/effect.map';
 import { EffectId } from '../../interfaces/effect-id.enum';
 import { SupportCardService } from '../../services/support-card.service';
-import { SupportCard } from '../../interfaces/support-card';
+import { SupportCard, SupportCardHints } from '../../interfaces/support-card';
 import { debounceTime, map, startWith, tap } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RarityPipe } from '../../pipes/rarity.pipe';
@@ -27,12 +27,14 @@ interface SupportCardEffectData {
   rarity: Rarity;
   type: SupportCardType,
   characterImageUrl: string;
+  event_skills: number[];
+  hints: SupportCardHints;
   uniqueDisplayData?: UniqueColumnDisplayData;
   [key: string]: number | string | undefined | { value: string; isLocked: boolean } | {
     value: number;
     tooltip: string;
     hasUnique: boolean
-  } | UniqueColumnDisplayData;
+  } | UniqueColumnDisplayData | number[] | SupportCardHints;
 }
 
 export interface UniqueColumnDisplayData {
@@ -170,6 +172,8 @@ export class SupportCards {
         rarity: card.rarity,
         type: card.type,
         characterImageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/sup_cards/tex_support_card_${card.support_id}.png`,
+        event_skills: card.event_skills,
+        hints: card.hints,
       };
       const currentLevel = card.level || this.rarityLevelMap[card.rarity].default;
 

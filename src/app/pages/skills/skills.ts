@@ -14,6 +14,7 @@ import {FormControl, ReactiveFormsModule} from '@angular/forms';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {toSignal} from '@angular/core/rxjs-interop';
+import { SkillDisplay } from '../../components/common/skill-display/skill-display';
 
 @Component({
   selector: 'app-skills',
@@ -28,6 +29,7 @@ import {toSignal} from '@angular/core/rxjs-interop';
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
+    SkillDisplay,
   ],
   templateUrl: './skills.html',
   styleUrl: './skills.css',

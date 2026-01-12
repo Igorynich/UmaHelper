@@ -1,0 +1,93 @@
+<h2 mat-dialog-title>Add Events For a Card</h2>
+
+<mat-dialog-content class="dialog-content">
+  <div class="input-row">
+    <mat-form-field class="id-input">
+      <mat-label>Support Card ID</mat-label>
+      <input matInput [(ngModel)]="supportCardId" (ngModelChange)="supportCardId.set($event)" placeholder="Enter card ID (e.g., 30107)">
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="checkCard()" [disabled]="!supportCardId() || isCardChecking()">
+      @if(isCardChecking()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        Check
+      }
+    </button>
+  </div>
+
+  @if (foundCard(); as card) {
+    <p class="card-found-text">
+      Card Found: <strong>{{ card.url_name }}</strong>
+    </p>
+  }
+
+  <div class="input-row">
+    <mat-form-field class="json-textarea">
+      <mat-label>Event JSON string</mat-label>
+      <textarea matInput [(ngModel)]="eventJsonString" (ngModelChange)="eventJsonString.set($event)" rows="10" placeholder="Paste the event JSON here"></textarea>
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="checkJson()" [disabled]="!eventJsonString() || isJsonChecking()">
+       @if(isJsonChecking()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        Check
+      }
+    </button>
+  </div>
+
+  @if (decodedEvents(); as events) {
+    <div class="decoded-results">
+      <h3>Parsed Events:</h3>
+
+      @if (events.random.length > 0) {
+        <h4 class="event-type-header">Random Events</h4>
+        @for(event of events.random; track event.name) {
+          <div class="event-group">
+            <h5>{{ event.name }}</h5>
+            @for(choice of event.choices; track $index) {
+              <div class="choice-group">
+                <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                <ul class="rewards-list">
+                  @for(reward of choice.rewards; track $index) {
+                    <li>{{ reward }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      @if (events.arrows.length > 0) {
+        <h4 class="event-type-header">Arrow Events</h4>
+        @for(event of events.arrows; track event.name) {
+          <div class="event-group">
+            <h5>{{ event.name }}</h5>
+            @for(choice of event.choices; track $index) {
+              <div class="choice-group">
+                <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                <ul class="rewards-list">
+                  @for(reward of choice.rewards; track $index) {
+                    <li>{{ reward }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-raised-button color="warn" (click)="uploadEvents()" [disabled]="isUploadDisabled || isUploading()">
+    @if(isUploading()) {
+      <mat-spinner diameter="20"></mat-spinner>
+    } @else {
+      Upload
+    }
+  </button>
+</mat-dialog-actions>

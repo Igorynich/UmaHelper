@@ -24,6 +24,7 @@ export enum SkillEffect {
   TargetSpeed = 27,
   LaneMovementSpeed = 28,
   RushChance = 29,
+  SkillPoints = 30,
   Acceleration = 31,
   ChangeLane = 35,
   CarnivalPointGain = 501,

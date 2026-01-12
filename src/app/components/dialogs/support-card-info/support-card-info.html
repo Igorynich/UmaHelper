@@ -4,6 +4,106 @@
     <mat-icon>close</mat-icon>
   </button>
 </div>
-<mat-dialog-content class="dialog-content">
-  <img [src]="data.characterImageUrl" [alt]="data.char_name">
+<mat-dialog-content class="dialog-content-wrapper">
+  <div class="image-section">
+    <img [src]="data.characterImageUrl" [alt]="data.char_name">
+  </div>
+  <div class="info-section">
+    <div class="info-block">
+      <h3>Support hints</h3>
+      <p class="description">One will be randomly granted when getting a hint during training</p>
+      <div class="skills-container">
+        @for(skill of hintSkills(); track skill.id) {
+          <app-skill-display [skill]="skill"></app-skill-display>
+        }
+      </div>
+      @if (statGains().length > 0) {
+        <mat-card class="skill-card stat-gain-card">
+          <div class="skill-icon-wrapper">
+            <mat-icon>insights</mat-icon>
+          </div>
+          <div class="skill-info">
+            <div class="skill-name">Stat gain</div>
+            <ul>
+              @for(gain of statGains(); track gain) {
+                <li class="stat-gain-item">{{ gain }}</li>
+              }
+            </ul>
+          </div>
+        </mat-card>
+      }
+    </div>
+    <div class="info-block">
+      <h3>Skills from events</h3>
+      <div class="skills-container">
+        @for(skill of eventSkills(); track skill.id) {
+          <app-skill-display [skill]="skill"></app-skill-display>
+        }
+      </div>
+    </div>
+    <div class="info-block">
+      <h3>Training Events</h3>
+      @if (trainingEvents(); as events) {
+        <div class="training-events-display">
+          @if (events.random.length > 0) {
+            <h4 class="event-type-header">Random Events</h4>
+            @for(event of events.random; track event.name) {
+              <div class="event-group">
+                <h5>{{ event.name }}</h5>
+                @for(choice of event.choices; track $index) {
+                  <div class="choice-group">
+                    <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                    <ul class="rewards-list">
+                      @for(reward of choice.rewards; track $index) {
+                        <li>
+                          @if (isString(reward)) {
+                            {{ reward }}
+                          } @else if (isSkillReward(reward)) {
+                            <span class="skill-reward-inline">
+                              <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
+                              <span>{{ reward.value }}</span>
+                            </span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
+          }
+
+          @if (events.arrows.length > 0) {
+            <h4 class="event-type-header">Arrow Events</h4>
+            @for(event of events.arrows; track event.name) {
+              <div class="event-group">
+                <h5>{{ event.name }}</h5>
+                @for(choice of event.choices; track $index) {
+                  <div class="choice-group">
+                    <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                    <ul class="rewards-list">
+                      @for(reward of choice.rewards; track $index) {
+                        <li>
+                          @if (isString(reward)) {
+                            {{ reward }}
+                          } @else if (isSkillReward(reward)) {
+                            <span class="skill-reward-inline">
+                              <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
+                              <span>{{ reward.value }}</span>
+                            </span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      } @else {
+        <p>No training event data available for this card.</p>
+      }
+    </div>
+  </div>
 </mat-dialog-content>
