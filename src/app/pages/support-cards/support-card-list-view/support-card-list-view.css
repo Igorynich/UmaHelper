@@ -1,0 +1,31 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 1rem;
+}
+
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.name-filter-field {
+  width: 300px; /* Make name filter wider */
+}
+
+.operator-field {
+  width: 100px;
+}
+
+.selected-types-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.selected-type-image {
+  display: inline-block;
+}

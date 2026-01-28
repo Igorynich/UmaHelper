@@ -14,7 +14,7 @@ import { MatSort, MatSortModule, Sort, SortDirection } from '@angular/material/s
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatMenuModule } from '@angular/material/menu';
+import {MatMenu, MatMenuModule} from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -70,10 +70,14 @@ export class DataGrid<T> implements AfterViewInit {
   multiSort = input(false, { transform: coerceBooleanProperty });
   rarityLevelMap = input<any>();
   pageSize = input<number>();
+  isFirstTab = input<boolean>(false);
+  addMenu = input<MatMenu>();
 
   levelChanged = output<{ row: T; level: number }>();
   imageClick = output<T>();
   setAllToMax = output();
+  addClicked = output<T>();
+  removeClicked = output<T>();
 
   protected readonly allColumnKeys = computed(() => this.columns().map((c) => c.key));
   protected readonly visibleColumns = signal<string[]>([]);
@@ -176,7 +180,11 @@ export class DataGrid<T> implements AfterViewInit {
   }
 
   protected onActionClick(action: string, row: T): void {
-    console.log('Action:', action, 'Row:', row);
+    if (action === 'add') {
+      this.addClicked.emit(row);
+    } else if (action === 'remove') {
+      this.removeClicked.emit(row);
+    }
   }
 
   protected isLockedEffectData(value: any): value is LockedEffectData {

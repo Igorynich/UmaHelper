@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>Create New Tab</h2>
+<mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Tab Name</mat-label>
+    <input matInput [formControl]="nameControl" (keydown.enter)="create()" cdkFocusInitial>
+    @if (nameControl.hasError('required')) {
+      <mat-error>Tab name is required</mat-error>
+    }
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="!nameControl.valid" (click)="create()">Create</button>
+</mat-dialog-actions>

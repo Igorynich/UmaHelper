@@ -74,8 +74,8 @@
                  width="24"
             >
           } @else if (column.type === 'actions') {
-            <mat-icon color="primary" (click)="onActionClick('add', row)" matTooltip="Add Action">+</mat-icon>
-            <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action">-</mat-icon>
+            <mat-icon color="primary" [matMenuTriggerFor]="addMenu() || null" matTooltip="Add Action" (click)="onActionClick('add', row)">add</mat-icon>
+            <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action" [class.disabled-button]="isFirstTab()">remove</mat-icon>
           } @else if (column.type === 'characterImage') {
             @if ($any(row).characterImageUrl) {
               <img
