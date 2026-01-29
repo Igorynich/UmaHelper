@@ -1,10 +1,12 @@
 import { Component, computed, DestroyRef, effect, EventEmitter, inject, input, Output, signal } from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DataGrid, DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid';
+import { DataGrid } from '../../../components/common/data-grid/data-grid';
+import { DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
 import { DisplaySupportCard, Rarity } from '../../../interfaces/display-support-card';
 import { effectMap } from '../../../maps/effect.map';
 import { EffectId } from '../../../interfaces/effect-id.enum';
 import { SupportCard, SupportCardHints } from '../../../interfaces/support-card';
+import { SupportCardFilter } from '../../../interfaces/user-support-cards-data';
 import { debounceTime, startWith } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RarityPipe } from '../../../pipes/rarity.pipe';
@@ -17,6 +19,7 @@ import { IMAGEKIT_CONFIG } from '../../../imagekit.config';
 import { MatDialog } from '@angular/material/dialog';
 import { SupportCardInfo } from '../../../components/dialogs/support-card-info/support-card-info';
 import {MatMenu} from '@angular/material/menu';
+import { DataGridStateService } from '../../../services/data-grid-state.service';
 
 type Operator = '>=' | '<=' | '>' | '<' | '=';
 
@@ -66,13 +69,18 @@ const LEVEL_TO_INDEX_MAP: { [level: number]: number } = {
 export class SupportCardListViewComponent {
   private destroyRef = inject(DestroyRef);
   private dialog = inject(MatDialog);
+  private dataGridStateService = inject(DataGridStateService);
 
   cards = input<DisplaySupportCard[]>([]);
   isFirstTab = input<boolean>(false);
   addMenu = input<MatMenu>();
+  filterState = input<SupportCardFilter | null>(null);
+  tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
+  
   @Output() levelChangedInTab = new EventEmitter<{ id: number; level: number }>();
   @Output() add = new EventEmitter<SupportCardEffectData>();
   @Output() remove = new EventEmitter<SupportCardEffectData>();
+  @Output() filterChanged = new EventEmitter<SupportCardFilter>();
 
   constructor() {
     effect(() => {
@@ -85,6 +93,37 @@ export class SupportCardListViewComponent {
         }
       }
       this.levelChanges.set(initialLevels);
+    });
+
+    effect(() => {
+      const filter = this.filterState();
+      if (filter) {
+        this.filterForm.patchValue(filter, { emitEvent: false });
+      }
+    });
+
+    effect(() => {
+      // Sync filter state with service when tab changes
+      const tabIndex = this.tabIndex();
+      const tabState = this.dataGridStateService.getTabState(tabIndex);
+      if (tabState.filter) {
+        this.filterForm.patchValue(tabState.filter, { emitEvent: false });
+      }
+    });
+
+    effect(() => {
+      const filterValue = this.filters();
+      if (filterValue) {
+        const completeFilter: SupportCardFilter = {
+          name: filterValue.name || '',
+          rarity: filterValue.rarity || [],
+          type: filterValue.type || [],
+          effectId: filterValue.effectId || '',
+          operator: filterValue.operator || '>=',
+          value: filterValue.value ?? null
+        };
+        this.filterChanged.emit(completeFilter);
+      }
     });
   }
 

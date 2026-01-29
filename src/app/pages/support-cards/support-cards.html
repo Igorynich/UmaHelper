@@ -10,6 +10,7 @@
             (add)="onAddCard($event)"
             [isFirstTab]="true"
             [addMenu]="addMenu"
+            [tabIndex]="-1"
           >
           </app-support-card-list-view>
         </div>
@@ -32,9 +33,12 @@
           <div class="tab-content">
             <app-support-card-list-view
               [cards]="tab.cards"
+              [filterState]="tabFilters().get($index) || null"
+              [tabIndex]="$index"
               (levelChangedInTab)="onLevelChangedInDynamicTab($index, $event)"
               (add)="onAddCard($event)"
               (remove)="onRemoveCard($index, $event)"
+              (filterChanged)="onFilterChanged($index, $event)"
               [addMenu]="addMenu">
             </app-support-card-list-view>
           </div>

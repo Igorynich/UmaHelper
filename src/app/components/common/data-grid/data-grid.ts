@@ -1,18 +1,18 @@
-import { RarityPipe } from '../../../pipes/rarity.pipe';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   computed,
   effect,
+  inject,
   input,
   output,
   signal,
   ViewChild,
 } from '@angular/core';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { MatSort, MatSortModule, Sort, SortDirection } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import {MatMenu, MatMenuModule} from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
@@ -22,26 +22,16 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Level } from '../level/level';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { RarityClassPipe } from '../../../pipes/rarity-class.pipe';
+import { RarityPipe } from '../../../pipes/rarity.pipe';
+import { DataGridStateService } from '../../../services/data-grid-state.service';
+import { 
+  SortType, 
+  DataGridColumn, 
+  ActiveSort, 
+  LockedEffectData, 
+  UniqueEffectData 
+} from './data-grid.types';
 
-export enum SortType {
-  String = 'string',
-  Number = 'number',
-}
-
-export interface DataGridColumn {
-  key: string;
-  header: string;
-  tooltip?: string;
-  width?: string;
-  type?: string;
-  sortType?: SortType;
-  stickyEnd?: boolean;
-}
-
-interface ActiveSort {
-  key: string;
-  direction: SortDirection;
-}
 
 @Component({
   selector: 'app-data-grid',
@@ -65,6 +55,8 @@ interface ActiveSort {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataGrid<T> implements AfterViewInit {
+  private dataGridStateService = inject(DataGridStateService);
+  
   data = input<T[]>([]);
   columns = input<DataGridColumn[]>([]);
   multiSort = input(false, { transform: coerceBooleanProperty });
@@ -72,6 +64,7 @@ export class DataGrid<T> implements AfterViewInit {
   pageSize = input<number>();
   isFirstTab = input<boolean>(false);
   addMenu = input<MatMenu>();
+  tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
 
   levelChanged = output<{ row: T; level: number }>();
   imageClick = output<T>();
@@ -91,10 +84,15 @@ export class DataGrid<T> implements AfterViewInit {
   constructor() {
     effect(() => {
       this.dataSource.data = this.data();
-      // console.log('GRID DATA', this.dataSource.data);
     });
     effect(() => {
       this.visibleColumns.set(this.allColumnKeys());
+    });
+    effect(() => {
+      // Sync sort state with service when tab changes
+      const tabIndex = this.tabIndex();
+      const tabState = this.dataGridStateService.getTabState(tabIndex);
+      this.activeSorts.set(tabState.sort);
     });
   }
 
@@ -109,9 +107,37 @@ export class DataGrid<T> implements AfterViewInit {
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
     }
+
+    // Initialize sort state from service
+    this.initializeSortFromService();
+  }
+
+  private initializeSortFromService(): void {
+    const tabIndex = this.tabIndex();
+    if (this.sort) {
+      const tabState = this.dataGridStateService.getTabState(tabIndex);
+      if (tabState.sort && tabState.sort.length > 0) {
+        // Use setTimeout to ensure MatSort is fully initialized
+        setTimeout(() => {
+          const primarySort = tabState.sort[0];
+          if (primarySort && this.sort) {
+            // Initialize MatSort with the saved state
+            this.sort.active = primarySort.key;
+            this.sort.direction = primarySort.direction;
+            // Trigger the sort to update visual indicators
+            this.sort.sortChange.emit({
+              active: primarySort.key,
+              direction: primarySort.direction
+            });
+          }
+        });
+      }
+    }
   }
 
   protected handleSort(sort: Sort): void {
+    const tabIndex = this.tabIndex();
+    
     if (this.multiSort()) {
       const newSort: ActiveSort = { key: sort.active, direction: sort.direction };
       this.activeSorts.update(sorts => {
@@ -128,13 +154,20 @@ export class DataGrid<T> implements AfterViewInit {
             sorts.push(newSort);
           }
         }
-        return [...sorts];
+        const updatedSorts = [...sorts];
+        // Update service instead of emitting
+        this.dataGridStateService.updateTabSort(tabIndex, updatedSorts);
+        return updatedSorts;
       });
       this.dataSource._updateChangeSubscription();
     } else if (this.sort) {
       this.sort.active = sort.active;
       this.sort.direction = sort.direction;
       this.dataSource.sort = this.sort;
+      
+      const singleSort: ActiveSort[] = sort.direction ? [{ key: sort.active, direction: sort.direction }] : [];
+      // Update service instead of emitting
+      this.dataGridStateService.updateTabSort(tabIndex, singleSort);
     }
   }
 
@@ -196,18 +229,27 @@ export class DataGrid<T> implements AfterViewInit {
   }
 
   protected removeSort(key: string): void {
+    const tabIndex = this.tabIndex();
+    
     this.activeSorts.update(sorts => {
       const index = sorts.findIndex(s => s.key === key);
       if (index > -1) {
         sorts.splice(index, 1);
       }
-      return [...sorts];
+      const updatedSorts = [...sorts];
+      // Update service instead of emitting
+      this.dataGridStateService.updateTabSort(tabIndex, updatedSorts);
+      return updatedSorts;
     });
     this.dataSource._updateChangeSubscription();
   }
 
   protected clearSorts(): void {
+    const tabIndex = this.tabIndex();
+    
     this.activeSorts.set([]);
+    // Update service instead of emitting
+    this.dataGridStateService.updateTabSort(tabIndex, []);
     this.dataSource._updateChangeSubscription();
   }
 
@@ -259,14 +301,4 @@ export class DataGrid<T> implements AfterViewInit {
   }
 }
 
-export interface LockedEffectData {
-  value: string;
-  isLocked: boolean;
-}
-
-export interface UniqueEffectData {
-  value: number;
-  tooltip: string;
-  hasUnique: boolean;
-}
 
