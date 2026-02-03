@@ -15,10 +15,12 @@ export interface SupportCardTab {
   cards: { id: number; level: number }[];
   filter?: SupportCardFilter;
   sort?: ActiveSort[];
+  selection?: { [key: string]: boolean };
 }
 
 export interface UserSupportCardsData {
   tabs: SupportCardTab[];
   selectedTabIndex: number;
   lastUpdated: Date;
+  allCardsSelection?: { [key: string]: boolean };
 }

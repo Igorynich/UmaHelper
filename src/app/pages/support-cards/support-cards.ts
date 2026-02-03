@@ -22,6 +22,8 @@ import { MatMenuTrigger } from '@angular/material/menu';
 import { DataGridStateService, TabState } from '../../services/data-grid-state.service';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
+import { CheckboxSelection } from '../../components/common/data-grid/data-grid.types';
+import { IMAGEKIT_CONFIG } from '../../imagekit.config';
 
 @Component({
   selector: 'app-support-cards',
@@ -92,32 +94,46 @@ export class SupportCards {
 
   protected selectedTabIndex = signal(0);
   protected selectedCard = signal<SupportCardEffectData | null>(null);
+  protected firstTabSupportCardsWithLevels = signal<DisplaySupportCard[]>([]);
 
   constructor() {
     effect(() => {
+      // console.log('Effect 1 triggered');
       const savedData = this.supportCardsDataService.userSupportCardsData();
       if (savedData) {
         this.dynamicTabs.set(savedData.tabs);
-        this.selectedTabIndex.set(savedData.selectedTabIndex);
-        
+        if (savedData.selectedTabIndex !== this.selectedTabIndex()) {
+          this.selectedTabIndex.set(savedData.selectedTabIndex);
+        }
+
         // Load filter and sort states into the service
         const tabStates = new Map<number, TabState>();
-        
-        // Add empty state for "All Cards" tab (-1) - never saved to DB
-        tabStates.set(-1, { sort: [] });
-        
+
+        // Preserve existing selection states from service
+        const existingStates = this.dataGridStateService.getAllTabStates();   // TODO rewrite to use single(current) tab state
+
+        // Add state for "All Cards" tab (0) - preserve existing selection or use empty
+        const existingAllCardsState = existingStates.get(0);
+        const allCardsTabState: TabState = {
+          sort: [],
+          selection: existingAllCardsState?.selection || {}
+        };
+        // Ignore stale allCardsSelection from Firebase - we don't persist selection anymore
+        tabStates.set(0, allCardsTabState);
+
         savedData.tabs.forEach((tab, index) => {
+          const existingTabState = existingStates.get(index + 1);
           const tabState: TabState = {
-            sort: tab.sort || []
+            sort: tab.sort || [],
+            selection: existingTabState?.selection || {} // Preserve existing selection
           };
           if (tab.filter) {
             tabState.filter = tab.filter;
           }
-          tabStates.set(index, tabState);
+          // Ignore stale tab.selection from Firebase - we don't persist selection anymore
+          tabStates.set(index + 1, tabState);
         });
-        
-        this.dataGridStateService.loadTabStates(tabStates);
-        
+
         // Load filter states for local signal (for template compatibility)
         const filtersMap = new Map<number, SupportCardFilter>();
         savedData.tabs.forEach((tab, index) => {
@@ -126,13 +142,19 @@ export class SupportCards {
           }
         });
         this.tabFilters.set(filtersMap);
-        
+
         this.isLoadingData.set(false);
       } else {
         this.dynamicTabs.set([]);
         this.selectedTabIndex.set(0);
         this.tabFilters.set(new Map());
-        this.dataGridStateService.clearAllStates();
+
+        // Initialize service with empty states
+        const tabStates = new Map<number, TabState>();
+        // Add empty state for "All Cards" tab (0)
+        tabStates.set(0, { sort: [], selection: {} });
+        this.dataGridStateService.loadTabStates(tabStates);
+
         this.isLoadingData.set(false);
       }
     });
@@ -143,15 +165,14 @@ export class SupportCards {
     });
   }
 
-  @ViewChild('addMenuTrigger') addMenuTrigger!: MatMenuTrigger;
-
   protected availableTabs = computed(() => {
     return this.dynamicTabs()
-      .map((tab, index) => ({ name: tab.name, index }))
-      .filter(tab => tab.index !== this.selectedTabIndex() - 1);
+      .map((tab, index) => ({ name: tab.name, index: index + 1 }))
+      .filter(tab => tab.index !== this.selectedTabIndex());
   });
 
   protected onTabChange(newIndex: number): void {
+    console.log('onTabChange', newIndex);
     this.selectedTabIndex.set(newIndex);
     this.saveData();
   }
@@ -159,7 +180,7 @@ export class SupportCards {
   protected addTab(): void {
     this.dialog.open(NewTabDialogComponent).afterClosed().pipe(filter(name => !!name)).subscribe(name => {
       this.dynamicTabs.update(tabs => [...tabs, { name, cards: [] }]);
-      this.onTabChange(this.hydratedTabsData().length);
+      this.onTabChange(this.hydratedTabsData().length + 1);
       this.saveData();
     });
   }
@@ -176,9 +197,10 @@ export class SupportCards {
 
     dialogRef.afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
       this.dynamicTabs.update(tabs => tabs.filter((_, i) => i !== index));
-      if (this.selectedTabIndex() > index + 1) {
+      const removedTabIndex = index + 1; // Convert to actual tab index
+      if (this.selectedTabIndex() > removedTabIndex) {
         this.selectedTabIndex.update(prev => prev - 1);
-      } else if (this.selectedTabIndex() === index + 1) {
+      } else if (this.selectedTabIndex() === removedTabIndex) {
         this.selectedTabIndex.set(0);
       }
       this.saveData();
@@ -205,30 +227,33 @@ export class SupportCards {
 
   protected onAddCard(card: SupportCardEffectData): void {
     this.selectedCard.set(card);
-    if (this.availableTabs().length > 0) {
-      this.addMenuTrigger?.openMenu();
-    } else {
-      this.snackBar.open('No other tabs available to add this card.', 'Dismiss', {
-        duration: 3000
-      });
-    }
   }
 
   protected addCardToTab(card: SupportCardEffectData | null, targetTabIndex: number): void {
+
+    const tabIndex = targetTabIndex - 1;
+    // Check if this is a bulk operation (no single card selected)
+    if (!card && this.hasSelectedCards()) {
+      const selectedCards = this.getSelectedCardsFromCurrentGrid();
+      this.addMultipleCardsToTab(selectedCards, tabIndex);
+      return;
+    }
+
     if (!card) return;
 
     this.dynamicTabs.update(tabs => {
+      console.log('Tabs', tabs, targetTabIndex);
       const newTabs = [...tabs];
-      const tabToUpdate = { ...newTabs[targetTabIndex] };
+      const tabToUpdate = { ...newTabs[tabIndex] };
 
-      const cardExists = tabToUpdate.cards.some(c => c.id === card.support_id);
+      const cardExists = tabToUpdate.cards?.some(c => c.id === card.support_id);
 
       if (!cardExists) {
-        tabToUpdate.cards = [...tabToUpdate.cards, {
+        tabToUpdate.cards = [...tabToUpdate.cards || [], {
           id: card.support_id,
           level: card.level ?? this.rarityLevelMap[card.rarity].default
         }];
-        newTabs[targetTabIndex] = tabToUpdate;
+        newTabs[tabIndex] = tabToUpdate;
 
         this.snackBar.open(`Added "${card.char_name}" to tab "${tabToUpdate.name}"`, 'Dismiss', {
           duration: 3000
@@ -278,22 +303,141 @@ export class SupportCards {
     this.saveData();
   }
 
+  protected hasSelectedCards(): boolean {
+    const currentTabIndex = this.selectedTabIndex();
+    return this.dataGridStateService.getTabSelectedCount(currentTabIndex) > 0;
+  }
+
+
+  protected onBulkRemove(tabIndex: number): void {
+    const selectedCards = this.getSelectedCardsFromCurrentGrid();
+    if (selectedCards.length === 0) return;
+
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Confirm Bulk Removal',
+        message: `Are you sure you want to remove ${selectedCards.length} selected cards from this tab?`
+      }
+    });
+
+    dialogRef.afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
+      this.removeMultipleCardsFromTab(tabIndex, selectedCards);
+    });
+  }
+
+  private addMultipleCardsToTab(cards: SupportCardEffectData[], targetTabIndex: number): void {
+    this.dynamicTabs.update(tabs => {
+      const newTabs = [...tabs];
+      const tabToUpdate = { ...newTabs[targetTabIndex] };
+      let addedCount = 0;
+
+      cards.forEach(card => {
+        const cardExists = tabToUpdate.cards.some(c => c.id === card.support_id);
+        if (!cardExists) {
+          tabToUpdate.cards = [...tabToUpdate.cards, {
+            id: card.support_id,
+            level: card.level ?? this.rarityLevelMap[card.rarity].default
+          }];
+          addedCount++;
+        }
+      });
+
+      newTabs[targetTabIndex] = tabToUpdate;
+
+      if (addedCount > 0) {
+        this.snackBar.open(`Added ${addedCount} cards to tab "${tabToUpdate.name}"`, 'Dismiss', {
+          duration: 3000
+        });
+      } else {
+        this.snackBar.open('All selected cards are already in the target tab', 'Dismiss', {
+          duration: 3000
+        });
+      }
+
+      return newTabs;
+    });
+    this.saveData();
+    // Clear selection?
+    const currentTabIndex = this.selectedTabIndex();
+    this.dataGridStateService.clearTabSelection(currentTabIndex);
+  }
+
+  private removeMultipleCardsFromTab(tabIndex: number, cards: SupportCardEffectData[]): void {
+    this.dynamicTabs.update(tabs => {
+      const newTabs = [...tabs];
+      const tabToUpdate = { ...newTabs[tabIndex] };
+      const cardIdsToRemove = cards.map(c => c.support_id);
+
+      tabToUpdate.cards = tabToUpdate.cards.filter(c => !cardIdsToRemove.includes(c.id));
+      newTabs[tabIndex] = tabToUpdate;
+      return newTabs;
+    });
+    this.saveData();
+    this.snackBar.open(`Removed ${cards.length} cards from tab.`, 'Dismiss', {
+      duration: 3000
+    });
+
+    // Clear selection after successful bulk remove
+    this.dataGridStateService.clearTabSelection(tabIndex);
+  }
+
+  private getSelectedCardsFromCurrentGrid(): SupportCardEffectData[] {
+    const currentTabIndex = this.selectedTabIndex();
+    const currentSelection = this.dataGridStateService.getTabSelection(currentTabIndex);
+
+    if (currentTabIndex === 0) {
+      // All Cards tab
+      return this.firstTabSupportCardsWithLevels().filter(card =>
+        currentSelection[card.support_id.toString()]
+      ).map(card => ({
+        support_id: card.support_id,
+        char_name: card.char_name,
+        level: card.level,
+        rarity: card.rarity,
+        type: card.type,
+        characterImageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/sup_cards/tex_support_card_${card.support_id}.png`,
+        event_skills: card.event_skills,
+        hints: card.hints,
+      } as SupportCardEffectData));
+    } else {
+      // Dynamic tab
+      const tabData = this.hydratedTabsData()[currentTabIndex - 1];
+      if (tabData) {
+        return tabData.cards.filter(card =>
+          currentSelection[card.support_id.toString()]
+        ).map(card => ({
+          support_id: card.support_id,
+          char_name: card.char_name,
+          level: card.level,
+          rarity: card.rarity,
+          type: card.type,
+          characterImageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/sup_cards/tex_support_card_${card.support_id}.png`,
+          event_skills: card.event_skills,
+          hints: card.hints,
+        } as SupportCardEffectData));
+      }
+    }
+    return [];
+  }
+
   private async saveData(): Promise<void> {
     if (this.isLoadingData()) return;
-    
+
     try {
       const tabsWithFiltersAndSorts = this.dynamicTabs().map((tab, index) => {
         const filter = this.tabFilters().get(index);
-        const tabState = this.dataGridStateService.getTabState(index);
+        const tabState = this.dataGridStateService.getTabState(index + 1);
         const result: any = { ...tab };
         if (filter) result.filter = filter;
         if (tabState.sort && tabState.sort.length > 0) result.sort = tabState.sort;
+        // Intentionally exclude selection from being saved to Firebase
         return result;
       });
-      
+
       await this.supportCardsDataService.saveUserSupportCardsData({
         tabs: tabsWithFiltersAndSorts,
         selectedTabIndex: this.selectedTabIndex()
+        // Intentionally exclude allCardsSelection from being saved to Firebase
       });
     } catch (error) {
       console.error('Failed to save support cards data:', error);
@@ -301,5 +445,9 @@ export class SupportCards {
         duration: 3000
       });
     }
+  }
+
+  protected onSupportCardsWithLevelsChanged(cards: DisplaySupportCard[]) {
+    this.firstTabSupportCardsWithLevels.set(cards);
   }
 }

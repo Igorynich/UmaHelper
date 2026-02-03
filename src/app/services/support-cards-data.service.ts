@@ -16,6 +16,7 @@ export class SupportCardsDataService {
   private readonly userSupportCardsData$: Observable<UserSupportCardsData | null> = this.authService.user$.pipe(
     switchMap(user => {
       if (user) {
+        console.log('Loading user support cards data for user:', user.uid);
         return docData(doc(this.firestore, 'users_sc_data', user.uid)) as Observable<UserSupportCardsData>;
       } else {
         return of(null);
@@ -37,6 +38,7 @@ export class SupportCardsDataService {
     };
 
     try {
+      console.log('Saving user support cards data for user:', user.uid);
       await setDoc(userDocRef, fullData, { merge: true });
     } catch (error) {
       console.error('Error saving user support cards data:', error);
@@ -51,7 +53,7 @@ export class SupportCardsDataService {
     }
 
     const userDocRef = doc(this.firestore, 'users_sc_data', user.uid);
-    
+
     try {
       await updateDoc(userDocRef, {
         ...updates,

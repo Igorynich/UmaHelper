@@ -21,7 +21,7 @@ export class AuthService {
   private router = inject(Router);
   private spinnerService = inject(SpinnerService);
 
-  private readonly user$: Observable<User | null> = authState(this.auth).pipe(
+  readonly user$ = authState(this.auth).pipe(
     switchMap(user => {
       if (user) {
         return docData(doc(this.firestore, 'users', user.uid)) as Observable<User>;

@@ -8,7 +8,7 @@ import {
   input,
   output,
   signal,
-  ViewChild,
+  viewChild,
 } from '@angular/core';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { MatSort, MatSortModule, Sort, SortDirection } from '@angular/material/sort';
@@ -24,12 +24,13 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { RarityClassPipe } from '../../../pipes/rarity-class.pipe';
 import { RarityPipe } from '../../../pipes/rarity.pipe';
 import { DataGridStateService } from '../../../services/data-grid-state.service';
-import { 
-  SortType, 
-  DataGridColumn, 
-  ActiveSort, 
-  LockedEffectData, 
-  UniqueEffectData 
+import {
+  SortType,
+  DataGridColumn,
+  ActiveSort,
+  LockedEffectData,
+  UniqueEffectData,
+  CheckboxSelection
 } from './data-grid.types';
 
 
@@ -56,7 +57,7 @@ import {
 })
 export class DataGrid<T> implements AfterViewInit {
   private dataGridStateService = inject(DataGridStateService);
-  
+
   data = input<T[]>([]);
   columns = input<DataGridColumn[]>([]);
   multiSort = input(false, { transform: coerceBooleanProperty });
@@ -65,6 +66,7 @@ export class DataGrid<T> implements AfterViewInit {
   isFirstTab = input<boolean>(false);
   addMenu = input<MatMenu>();
   tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
+  isActive = input<boolean>(false); // Whether this tab is currently active
 
   levelChanged = output<{ row: T; level: number }>();
   imageClick = output<T>();
@@ -77,35 +79,74 @@ export class DataGrid<T> implements AfterViewInit {
   protected readonly displayedColumns = computed(() => this.visibleColumns());
   protected readonly dataSource = new MatTableDataSource<T>([]);
   protected readonly activeSorts = signal<ActiveSort[]>([]);
+  protected readonly selection = signal<CheckboxSelection>({});
+  protected readonly isAllSelected = computed(() => {
+    const numSelected = Object.values(this.selection()).filter(selected => selected).length;
+    const numRows = this.data().length;
+    return numRows > 0 && numSelected === numRows;
+  });
+  protected readonly isSomeSelected = computed(() => {
+    const numSelected = Object.values(this.selection()).filter(selected => selected).length;
+    return numSelected > 0 && numSelected < this.data().length;
+  });
 
-  @ViewChild(MatSort) sort?: MatSort;
-  @ViewChild(MatPaginator) paginator?: MatPaginator;
+  sort = viewChild(MatSort);
+  paginator = viewChild(MatPaginator);
+
+  private readonly currentTabIndex = signal<number>(-1);
 
   constructor() {
+    // Initialize selection state from service immediately
+    const initialTabIndex = this.tabIndex();
+    const initialTabState = this.dataGridStateService.getTabState(initialTabIndex);
+    this.selection.set(initialTabState.selection || {});
+    this.currentTabIndex.set(initialTabIndex);
+
     effect(() => {
       this.dataSource.data = this.data();
+      // Clean up selection for cards that no longer exist
+      this.cleanupSelection();
     });
     effect(() => {
       this.visibleColumns.set(this.allColumnKeys());
     });
+
+    // Effect for tab changes - load selection when grid becomes active
     effect(() => {
-      // Sync sort state with service when tab changes
+      if (this.isActive()) {
+        // Load selection from service when this grid becomes active
+        const tabState = this.dataGridStateService.getTabState(this.tabIndex());
+        this.selection.set(tabState.selection || {});
+        this.activeSorts.set(tabState.sort);
+        this.currentTabIndex.set(this.tabIndex());
+      }
+    });
+
+    // Effect for selection changes - only save to service
+    effect(() => {
+      const selection = this.selection();
       const tabIndex = this.tabIndex();
-      const tabState = this.dataGridStateService.getTabState(tabIndex);
-      this.activeSorts.set(tabState.sort);
+
+      // Only save if we have a valid tab index and we're on the correct tab
+      if (tabIndex >= 0 && this.currentTabIndex() === tabIndex) {
+        this.dataGridStateService.updateTabSelection(tabIndex, selection);
+      }
     });
   }
 
   ngAfterViewInit(): void {
-    if (this.multiSort() && this.sort) {
-      this.dataSource.sort = this.sort;
+    const sortRef = this.sort();
+    const paginatorRef = this.paginator();
+
+    if (this.multiSort() && sortRef) {
+      this.dataSource.sort = sortRef;
       this.dataSource.sortData = (data, sort) => this.sortData(data, sort);
     } else {
-      this.dataSource.sort = this.sort ?? null;
+      this.dataSource.sort = sortRef ?? null;
     }
 
-    if (this.paginator) {
-      this.dataSource.paginator = this.paginator;
+    if (paginatorRef) {
+      this.dataSource.paginator = paginatorRef;
     }
 
     // Initialize sort state from service
@@ -114,18 +155,20 @@ export class DataGrid<T> implements AfterViewInit {
 
   private initializeSortFromService(): void {
     const tabIndex = this.tabIndex();
-    if (this.sort) {
+    const sortRef = this.sort();
+    if (sortRef) {
       const tabState = this.dataGridStateService.getTabState(tabIndex);
       if (tabState.sort && tabState.sort.length > 0) {
         // Use setTimeout to ensure MatSort is fully initialized
         setTimeout(() => {
           const primarySort = tabState.sort[0];
-          if (primarySort && this.sort) {
+          const currentSortRef = this.sort();
+          if (primarySort && currentSortRef) {
             // Initialize MatSort with the saved state
-            this.sort.active = primarySort.key;
-            this.sort.direction = primarySort.direction;
+            currentSortRef.active = primarySort.key;
+            currentSortRef.direction = primarySort.direction;
             // Trigger the sort to update visual indicators
-            this.sort.sortChange.emit({
+            currentSortRef.sortChange.emit({
               active: primarySort.key,
               direction: primarySort.direction
             });
@@ -137,7 +180,8 @@ export class DataGrid<T> implements AfterViewInit {
 
   protected handleSort(sort: Sort): void {
     const tabIndex = this.tabIndex();
-    
+    const sortRef = this.sort();
+
     if (this.multiSort()) {
       const newSort: ActiveSort = { key: sort.active, direction: sort.direction };
       this.activeSorts.update(sorts => {
@@ -160,11 +204,11 @@ export class DataGrid<T> implements AfterViewInit {
         return updatedSorts;
       });
       this.dataSource._updateChangeSubscription();
-    } else if (this.sort) {
-      this.sort.active = sort.active;
-      this.sort.direction = sort.direction;
-      this.dataSource.sort = this.sort;
-      
+    } else if (sortRef) {
+      sortRef.active = sort.active;
+      sortRef.direction = sort.direction;
+      this.dataSource.sort = sortRef;
+
       const singleSort: ActiveSort[] = sort.direction ? [{ key: sort.active, direction: sort.direction }] : [];
       // Update service instead of emitting
       this.dataGridStateService.updateTabSort(tabIndex, singleSort);
@@ -176,8 +220,9 @@ export class DataGrid<T> implements AfterViewInit {
       const sort = this.activeSorts().find(s => s.key === key);
       return sort ? sort.direction : '';
     }
-    if (this.sort?.active === key) {
-      return this.sort.direction;
+    const sortRef = this.sort();
+    if (sortRef?.active === key) {
+      return sortRef.direction;
     }
     return '';
   }
@@ -230,7 +275,7 @@ export class DataGrid<T> implements AfterViewInit {
 
   protected removeSort(key: string): void {
     const tabIndex = this.tabIndex();
-    
+
     this.activeSorts.update(sorts => {
       const index = sorts.findIndex(s => s.key === key);
       if (index > -1) {
@@ -246,7 +291,7 @@ export class DataGrid<T> implements AfterViewInit {
 
   protected clearSorts(): void {
     const tabIndex = this.tabIndex();
-    
+
     this.activeSorts.set([]);
     // Update service instead of emitting
     this.dataGridStateService.updateTabSort(tabIndex, []);
@@ -297,6 +342,68 @@ export class DataGrid<T> implements AfterViewInit {
         }
       }
       return 0;
+    });
+  }
+
+  protected masterToggle(): void {
+    const isAllSelected = this.isAllSelected();
+    const newSelection: CheckboxSelection = {};
+
+    this.data().forEach(row => {
+      const rowId = this.getRowId(row);
+      newSelection[rowId] = !isAllSelected;
+    });
+
+    this.selection.set(newSelection);
+  }
+
+  protected toggleRow(row: T): void {
+    const rowId = this.getRowId(row);
+    const currentSelection = this.selection();
+    const isSelected = currentSelection[rowId] || false;
+
+    this.selection.update(selection => ({
+      ...selection,
+      [rowId]: !isSelected
+    }));
+  }
+
+  protected isRowSelected(row: T): boolean {
+    const rowId = this.getRowId(row);
+    return this.selection()[rowId] || false;
+  }
+
+  private getRowId(row: T): string {
+    // Try to get support_id first, fallback to a generic approach
+    return (row as any).support_id?.toString() || JSON.stringify(row);
+  }
+
+  private cleanupSelection(): void {
+    const currentSelection = this.selection();
+    const currentDataIds = new Set(this.data().map(row => this.getRowId(row)));
+
+    const cleanedSelection: CheckboxSelection = {};
+    for (const [id, selected] of Object.entries(currentSelection)) {
+      if (currentDataIds.has(id)) {
+        cleanedSelection[id] = selected;
+      }
+    }
+
+    // Only update if something changed
+    if (Object.keys(cleanedSelection).length !== Object.keys(currentSelection).length) {
+      // console.log('Cleanup', this.tabIndex(), cleanedSelection);
+      this.selection.set(cleanedSelection);
+    }
+  }
+
+  getSelectedRows(): T[] {
+    const selectedIds = Object.entries(this.selection())
+      .filter(([, selected]) => selected)
+      .map(([id]) => id);
+
+    return this.data().filter(row => {
+      const rowId = this.getRowId(row);
+      return selectedIds.includes(rowId);
     });
   }
 }

@@ -42,7 +42,41 @@
 }
 
 .mat-mdc-checkbox {
-  padding: 0 1rem;
+  padding: 0 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Specific styling for checkbox column */
+.mat-column-select {
+  text-align: center;
+  padding: 0 !important;
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+}
+
+.mat-column-select .mat-mdc-checkbox {
+  padding: 0 4px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mat-column-select .mat-mdc-header-cell {
+  padding: 0 !important;
+  text-align: center;
+  justify-content: center;
+}
+
+.mat-column-select .mat-mdc-cell {
+  padding: 0 !important;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
 }
 
 .header-content-wrapper {

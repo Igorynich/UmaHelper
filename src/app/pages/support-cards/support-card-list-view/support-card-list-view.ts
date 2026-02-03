@@ -1,7 +1,7 @@
-import { Component, computed, DestroyRef, effect, EventEmitter, inject, input, Output, signal } from '@angular/core';
+import {Component, computed, DestroyRef, effect, inject, input, signal, contentChild, output} from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DataGrid } from '../../../components/common/data-grid/data-grid';
-import { DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
+import { DataGridColumn, SortType, CheckboxSelection } from '../../../components/common/data-grid/data-grid.types';
 import { DisplaySupportCard, Rarity } from '../../../interfaces/display-support-card';
 import { effectMap } from '../../../maps/effect.map';
 import { EffectId } from '../../../interfaces/effect-id.enum';
@@ -76,13 +76,25 @@ export class SupportCardListViewComponent {
   addMenu = input<MatMenu>();
   filterState = input<SupportCardFilter | null>(null);
   tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
-  
-  @Output() levelChangedInTab = new EventEmitter<{ id: number; level: number }>();
-  @Output() add = new EventEmitter<SupportCardEffectData>();
-  @Output() remove = new EventEmitter<SupportCardEffectData>();
-  @Output() filterChanged = new EventEmitter<SupportCardFilter>();
+  isActive = input<boolean>(false); // Whether this tab is currently active
+
+  // Modern output functions instead of @Output decorators
+  levelChangedInTab = output<{ id: number; level: number }>();
+  add = output<SupportCardEffectData>();
+  remove = output<SupportCardEffectData>();
+  filterChanged = output<SupportCardFilter>();
+  levelsChangedInFirstTab = output< DisplaySupportCard[]>();
+
+  // Modern ViewChild using contentChild for better performance
+  dataGrid = contentChild(DataGrid<SupportCardEffectData>);
 
   constructor() {
+    effect(() => {
+      if (this.isFirstTab()) {
+        this.levelsChangedInFirstTab.emit(this.supportCardsWithLevels());
+      }
+    });
+
     effect(() => {
       // Initialize levelChanges when cards input changes
       const newCards = this.cards();
@@ -161,6 +173,26 @@ export class SupportCardListViewComponent {
   );
 
   protected readonly levelChanges = signal<Map<number, number>>(new Map());
+  protected readonly selectedCards = computed(() => {
+    const dataGridRef = this.dataGrid();
+    return dataGridRef ? dataGridRef.getSelectedRows() : [];
+  });
+  protected readonly hasSelectedCards = computed(() => {
+    return this.selectedCards().length > 0;
+  });
+  protected readonly selectedCardsCount = computed(() => {
+    return this.selectedCards().length;
+  });
+
+  protected readonly filteredCards = computed(() => {
+    return this.filteredData();
+  });
+
+  protected readonly allEffects = computed(() => {
+    return this.dynamicColumns()
+      .filter(c => c.type === 'effect')
+      .map(c => ({ id: c.key, name: c.header, tooltip: c.tooltip }));
+  });
 
   protected readonly supportCardsWithLevels = computed((): DisplaySupportCard[] => {
     const cards = this.cards();
@@ -192,6 +224,7 @@ export class SupportCardListViewComponent {
     }));
 
     return [
+      { key: 'select', header: '', width: '50px', type: 'checkbox' },
       { key: 'char_name', header: 'Character', tooltip: 'Character Name', width: '120px', sortType: SortType.String, type: 'characterImage' },
       { key: 'rarity', header: 'Rarity', width: '40px', type: 'rarity', sortType: SortType.Number },
       { key: 'type', header: 'Type', width: '80px', type: 'type', sortType: SortType.String },
@@ -200,12 +233,6 @@ export class SupportCardListViewComponent {
       ...effectColumns,
       { key: 'actions', header: 'Actions', width: '70px', type: 'actions', stickyEnd: true },
     ];
-  });
-
-  protected readonly allEffects = computed(() => {
-    return this.dynamicColumns()
-      .filter(c => c.type === 'effect')
-      .map(c => ({ id: c.key, name: c.header, tooltip: c.tooltip }));
   });
 
   protected readonly processedData = computed((): SupportCardEffectData[] => {
@@ -323,7 +350,7 @@ export class SupportCardListViewComponent {
 
   protected readonly visibleColumns = computed(() => {
     const allCols = this.dynamicColumns();
-    const filtered = this.filteredData();
+    const filtered = this.filteredCards();
 
     if (filtered.length === 0) return allCols;
 
@@ -423,7 +450,7 @@ export class SupportCardListViewComponent {
   }
 
   protected onSetAllFilteredToMax(): void {
-    const filtered = this.filteredData();
+    const filtered = this.filteredCards();
     if (filtered.length === 0) return;
 
     this.levelChanges.update(currentChanges => {

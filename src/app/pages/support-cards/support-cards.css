@@ -119,6 +119,19 @@
   gap: 1rem;
 }
 
+.bulk-actions-container {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  align-items: center;
+}
+
+.bulk-actions-container button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Make the tab group content take full height */
 ::ng-deep .mat-mdc-tab-body-wrapper {
   flex-grow: 1;

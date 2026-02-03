@@ -5,12 +5,25 @@
     <mat-tab-group class="tab-group" animationDuration="0ms" [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="onTabChange($event)">
       <mat-tab label="All Cards">
         <div class="tab-content">
+          <div class="bulk-actions-container">
+            <button
+              mat-raised-button
+              color="primary"
+              [matMenuTriggerFor]="addMenu"
+              [disabled]="!hasSelectedCards()"
+              matTooltip="Add selected cards to tab">
+              <mat-icon>add</mat-icon>
+              Add Selected
+            </button>
+          </div>
           <app-support-card-list-view
             [cards]="allCardsWithDefaults()"
             (add)="onAddCard($event)"
             [isFirstTab]="true"
             [addMenu]="addMenu"
-            [tabIndex]="-1"
+            [tabIndex]="0"
+            [isActive]="selectedTabIndex() === 0"
+            (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
           >
           </app-support-card-list-view>
         </div>
@@ -31,14 +44,36 @@
             </div>
           </ng-template>
           <div class="tab-content">
+            <div class="bulk-actions-container">
+              <button
+                mat-raised-button
+                color="primary"
+                [disabled]="!hasSelectedCards()"
+                [matMenuTriggerFor]="addMenu"
+                matTooltip="Add selected cards to tab">
+                <mat-icon>add</mat-icon>
+                Add Selected
+              </button>
+              <button
+                mat-raised-button
+                color="warn"
+                [disabled]="!hasSelectedCards()"
+                (click)="onBulkRemove($index)"
+                matTooltip="Remove selected cards from this tab">
+                <mat-icon>remove</mat-icon>
+                Remove Selected
+              </button>
+            </div>
             <app-support-card-list-view
               [cards]="tab.cards"
               [filterState]="tabFilters().get($index) || null"
-              [tabIndex]="$index"
+              [tabIndex]="$index + 1"
+              [isActive]="selectedTabIndex() === $index + 1"
               (levelChangedInTab)="onLevelChangedInDynamicTab($index, $event)"
               (add)="onAddCard($event)"
               (remove)="onRemoveCard($index, $event)"
               (filterChanged)="onFilterChanged($index, $event)"
+              (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
               [addMenu]="addMenu">
             </app-support-card-list-view>
           </div>

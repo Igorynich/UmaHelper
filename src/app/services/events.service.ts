@@ -78,7 +78,8 @@ export class EventsService {
       he: 'Heal a negative status effect',
       se: 'Get Charming ○ status',
       sg: 'Skill Gain',
-      sr: 'Skill Random'    // TODO: make custom template
+      sr: 'Skill Random',    // TODO: make custom template
+      '5s': 'All Stats'
     };
 
     const eventData = events.en || events;

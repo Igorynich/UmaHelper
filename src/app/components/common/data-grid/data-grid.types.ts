@@ -30,3 +30,7 @@ export interface UniqueEffectData {
   tooltip: string;
   hasUnique: boolean;
 }
+
+export interface CheckboxSelection {
+  [key: string]: boolean;
+}

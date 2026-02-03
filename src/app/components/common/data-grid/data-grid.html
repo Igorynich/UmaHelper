@@ -36,11 +36,20 @@
       <th mat-header-cell *matHeaderCellDef mat-sort-header [id]="column.key" [arrowPosition]="'before'"
           [matTooltip]="column.tooltip || ''" [style.width]="column.width">
         <div class="header-content-wrapper">
-          <span>{{ column.header }}</span>
-          @if (column.key === 'level') {
-            <button mat-icon-button (click)="onSetAllToMax($event)" matTooltip="Set all to max level" class="header-button">
-              <mat-icon>trending_up</mat-icon>
-            </button>
+          @if (column.type === 'checkbox') {
+            <mat-checkbox 
+              [checked]="isAllSelected()" 
+              [indeterminate]="isSomeSelected()"
+              (change)="masterToggle()"
+              (click)="$event.stopPropagation()">
+            </mat-checkbox>
+          } @else {
+            <span>{{ column.header }}</span>
+            @if (column.key === 'level') {
+              <button mat-icon-button (click)="onSetAllToMax($event)" matTooltip="Set all to max level" class="header-button">
+                <mat-icon>trending_up</mat-icon>
+              </button>
+            }
           }
         </div>
       </th>
@@ -49,7 +58,14 @@
           <div class="ssr-background-layer"></div>
         }
         <div class="cell-content-wrapper">
-          @if (column.type === 'level') {
+          @if (column.type === 'checkbox') {
+            <mat-checkbox 
+              [checked]="isRowSelected(row)" 
+              [indeterminate]="false"
+              (change)="toggleRow(row)"
+              (click)="$event.stopPropagation()">
+            </mat-checkbox>
+          } @else if (column.type === 'level') {
           <app-level
             [currentLevel]="row[column.key] || rarityLevelMap()[row.rarity].default"
             [maxLevel]="rarityLevelMap()[row.rarity].max"
