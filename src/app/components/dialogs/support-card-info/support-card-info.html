@@ -85,63 +85,77 @@
     <div class="info-block">
       <h3>Training Events</h3>
       @if (trainingEvents(); as events) {
-        <div class="training-events-display">
+        <mat-accordion multi> <!-- 'multi' allows multiple panels to be open at once -->
           @if (events.random.length > 0) {
             <h4 class="event-type-header">Random Events</h4>
             @for(event of events.random; track event.name) {
-              <div class="event-group">
-                <h5>{{ event.name }}</h5>
-                @for(choice of event.choices; track $index) {
-                  <div class="choice-group">
-                    <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
-                    <ul class="rewards-list">
-                      @for(reward of choice.rewards; track $index) {
-                        <li>
-                          @if (isString(reward)) {
-                            {{ reward }}
-                          } @else if (isSkillReward(reward)) {
-                            <span class="skill-reward-inline">
-                              <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
-                              <span>{{ reward.value }}</span>
-                            </span>
-                          }
-                        </li>
-                      }
-                    </ul>
-                  </div>
-                }
-              </div>
+              <mat-expansion-panel>
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    {{ event.name }}
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+
+                <div class="event-content">
+                  @for(choice of event.choices; track $index) {
+                    <div class="choice-group">
+                      <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                      <ul class="rewards-list">
+                        @for(reward of choice.rewards; track $index) {
+                          <li>
+                            @if (isString(reward)) {
+                              {{ reward }}
+                            } @else if (isSkillReward(reward)) {
+                              <span class="skill-reward-inline">
+                                <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
+                                <span>{{ reward.value }}</span>
+                              </span>
+                            }
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              </mat-expansion-panel>
             }
           }
 
           @if (events.arrows.length > 0) {
             <h4 class="event-type-header">Arrow Events</h4>
             @for(event of events.arrows; track event.name) {
-              <div class="event-group">
-                <h5>{{ event.name }}</h5>
-                @for(choice of event.choices; track $index) {
-                  <div class="choice-group">
-                    <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
-                    <ul class="rewards-list">
-                      @for(reward of choice.rewards; track $index) {
-                        <li>
-                          @if (isString(reward)) {
-                            {{ reward }}
-                          } @else if (isSkillReward(reward)) {
-                            <span class="skill-reward-inline">
-                              <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
-                              <span>{{ reward.value }}</span>
-                            </span>
-                          }
-                        </li>
-                      }
-                    </ul>
-                  </div>
-                }
-              </div>
+              <mat-expansion-panel>
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    {{ event.name }}
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+
+                <div class="event-content">
+                  @for(choice of event.choices; track $index) {
+                    <div class="choice-group">
+                      <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                      <ul class="rewards-list">
+                        @for(reward of choice.rewards; track $index) {
+                          <li>
+                            @if (isString(reward)) {
+                              {{ reward }}
+                            } @else if (isSkillReward(reward)) {
+                              <span class="skill-reward-inline">
+                                <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
+                                <span>{{ reward.value }}</span>
+                              </span>
+                            }
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              </mat-expansion-panel>
             }
           }
-        </div>
+        </mat-accordion>
       } @else {
         <p>No training event data available for this card.</p>
       }

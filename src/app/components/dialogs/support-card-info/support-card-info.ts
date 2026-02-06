@@ -18,11 +18,12 @@ import { EffectIdTranslatorPipe } from '../../../pipes/effect-id-translator.pipe
 import { effectMap } from '../../../maps/effect.map';
 import {MatIconButton} from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion'; // New import
 
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, MatIconButton, MatTooltipModule],
+  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, MatIconButton, MatTooltipModule, MatExpansionModule],
   templateUrl: './support-card-info.html',
   styleUrl: './support-card-info.css'
 })
@@ -68,8 +69,9 @@ export class SupportCardInfo {
 
   constructor() {
     effect(() => {
-      console.log('Rawdata', this.rawCardData());
-      console.log('Processed data', this.processedCardData());
+      // console.log('Rawdata', this.rawCardData());
+      // console.log('Processed data', this.processedCardData());
+      console.log('trainingEvents', this.trainingEvents());
     });
     const rarityClass = this.getRarityClass();
     if (rarityClass) {
