@@ -3,13 +3,14 @@
   justify-content: center; /* Center horizontally */
   align-items: center;
   position: relative; /* For positioning the close button */
-  padding: 1rem 3rem; /* Add padding to prevent overlap with close button */
+  padding: 0.25rem 3rem; /* Reduced top/bottom padding */
   border-bottom: 1px solid #e0e0e0;
 }
 
 .dialog-title h2 {
   color: black;
   font-weight: bold;
+  font-size: 2rem; /* Slightly reduced font size */
 }
 
 .type-icon {
@@ -281,7 +282,7 @@
 
 .unique-effect-value {
   font-weight: bold;
-  color: #007bff;
+  color: #ff9800; /* Matching unique-effect color */
 }
 
 .locked-unique-effect {

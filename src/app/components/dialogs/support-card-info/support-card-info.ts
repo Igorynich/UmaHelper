@@ -18,7 +18,8 @@ import { EffectIdTranslatorPipe } from '../../../pipes/effect-id-translator.pipe
 import { effectMap } from '../../../maps/effect.map';
 import {MatIconButton} from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatExpansionModule } from '@angular/material/expansion'; // New import
+import { MatExpansionModule } from '@angular/material/expansion';
+import {effectTypeMap} from '../../../maps/skill-effect.map'; // New import
 
 @Component({
   selector: 'app-support-card-info',
@@ -71,7 +72,8 @@ export class SupportCardInfo {
     effect(() => {
       // console.log('Rawdata', this.rawCardData());
       // console.log('Processed data', this.processedCardData());
-      console.log('trainingEvents', this.trainingEvents());
+      // console.log('trainingEvents', this.trainingEvents());
+      console.log('statGains', this.statGains());
     });
     const rarityClass = this.getRarityClass();
     if (rarityClass) {
@@ -114,24 +116,24 @@ export class SupportCardInfo {
   }
 
   private processEventSkills(): void {
-    if (this.rawCardData().event_skills?.length > 0) {
-      this.skillsService.getSkillsByIds(this.rawCardData().event_skills).pipe(take(1)).subscribe(foundSkills => {
+    if (this.processedCardData().event_skills?.length > 0) {
+      this.skillsService.getSkillsByIds(this.processedCardData().event_skills).pipe(take(1)).subscribe(foundSkills => {
         this.eventSkills.set(foundSkills);
       });
     }
   }
 
   private processHints(): void {
-    if (this.rawCardData().hints) {
-      if (this.rawCardData().hints.hint_skills?.length > 0) {
-        this.skillsService.getSkillsByIds(this.rawCardData().hints.hint_skills).pipe(take(1)).subscribe(foundSkills => {
+    if (this.processedCardData().hints) {
+      if (this.processedCardData().hints.hint_skills?.length > 0) {
+        this.skillsService.getSkillsByIds(this.processedCardData().hints.hint_skills).pipe(take(1)).subscribe(foundSkills => {
           this.hintSkills.set(foundSkills);
         });
       }
 
-      if (this.rawCardData().hints.hint_others?.length > 0) {
-        const gains = this.rawCardData().hints.hint_others.map((hint: { hint_type: number, hint_value: number }) => {
-          const effectName = effectMap[hint.hint_type as keyof typeof effectMap] || `Unknown Stat (${hint.hint_type})`;
+      if (this.processedCardData().hints.hint_others?.length > 0) {
+        const gains = this.processedCardData().hints.hint_others.map((hint: { hint_type: number, hint_value: number }) => {
+          const effectName: string = effectTypeMap[hint.hint_type as keyof typeof effectTypeMap] || `Unknown Stat (${hint.hint_type})`;
           return `${effectName} +${hint.hint_value}`;
         });
         this.statGains.set(gains);

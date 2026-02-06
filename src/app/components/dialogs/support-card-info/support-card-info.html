@@ -17,7 +17,7 @@
     ></app-level>
 
     @if (processedCardData().uniqueDisplayData; as uniqueData) {
-      <div class="unique-effects-section" [class.locked-unique-effect]="uniqueData.isCardUniqueLocked" [matTooltip]="uniqueData.tooltip">
+      <div class="unique-effects-section" [class.locked-unique-effect]="uniqueData.isCardUniqueLocked">
         <div class="unique-level-display">Unique Effect ({{ uniqueData.levelDisplay }})</div>
         <div class="unique-effects-list">
           @for (effect of uniqueData.effectsDisplay; track $index) {
