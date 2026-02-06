@@ -1,11 +1,10 @@
 import {Component, computed, DestroyRef, effect, inject, input, signal, contentChild, output} from '@angular/core';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DataGrid } from '../../../components/common/data-grid/data-grid';
-import { DataGridColumn, SortType, CheckboxSelection } from '../../../components/common/data-grid/data-grid.types';
+import { DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
 import { DisplaySupportCard, Rarity } from '../../../interfaces/display-support-card';
 import { effectMap } from '../../../maps/effect.map';
 import { EffectId } from '../../../interfaces/effect-id.enum';
-import { SupportCard, SupportCardHints } from '../../../interfaces/support-card';
 import { SupportCardFilter } from '../../../interfaces/user-support-cards-data';
 import { debounceTime, startWith } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -15,41 +14,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { SupportCardType } from '../../../interfaces/support-card-type.enum';
-import { IMAGEKIT_CONFIG } from '../../../imagekit.config';
 import { MatDialog } from '@angular/material/dialog';
 import { SupportCardInfo } from '../../../components/dialogs/support-card-info/support-card-info';
 import {MatMenu} from '@angular/material/menu';
 import { DataGridStateService } from '../../../services/data-grid-state.service';
+import { SupportCardEffectData }
+from '../../../interfaces/support-card';
+import {rarityLevelMap, SupportCardService } from '../../../services/support-card.service';
 
 type Operator = '>=' | '<=' | '>' | '<' | '=';
-
-export interface SupportCardEffectData {
-  support_id: number;
-  char_name: string;
-  level?: number | undefined;
-  rarity: Rarity;
-  type: SupportCardType,
-  characterImageUrl: string;
-  event_skills: number[];
-  hints: SupportCardHints;
-  uniqueDisplayData?: UniqueColumnDisplayData;
-  [key: string]: number | string | undefined | { value: string; isLocked: boolean } | {
-    value: number;
-    tooltip: string;
-    hasUnique: boolean
-  } | UniqueColumnDisplayData | number[] | SupportCardHints;
-}
-
-export interface UniqueColumnDisplayData {
-  levelDisplay: string;
-  effectsDisplay: { shortName: string; value: number; isLocked: boolean; }[];
-  isCardUniqueLocked: boolean;
-  tooltip: string;
-}
-
-const LEVEL_TO_INDEX_MAP: { [level: number]: number } = {
-  1: 1, 5: 2, 10: 3, 15: 4, 20: 5, 25: 6, 30: 7, 35: 8, 40: 9, 45: 10, 50: 11,
-};
 
 @Component({
   selector: 'app-support-card-list-view',
@@ -70,6 +43,7 @@ export class SupportCardListViewComponent {
   private destroyRef = inject(DestroyRef);
   private dialog = inject(MatDialog);
   private dataGridStateService = inject(DataGridStateService);
+  private supportCardService = inject(SupportCardService);
 
   cards = input<DisplaySupportCard[]>([]);
   isFirstTab = input<boolean>(false);
@@ -140,11 +114,7 @@ export class SupportCardListViewComponent {
   }
 
   protected readonly Rarity = Rarity;
-  protected readonly rarityLevelMap = {
-    [Rarity.R]: { default: 20, max: 40 },
-    [Rarity.SR]: { default: 25, max: 45 },
-    [Rarity.SSR]: { default: 30, max: 50 },
-  };
+  protected readonly rarityLevelMap = rarityLevelMap;
   protected readonly operatorOptions: { label: string, value: Operator }[] = [
     { label: '>=', value: '>=' },
     { label: '<=', value: '<=' },
@@ -236,76 +206,10 @@ export class SupportCardListViewComponent {
   });
 
   protected readonly processedData = computed((): SupportCardEffectData[] => {
-
     const columns = this.dynamicColumns();
     const effectIds = columns.filter(c => c.type === 'effect').map(c => Number(c.key));
 
-    return this.supportCardsWithLevels().map(card => {
-      const data: SupportCardEffectData = {
-        support_id: card.support_id,
-        char_name: card.char_name,
-        level: card.level,
-        rarity: card.rarity,
-        type: card.type,
-        characterImageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/sup_cards/tex_support_card_${card.support_id}.png`,
-        event_skills: card.event_skills,
-        hints: card.hints,
-      };
-      const currentLevel = card.level || this.rarityLevelMap[card.rarity].default;
-
-      if (card.unique) {
-        const uniqueLevel = card.unique.level;
-        const isCardUniqueLocked = currentLevel < uniqueLevel;
-
-        const effectsDisplay = card.unique.effects.map(ue => ({
-          shortName: effectMap[ue.type as EffectId]?.short || `Effect ${ue.type}`,
-          value: ue.value,
-          isLocked: isCardUniqueLocked,
-        }));
-
-        data.uniqueDisplayData = {
-          levelDisplay: `Lvl ${uniqueLevel}`,
-          effectsDisplay: effectsDisplay,
-          isCardUniqueLocked: isCardUniqueLocked,
-          tooltip: isCardUniqueLocked ? `Unique effects unlock at Lvl ${uniqueLevel}` : card.unique.unique_desc || `Unique effects unlock at Lvl ${uniqueLevel}`,
-        };
-      }
-
-      for (const effectId of effectIds) {
-        const effectIdStr = effectId.toString();
-        const effect = card.effects.find(e => e[0] === effectId);
-        const baseValue = effect ? this.calculateEffectValue(effect, currentLevel) : 0;
-        let uniqueValue = 0;
-
-        if (card.unique && currentLevel >= card.unique.level) {
-          const uniqueEffect = card.unique.effects.find(e => e.type === effectId);
-          if (uniqueEffect) {
-            uniqueValue = uniqueEffect.value;
-          }
-        }
-
-        if (baseValue > 0 || uniqueValue > 0) {
-          if (uniqueValue > 0) {
-            data[effectIdStr] = {
-              value: baseValue + uniqueValue,
-              tooltip: `${baseValue}+${uniqueValue}u`,
-              hasUnique: true,
-            };
-          } else {
-            data[effectIdStr] = baseValue;
-          }
-        } else if (effect) {
-          const unlockInfo = this.findUnlockInfo(effect);
-          if (unlockInfo) {
-            data[effectIdStr] = {
-              value: `${unlockInfo.value}(Lvl ${unlockInfo.level})`,
-              isLocked: true,
-            };
-          }
-        }
-      }
-      return data;
-    });
+    return this.supportCardsWithLevels().map(card => this.supportCardService.mapToSupportCardEffectData(card, effectIds));
   });
 
   protected readonly filteredData = computed(() => {
@@ -390,63 +294,17 @@ export class SupportCardListViewComponent {
     });
   }
 
-  private findUnlockInfo(effect: number[]): { value: number; level: number } | null {
-    const levels = Object.keys(LEVEL_TO_INDEX_MAP).map(Number);
-    for (const level of levels) {
-      const value = effect[LEVEL_TO_INDEX_MAP[level]];
-      if (value !== -1) return { value, level };
-    }
-    return null;
-  }
-
-  private calculateEffectValue(effect: number[], level: number): number {
-    const levels = Object.keys(LEVEL_TO_INDEX_MAP).map(Number);
-    let startLevel = 1, startValue = -1;
-
-    for (let i = 0; i < levels.length; i++) {
-      const currentLevel = levels[i];
-      if (currentLevel > level) break;
-      const val = effect[LEVEL_TO_INDEX_MAP[currentLevel]];
-      if (val !== -1) {
-        startLevel = currentLevel;
-        startValue = val;
-      }
-    }
-
-    if (startValue === -1) return 0;
-    if (level === startLevel) return startValue;
-
-    let endLevel = startLevel, endValue = startValue;
-
-    for (let i = levels.indexOf(startLevel) + 1; i < levels.length; i++) {
-      const currentLevel = levels[i];
-      const val = effect[LEVEL_TO_INDEX_MAP[currentLevel]];
-      if (val !== -1) {
-        endLevel = currentLevel;
-        endValue = val;
-        break;
-      }
-    }
-
-    if (endLevel === startLevel) return startValue;
-    if (level >= endLevel) return endValue;
-
-    const levelDiff = endLevel - startLevel;
-    const valueDiff = endValue - startValue;
-    const progress = (level - startLevel) / levelDiff;
-    const interpolatedValue = startValue + (valueDiff * progress);
-
-    return Math.floor(interpolatedValue);
-  }
-
   protected readonly Object = Object;
 
-  protected openImageModal(cardData: any): void {
-    this.dialog.open(SupportCardInfo, {
-      data: cardData,
-      maxWidth: '90vw',
-      maxHeight: '90vh',
-    });
+  protected openImageModal(cardData: SupportCardEffectData): void {
+    const fullCardData = this.supportCardsWithLevels().find(card => card.support_id === cardData.support_id);
+    if (fullCardData) {
+      this.dialog.open(SupportCardInfo, {
+        data: fullCardData,
+        maxWidth: '90vw',
+        maxHeight: '90vh',
+      });
+    }
   }
 
   protected onSetAllFilteredToMax(): void {

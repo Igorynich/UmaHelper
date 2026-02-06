@@ -1,14 +1,13 @@
 import { Component, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { SupportCardService } from '../../services/support-card.service';
+import {rarityLevelMap, SupportCardService} from '../../services/support-card.service';
 import { SupportCardsDataService } from '../../services/support-cards-data.service';
 import { DisplaySupportCard, Rarity } from '../../interfaces/display-support-card';
-import { SupportCard } from '../../interfaces/support-card';
+import {SupportCard, SupportCardEffectData} from '../../interfaces/support-card';
 import { UserSupportCardsData, SupportCardFilter } from '../../interfaces/user-support-cards-data';
 import { MatTabsModule } from '@angular/material/tabs';
 import {
-  SupportCardListViewComponent,
-  SupportCardEffectData
+  SupportCardListViewComponent
 } from './support-card-list-view/support-card-list-view';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -86,11 +85,7 @@ export class SupportCards {
     });
   });
 
-  protected readonly rarityLevelMap = {
-    [Rarity.R]: { default: 20, max: 40 },
-    [Rarity.SR]: { default: 25, max: 45 },
-    [Rarity.SSR]: { default: 30, max: 50 },
-  };
+  protected readonly rarityLevelMap = rarityLevelMap;
 
   protected selectedTabIndex = signal(0);
   protected selectedCard = signal<SupportCardEffectData | null>(null);
