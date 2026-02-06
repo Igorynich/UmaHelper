@@ -1,12 +1,53 @@
 <div mat-dialog-title class="dialog-title">
-  <h2>{{ data.char_name }}</h2>
+  <img [src]="typeImageUrl()" [alt]="processedCardData().type" class="type-icon">
+  <h2>{{ rawCardData().char_name }}</h2>
   <button mat-icon-button (click)="close()" class="close-button">
     <mat-icon>close</mat-icon>
   </button>
 </div>
 <mat-dialog-content class="dialog-content-wrapper">
   <div class="image-section">
-    <img [src]="data.characterImageUrl" [alt]="data.char_name">
+    <img [src]="processedCardData().characterImageUrl" [alt]="rawCardData().char_name">
+
+    <app-level
+      [minLevel]="1"
+      [maxLevel]="rarityLevelMap[rawCardData().rarity].max"
+      [currentLevel]="level()"
+      (levelChange)="onLevelChange($event)"
+    ></app-level>
+
+    @if (processedCardData().uniqueDisplayData; as uniqueData) {
+      <div class="unique-effects-section" [class.locked-unique-effect]="uniqueData.isCardUniqueLocked" [matTooltip]="uniqueData.tooltip">
+        <div class="unique-level-display">Unique Effect ({{ uniqueData.levelDisplay }})</div>
+        <div class="unique-effects-list">
+          @for (effect of uniqueData.effectsDisplay; track $index) {
+            <div class="unique-effect-item">
+              <span class="unique-effect-name">{{ effect.longName }}</span>
+              <span class="unique-effect-value">{{ effect.value }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="card-stats-grid">
+      @for (effectId of presentEffectIds(); track effectId) {
+        @if (processedCardData()[effectId.toString()]; as effectData) {
+          <div class="stat-row">
+            <span class="stat-name">{{ effectId | effectIdTranslator }}</span>
+            <span class="stat-value">
+              @if (isLockedEffectData(effectData)) {
+                <span [class.locked-stat]="effectData.isLocked">{{ effectData.value }}</span>
+              } @else if (isUniqueEffectData(effectData)) {
+                <span [class.unique-effect]="effectData.hasUnique" [matTooltip]="effectData.tooltip">{{ effectData.value }}</span>
+              } @else {
+                {{ effectData }}
+              }
+            </span>
+          </div>
+        }
+      }
+    </div>
   </div>
   <div class="info-section">
     <div class="info-block">

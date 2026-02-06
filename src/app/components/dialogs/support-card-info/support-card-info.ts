@@ -1,38 +1,76 @@
-import { Component, inject, signal } from '@angular/core';
+import {Component, computed, effect, inject, signal, Signal, WritableSignal} from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { Rarity } from '../../../interfaces/display-support-card';
+import {DisplaySupportCard, Rarity} from '../../../interfaces/display-support-card';
 import { SkillsService } from '../../../services/skills.service';
 import { Skill } from '../../../interfaces/skill';
 import { take } from 'rxjs';
-import { effectTypeMap } from '../../../maps/skill-effect.map';
 import { CommonModule } from '@angular/common';
 import { SkillDisplay } from '../../common/skill-display/skill-display';
 import {MatCard} from '@angular/material/card';
-import { EventsService } from '../../../services/events.service'; // New Import
-import { DecodedEventsContainer, DecodedSkillReward } from '../../../interfaces/event'; // New Import
+import { EventsService } from '../../../services/events.service';
+import { DecodedEventsContainer, DecodedSkillReward } from '../../../interfaces/event';
+import { SupportCardEffectData } from '../../../interfaces/support-card';
+import { SupportCardService, rarityLevelMap } from '../../../services/support-card.service';
+import { EffectId } from '../../../interfaces/effect-id.enum';
+import { Level } from '../../common/level/level';
+import { EffectIdTranslatorPipe } from '../../../pipes/effect-id-translator.pipe';
+import { effectMap } from '../../../maps/effect.map';
+import {MatIconButton} from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard],
+  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, MatIconButton, MatTooltipModule],
   templateUrl: './support-card-info.html',
   styleUrl: './support-card-info.css'
 })
 export class SupportCardInfo {
-  protected readonly data: any = inject(MAT_DIALOG_DATA);
-  private readonly dialogRef = inject(MatDialogRef<SupportCardInfo>);
+  protected readonly rawCardData: Signal<DisplaySupportCard> = signal(inject(MAT_DIALOG_DATA) as DisplaySupportCard);
+  protected readonly dialogRef = inject(MatDialogRef<SupportCardInfo>);
   private readonly skillsService = inject(SkillsService);
-  private readonly eventsService = inject(EventsService); // New injection
+  private readonly eventsService = inject(EventsService);
+  private readonly supportCardService = inject(SupportCardService);
 
-  protected readonly Rarity = Rarity;
+  protected readonly rarityLevelMap = rarityLevelMap;
+  protected readonly level: WritableSignal<number> = signal(this.rawCardData().level || rarityLevelMap[this.rawCardData().rarity].default);
   protected hintSkills = signal<Skill[]>([]);
   protected statGains = signal<string[]>([]);
   protected eventSkills = signal<Skill[]>([]);
-  protected trainingEvents = signal<DecodedEventsContainer | null>(null); // New signal
+  protected trainingEvents = signal<DecodedEventsContainer | null>(null);
+
+  protected readonly processedCardData: Signal<SupportCardEffectData> = computed(() => {
+    const currentLevel = this.level();
+    const card = this.rawCardData();
+    const cardWithDynamicLevel = { ...card, level: currentLevel };
+    return this.supportCardService.mapToSupportCardEffectData(cardWithDynamicLevel);
+  });
+
+  protected readonly presentEffectIds = computed(() => {
+    const processed = this.processedCardData();
+    const effectIdsPresent: EffectId[] = [];
+
+    for (const key in processed) {
+      if (processed.hasOwnProperty(key)) {
+        const effectId = parseInt(key, 10);
+        if (!isNaN(effectId) && Object.values(EffectId).includes(effectId) && (processed as any)[key] !== undefined && (processed as any)[key] !== null) {
+          effectIdsPresent.push(effectId);
+        }
+      }
+    }
+    return effectIdsPresent.sort((a, b) => a - b);
+  });
+
+  protected readonly typeImageUrl = computed(() => {
+    return `assets/types/${this.processedCardData().type.toLowerCase()}.png`;
+  });
 
   constructor() {
-    console.log('data', this.data);
+    effect(() => {
+      console.log('Rawdata', this.rawCardData());
+      console.log('Processed data', this.processedCardData());
+    });
     const rarityClass = this.getRarityClass();
     if (rarityClass) {
       this.dialogRef.addPanelClass(rarityClass);
@@ -40,7 +78,11 @@ export class SupportCardInfo {
 
     this.processHints();
     this.processEventSkills();
-    this.processTrainingEvents(); // New call
+    this.processTrainingEvents();
+  }
+
+  protected onLevelChange(newLevel: number): void {
+    this.level.set(newLevel);
   }
 
   protected isString(reward: any): reward is string {
@@ -51,9 +93,17 @@ export class SupportCardInfo {
     return typeof reward === 'object' && reward.type === 'skill';
   }
 
+  protected isLockedEffectData(value: any): value is { value: string; isLocked: boolean; } {
+    return typeof value === 'object' && value !== null && 'isLocked' in value;
+  }
+
+  protected isUniqueEffectData(value: any): value is { value: number | string; tooltip: string; hasUnique: boolean; } {
+    return typeof value === 'object' && value !== null && 'hasUnique' in value;
+  }
+
   private processTrainingEvents(): void {
-    if (this.data.support_id) {
-      this.eventsService.getAndDecodeEvents(this.data.support_id.toString())
+    if (this.rawCardData().support_id) {
+      this.eventsService.getAndDecodeEvents(this.rawCardData().support_id.toString())
         .pipe(take(1))
         .subscribe(decodedEvents => {
           this.trainingEvents.set(decodedEvents);
@@ -62,26 +112,24 @@ export class SupportCardInfo {
   }
 
   private processEventSkills(): void {
-    if (this.data.event_skills?.length > 0) {
-      this.skillsService.getSkillsByIds(this.data.event_skills).pipe(take(1)).subscribe(foundSkills => {
+    if (this.rawCardData().event_skills?.length > 0) {
+      this.skillsService.getSkillsByIds(this.rawCardData().event_skills).pipe(take(1)).subscribe(foundSkills => {
         this.eventSkills.set(foundSkills);
       });
     }
   }
 
   private processHints(): void {
-    if (this.data.hints) {
-      // Process hint_skills
-      if (this.data.hints.hint_skills?.length > 0) {
-        this.skillsService.getSkillsByIds(this.data.hints.hint_skills).pipe(take(1)).subscribe(foundSkills => {
+    if (this.rawCardData().hints) {
+      if (this.rawCardData().hints.hint_skills?.length > 0) {
+        this.skillsService.getSkillsByIds(this.rawCardData().hints.hint_skills).pipe(take(1)).subscribe(foundSkills => {
           this.hintSkills.set(foundSkills);
         });
       }
 
-      // Process hint_others for stat gains
-      if (this.data.hints.hint_others?.length > 0) {
-        const gains = this.data.hints.hint_others.map((hint: { hint_type: number, hint_value: number }) => {
-          const effectName = effectTypeMap[hint.hint_type as keyof typeof effectTypeMap] || `Unknown Stat (${hint.hint_type})`;
+      if (this.rawCardData().hints.hint_others?.length > 0) {
+        const gains = this.rawCardData().hints.hint_others.map((hint: { hint_type: number, hint_value: number }) => {
+          const effectName = effectMap[hint.hint_type as keyof typeof effectMap] || `Unknown Stat (${hint.hint_type})`;
           return `${effectName} +${hint.hint_value}`;
         });
         this.statGains.set(gains);
@@ -90,7 +138,7 @@ export class SupportCardInfo {
   }
 
   private getRarityClass(): string {
-    switch (this.data.rarity) {
+    switch (this.rawCardData().rarity) {
       case Rarity.SSR:
         return 'rarity-ssr-dialog';
       case Rarity.SR:

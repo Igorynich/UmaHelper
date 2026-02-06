@@ -137,3 +137,27 @@ export interface SupportCard {
    */
   url_name: string;
 }
+
+export interface SupportCardEffectData {
+  support_id: number;
+  char_name: string;
+  level?: number | undefined;
+  rarity: Rarity;
+  type: SupportCardType,
+  characterImageUrl: string;
+  event_skills: number[];
+  hints: SupportCardHints;
+  uniqueDisplayData?: UniqueColumnDisplayData;
+  [key: string]: number | string | undefined | { value: string; isLocked: boolean } | {
+    value: number;
+    tooltip: string;
+    hasUnique: boolean
+  } | UniqueColumnDisplayData | number[] | SupportCardHints;
+}
+
+export interface UniqueColumnDisplayData {
+  levelDisplay: string;
+  effectsDisplay: { shortName: string; longName: string; value: number; }[];
+  isCardUniqueLocked: boolean;
+  tooltip: string;
+}
