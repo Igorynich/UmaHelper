@@ -45,8 +45,20 @@ export class Level {
   }
 
   setLevel(index: number): void {
-    let newLevel = this.availableLevels()[index];
-    newLevel = Math.max(this.minLevel(), Math.min(newLevel, this.maxLevel()));
-    this.levelChange.emit(newLevel);
+    const current = this.currentLevel();
+    const levels = this.availableLevels();
+    const targetLevel = levels[index];
+
+    // Check if current level is exactly one of the special levels
+    if (current === targetLevel) {
+      // Set to max - 20 (default level for current rarity)
+      const defaultLevel = this.maxLevel() - 20;
+      const newLevel = Math.max(this.minLevel(), Math.min(defaultLevel, this.maxLevel()));
+      this.levelChange.emit(newLevel);
+    } else {
+      // Normal behavior: set to the clicked level
+      const newLevel = Math.max(this.minLevel(), Math.min(targetLevel, this.maxLevel()));
+      this.levelChange.emit(newLevel);
+    }
   }
 }
