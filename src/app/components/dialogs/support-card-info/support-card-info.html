@@ -43,10 +43,25 @@
               } @else {
                 {{ effectData }}
               }
+              @if (statDifferences()[effectId.toString()]; as diff) {
+                <span [class.positive-diff]="diff > 0" [class.negative-diff]="diff < 0">
+                  ({{ diff > 0 ? '+' : '' }}{{ diff }})
+                </span>
+              }
             </span>
           </div>
         }
       }
+    </div>
+
+    <!-- Stat differences toggle -->
+    <div class="stat-differences-toggle">
+      <mat-checkbox 
+        [checked]="showStatDifferences()" 
+        (change)="toggleStatDifferences()"
+        labelPosition="after">
+        Show stat differences
+      </mat-checkbox>
     </div>
   </div>
   <div class="info-section">

@@ -18,13 +18,14 @@ import { EffectIdTranslatorPipe } from '../../../pipes/effect-id-translator.pipe
 import { effectMap } from '../../../maps/effect.map';
 import {MatIconButton} from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import {effectTypeMap} from '../../../maps/skill-effect.map'; // New import
 
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, MatIconButton, MatTooltipModule, MatExpansionModule],
+  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule],
   templateUrl: './support-card-info.html',
   styleUrl: './support-card-info.css'
 })
@@ -41,6 +42,10 @@ export class SupportCardInfo {
   protected statGains = signal<string[]>([]);
   protected eventSkills = signal<Skill[]>([]);
   protected trainingEvents = signal<DecodedEventsContainer | null>(null);
+
+  // Stat difference feature
+  protected readonly showStatDifferences = signal(true);
+  protected readonly previousProcessedData = signal<SupportCardEffectData | null>(null);
 
   protected readonly processedCardData: Signal<SupportCardEffectData> = computed(() => {
     const currentLevel = this.level();
@@ -68,6 +73,43 @@ export class SupportCardInfo {
     return `assets/types/${this.processedCardData().type.toLowerCase()}.png`;
   });
 
+  protected readonly statDifferences = computed(() => {
+    if (!this.showStatDifferences()) return {}; // Don't calculate if disabled
+
+    const current = this.processedCardData();
+    const previous = this.previousProcessedData();
+    console.log('current', current);
+    console.log('previous', previous);
+    if (!previous) return {}; // No previous data
+
+    const differences: Record<string, number> = {};
+    for (const key in current) {
+      const currentValue = (current as any)[key];
+      const prevValue = (previous as any)[key];
+
+      // Helper function to extract numeric value
+      const getNumericValue = (value: any): number => {
+        if (typeof value === 'number') {
+          return value;
+        }
+        if (typeof value === 'object' && value !== null && 'value' in value) {
+          const objValue = value.value;
+          return typeof objValue === 'number' ? objValue : 0;
+        }
+        return 0;
+      };
+
+      const currentNum = getNumericValue(currentValue);
+      const prevNum = getNumericValue(prevValue);
+
+      const diff = currentNum - prevNum;
+      if (diff !== 0) {
+        differences[key] = diff;
+      }
+    }
+    return differences;
+  });
+
   constructor() {
     effect(() => {
       // console.log('Rawdata', this.rawCardData());
@@ -86,7 +128,12 @@ export class SupportCardInfo {
   }
 
   protected onLevelChange(newLevel: number): void {
+    this.previousProcessedData.set(this.processedCardData());
     this.level.set(newLevel);
+  }
+
+  protected toggleStatDifferences(): void {
+    this.showStatDifferences.set(!this.showStatDifferences());
   }
 
   protected isString(reward: any): reward is string {

@@ -27,7 +27,7 @@
 }
 
 .image-section {
-  flex: 0 0 250px; /* Fixed width for the image */
+  flex: 0 0 280px; /* Increased width for the image section */
   display: flex;
   flex-direction: column; /* Allow content to stack vertically */
   align-items: center; /* Center items horizontally within the section */
@@ -42,10 +42,10 @@
 
 .card-stats-grid {
   display: grid;
-  grid-template-columns: 1fr auto; /* Two columns: 1st takes available space, 2nd auto-sizes */
+  grid-template-columns: 150px auto; /* Match stat-name width */
   gap: 0.5rem 1rem; /* Row gap, Column gap */
   width: 100%; /* Take full width of parent image-section */
-  padding: 0.5rem;
+  padding: 0.5rem; /* Smaller padding */
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #f9f9f9;
@@ -59,12 +59,23 @@
   text-align: left;
   font-weight: 500;
   color: #333;
+  min-width: 150px; /* Adjusted width */
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .stat-value {
   text-align: right;
   font-weight: bold;
   color: #007bff; /* Example color for values */
+  font-size: 0.9em; /* Smaller font */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
 }
 
 
@@ -244,8 +255,9 @@
 }
 
 .unique-effects-section {
-  width: 100%;
-  padding: 0.75rem;
+  width: 100%; /* Match stats section width */
+  max-width: 100%; /* Ensure it doesn't overflow */
+  padding: 0.5rem; /* Smaller padding to match stats */
   border-radius: 8px;
   margin-top: 1rem;
   background-color: #e0f7fa; /* Light blue background for distinction */
@@ -297,4 +309,27 @@
 .locked-unique-effect .unique-effect-name,
 .locked-unique-effect .unique-effect-value {
   color: #9e9e9e; /* Even lighter grey for text */
+}
+
+.stat-differences-toggle {
+  margin: 12px 0;
+  padding: 8px;
+  border-top: 1px solid #e0e0e0;
+  width: 100%;
+}
+
+.positive-diff {
+  color: #4caf50; /* Green */
+  font-weight: bold;
+  margin-left: 4px;
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+.negative-diff {
+  color: #f44336; /* Red */
+  font-weight: bold;
+  margin-left: 4px;
+  font-size: 0.9em;
+  flex-shrink: 0;
 }
