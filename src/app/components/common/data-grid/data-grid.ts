@@ -28,10 +28,9 @@ import {
   SortType,
   DataGridColumn,
   ActiveSort,
-  LockedEffectData,
-  UniqueEffectData,
   CheckboxSelection
 } from './data-grid.types';
+import {EffectValuePipe} from '../../../pipes/effect-value.pipe';
 
 
 @Component({
@@ -50,6 +49,7 @@ import {
     MatPaginatorModule,
     RarityPipe,
     RarityClassPipe,
+    EffectValuePipe,
   ],
   templateUrl: './data-grid.html',
   styleUrl: './data-grid.css',
@@ -263,14 +263,6 @@ export class DataGrid<T> implements AfterViewInit {
     } else if (action === 'remove') {
       this.removeClicked.emit(row);
     }
-  }
-
-  protected isLockedEffectData(value: any): value is LockedEffectData {
-    return typeof value === 'object' && value !== null && 'isLocked' in value;
-  }
-
-  protected isUniqueEffectData(value: any): value is UniqueEffectData {
-    return typeof value === 'object' && value !== null && 'hasUnique' in value;
   }
 
   protected removeSort(key: string): void {

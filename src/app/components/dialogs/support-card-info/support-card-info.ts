@@ -8,24 +8,24 @@ import { take } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { SkillDisplay } from '../../common/skill-display/skill-display';
 import {MatCard} from '@angular/material/card';
-import { EventsService } from '../../../services/events.service';
+import {EventsService, eventTypes, evntTypeConvertFn} from '../../../services/events.service';
 import { DecodedEventsContainer, DecodedSkillReward } from '../../../interfaces/event';
 import { SupportCardEffectData } from '../../../interfaces/support-card';
 import { SupportCardService, rarityLevelMap } from '../../../services/support-card.service';
 import { EffectId } from '../../../interfaces/effect-id.enum';
 import { Level } from '../../common/level/level';
 import { EffectIdTranslatorPipe } from '../../../pipes/effect-id-translator.pipe';
-import { effectMap } from '../../../maps/effect.map';
 import {MatIconButton} from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import {effectTypeMap} from '../../../maps/skill-effect.map'; // New import
+import { EffectValuePipe } from '../../../pipes/effect-value.pipe';
 
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule],
+  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule],
   templateUrl: './support-card-info.html',
   styleUrl: './support-card-info.css'
 })
@@ -42,6 +42,7 @@ export class SupportCardInfo {
   protected statGains = signal<string[]>([]);
   protected eventSkills = signal<Skill[]>([]);
   protected trainingEvents = signal<DecodedEventsContainer | null>(null);
+  protected displayedTrainingEvents = computed(() => evntTypeConvertFn(this.trainingEvents()));
 
   // Stat difference feature
   protected readonly showStatDifferences = signal(true);
@@ -142,14 +143,6 @@ export class SupportCardInfo {
 
   protected isSkillReward(reward: any): reward is DecodedSkillReward {
     return typeof reward === 'object' && reward.type === 'skill';
-  }
-
-  protected isLockedEffectData(value: any): value is { value: string; isLocked: boolean; } {
-    return typeof value === 'object' && value !== null && 'isLocked' in value;
-  }
-
-  protected isUniqueEffectData(value: any): value is { value: number | string; tooltip: string; hasUnique: boolean; } {
-    return typeof value === 'object' && value !== null && 'hasUnique' in value;
   }
 
   private processTrainingEvents(): void {

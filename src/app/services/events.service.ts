@@ -1,10 +1,36 @@
-import { inject, Injectable } from '@angular/core';
-import { doc, Firestore, getDoc } from '@angular/fire/firestore';
-import { from, Observable, of, switchMap, map } from 'rxjs';
-import { DecodedEvent, DecodedEventsContainer, EventChoice, EventReward, UmaEvent } from '../interfaces/event';
-import { effectTypeMap } from '../maps/skill-effect.map';
-import { Skill } from '../interfaces/skill';
-import { SkillsService } from './skills.service';
+import {inject, Injectable} from '@angular/core';
+import {doc, Firestore, getDoc} from '@angular/fire/firestore';
+import {from, map, Observable, of, switchMap} from 'rxjs';
+import {DecodedEvent, DecodedEventsContainer, EventChoice, EventReward, UmaEvent} from '../interfaces/event';
+import {Skill} from '../interfaces/skill';
+import {SkillsService} from './skills.service';
+
+export const eventTypes: Record<string, { name: string }> = {
+  random: {
+    name: 'Random Events'
+  },
+  arrows: {
+    name: 'Chain Events'
+  },
+  dates: {
+    name: 'Dates'
+  },
+  special: {
+    name: 'Special Events'
+  }
+};
+
+// DecodedEventsContainer -> {name: string, events:[]}[]
+export const evntTypeConvertFn = (container: DecodedEventsContainer | null) => Object.keys(container || {}).map(key => {
+  const evName =  eventTypes[key]?.name;
+  if (!evName) {
+    console.log('Unknown Event Group', key);
+  }
+  return {
+    name: evName || 'Unknown Events',
+    events: container?.[key] || []
+  };
+});     // add sorting?
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +46,8 @@ export class EventsService {
         if (!rawEvents) return of(null);
 
         const eventData = rawEvents.en || rawEvents;
-        const allEvents: UmaEvent[] = [...(eventData.random || []), ...(eventData.arrows || [])];
+        const allEvents: UmaEvent[] = [...Object.values(eventData)?.flat() || []] as UmaEvent[];
+        // const allEvents: UmaEvent[] = [...(eventData.random || []), ...(eventData.arrows || [])];
 
         const skillIds = allEvents
           .flatMap(event => event.c.flatMap(choice => choice.r))
@@ -79,7 +106,9 @@ export class EventsService {
       se: 'Get Charming ○ status',
       sg: 'Skill Gain',
       sr: 'Skill Random',    // TODO: make custom template
-      '5s': 'All Stats'
+      '5s': 'All Stats',
+      rs: '1 Random Stat',
+      fe: 'Full Energy Recovery'
     };
 
     const eventData = events.en || events;
@@ -113,9 +142,11 @@ export class EventsService {
       }))
     });
 
-    return {
-      random: (eventData.random || []).map(mapEvent),
-      arrows: (eventData.arrows || []).map(mapEvent)
-    };
+    return Object.keys(eventData).reduce((acc, key) => {
+      return {
+        ...acc,
+        [key]: eventData[key].map(mapEvent)
+      };
+    }, {});
   }
 }

@@ -19,3 +19,13 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   font-size: 14px;
   max-width: 800px;
 }
+
+.locked-effect {
+  color: grey;
+  font-style: italic;
+  font-size: 0.8em;
+}
+
+.unique-effect {
+  color: #DAA520; /* Brown-golden color */
+}

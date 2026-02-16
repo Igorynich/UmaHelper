@@ -35,11 +35,30 @@
     </button>
   </div>
 
-  @if (decodedEvents(); as events) {
+  @if (displayedDecodedEvents(); as events) {
     <div class="decoded-results">
       <h3>Parsed Events:</h3>
-
-      @if (events.random.length > 0) {
+      @for(eventGroup of events; track eventGroup.name) {
+        @if (eventGroup.events.length > 0) {
+          <h4 class="event-type-header">{{ eventGroup.name }}</h4>
+          @for(event of eventGroup.events; track event.name) {
+            <div class="event-group">
+              <h5>{{ event.name }}</h5>
+              @for(choice of event.choices; track $index) {
+                <div class="choice-group">
+                  <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                  <ul class="rewards-list">
+                    @for(reward of choice.rewards; track $index) {
+                      <li>{{ reward }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          }
+        }
+      }
+      <!--@if (events.random.length > 0) {
         <h4 class="event-type-header">Random Events</h4>
         @for(event of events.random; track event.name) {
           <div class="event-group">
@@ -75,7 +94,7 @@
             }
           </div>
         }
-      }
+      }-->
     </div>
   }
 

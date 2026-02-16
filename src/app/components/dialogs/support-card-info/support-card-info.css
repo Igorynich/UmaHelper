@@ -244,16 +244,6 @@
   background-color: rgba(192, 192, 192, 0.4); /* Silver */
 }
 
-.locked-stat {
-  color: #888; /* Grey color */
-  font-style: italic;
-}
-
-.unique-effect {
-  font-weight: bold;
-  color: #ff9800; /* Example: Orange for unique */
-}
-
 .unique-effects-section {
   width: 100%; /* Match stats section width */
   max-width: 100%; /* Ensure it doesn't overflow */

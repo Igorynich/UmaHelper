@@ -37,8 +37,8 @@
           [matTooltip]="column.tooltip || ''" [style.width]="column.width">
         <div class="header-content-wrapper">
           @if (column.type === 'checkbox') {
-            <mat-checkbox 
-              [checked]="isAllSelected()" 
+            <mat-checkbox
+              [checked]="isAllSelected()"
               [indeterminate]="isSomeSelected()"
               (change)="masterToggle()"
               (click)="$event.stopPropagation()">
@@ -59,8 +59,8 @@
         }
         <div class="cell-content-wrapper">
           @if (column.type === 'checkbox') {
-            <mat-checkbox 
-              [checked]="isRowSelected(row)" 
+            <mat-checkbox
+              [checked]="isRowSelected(row)"
               [indeterminate]="false"
               (change)="toggleRow(row)"
               (click)="$event.stopPropagation()">
@@ -107,14 +107,7 @@
             <span>{{ $any(row).char_name }}</span>
           }
           @else {
-          @if (isLockedEffectData(row[column.key])) {
-          <span [class.locked-effect]="row[column.key].isLocked">{{ row[column.key].value }}</span>
-          } @else if (isUniqueEffectData(row[column.key])) {
-          <span [class.unique-effect]="row[column.key].hasUnique"
-                [matTooltip]="row[column.key].tooltip">{{ row[column.key].value }}</span>
-          } @else {
-          {{ row[column.key] }}
-          }
+            <span [class]="(row[column.key] | effectValue:column.key)?.cssClass">{{ (row[column.key] | effectValue:column.key).value }}</span>
           }
         </div>
       </td>

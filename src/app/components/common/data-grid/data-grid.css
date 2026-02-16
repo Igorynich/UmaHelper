@@ -107,16 +107,6 @@
   table-layout: fixed;
 }
 
-.locked-effect {
-  color: grey;
-  font-style: italic;
-  font-size: 0.8em;
-}
-
-.unique-effect {
-  color: #DAA520; /* Brown-golden color */
-}
-
 /* --- Rarity Styling --- */
 
 /* Base styles for simple SR and R rows */

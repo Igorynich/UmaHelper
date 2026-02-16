@@ -36,13 +36,7 @@
           <div class="stat-row">
             <span class="stat-name">{{ effectId | effectIdTranslator }}</span>
             <span class="stat-value">
-              @if (isLockedEffectData(effectData)) {
-                <span [class.locked-stat]="effectData.isLocked">{{ effectData.value }}</span>
-              } @else if (isUniqueEffectData(effectData)) {
-                <span [class.unique-effect]="effectData.hasUnique" [matTooltip]="effectData.tooltip">{{ effectData.value }}</span>
-              } @else {
-                {{ effectData }}
-              }
+              <span [class]="(effectData | effectValue:effectId).cssClass">{{ (effectData | effectValue:effectId).value }}</span>
               @if (statDifferences()[effectId.toString()]; as diff) {
                 <span [class.positive-diff]="diff > 0" [class.negative-diff]="diff < 0">
                   ({{ diff > 0 ? '+' : '' }}{{ diff }})
@@ -56,8 +50,8 @@
 
     <!-- Stat differences toggle -->
     <div class="stat-differences-toggle">
-      <mat-checkbox 
-        [checked]="showStatDifferences()" 
+      <mat-checkbox
+        [checked]="showStatDifferences()"
         (change)="toggleStatDifferences()"
         labelPosition="after">
         Show stat differences
@@ -99,9 +93,45 @@
     </div>
     <div class="info-block">
       <h3>Training Events</h3>
-      @if (trainingEvents(); as events) {
+      @if (displayedTrainingEvents(); as events) {
         <mat-accordion multi> <!-- 'multi' allows multiple panels to be open at once -->
-          @if (events.random.length > 0) {
+          @for (eventGroup of events; track eventGroup.name) {
+            @if (eventGroup.events.length > 0) {
+              <h4 class="event-type-header">{{ eventGroup.name }}</h4>
+              @for(event of eventGroup.events; track event.name) {
+                <mat-expansion-panel>
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ event.name }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+
+                  <div class="event-content">
+                    @for(choice of event.choices; track $index) {
+                      <div class="choice-group">
+                        <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                        <ul class="rewards-list">
+                          @for(reward of choice.rewards; track $index) {
+                            <li>
+                              @if (isString(reward)) {
+                                {{ reward }}
+                              } @else if (isSkillReward(reward)) {
+                                <span class="skill-reward-inline">
+                                <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
+                                <span>{{ reward.value }}</span>
+                              </span>
+                              }
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    }
+                  </div>
+                </mat-expansion-panel>
+              }
+            }
+          }
+          <!--@if (events.random.length > 0) {
             <h4 class="event-type-header">Random Events</h4>
             @for(event of events.random; track event.name) {
               <mat-expansion-panel>
@@ -169,7 +199,7 @@
                 </div>
               </mat-expansion-panel>
             }
-          }
+          }-->
         </mat-accordion>
       } @else {
         <p>No training event data available for this card.</p>

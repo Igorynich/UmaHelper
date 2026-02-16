@@ -31,6 +31,5 @@ export interface DecodedEvent {
 }
 
 export interface DecodedEventsContainer {
-  random: DecodedEvent[];
-  arrows: DecodedEvent[];
+  [key: string]: DecodedEvent[];
 }

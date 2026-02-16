@@ -1,4 +1,4 @@
-import { Component, inject, signal, WritableSignal } from '@angular/core';
+import {Component, computed, inject, signal, WritableSignal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,7 +11,8 @@ import { SupportCard } from '../../../interfaces/support-card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SupportCardService } from '../../../services/support-card.service';
 import { EventChoice, EventReward, UmaEvent, DecodedEvent, DecodedEventsContainer } from '../../../interfaces/event'; // Updated import
-import { EventsService } from '../../../services/events.service'; // New import
+import {EventsService, evntTypeConvertFn} from '../../../services/events.service';
+import {group} from '@angular/animations'; // New import
 
 @Component({
   selector: 'app-event-upload-dialog',
@@ -45,6 +46,7 @@ export class EventUploadDialog {
   foundCard: WritableSignal<SupportCard | null> = signal(null);
   parsedEvents: WritableSignal<any | null> = signal(null);
   decodedEvents: WritableSignal<DecodedEventsContainer | null> = signal(null);
+  displayedDecodedEvents= computed(() => evntTypeConvertFn(this.decodedEvents()));
 
   get isUploadDisabled(): boolean {
     return !this.foundCard() || !this.parsedEvents();
@@ -92,8 +94,13 @@ export class EventUploadDialog {
 
       this.parsedEvents.set(parsed);
       console.log('parsedEvents', this.parsedEvents());
-      this.decodedEvents.set(this.eventsService.decodeEvents(parsed)); // Changed call
+      const decodedEvnts = this.eventsService.decodeEvents(parsed);
+      this.decodedEvents.set(decodedEvnts); // Changed call
       console.log('decodedEvents', this.decodedEvents());
+      const eventGroups = evntTypeConvertFn(decodedEvnts);
+      if (!eventGroups?.length || !eventGroups.map(group  => group.events).flat()?.length) {
+        throw new Error('No events found in the JSON.');
+      }
       this.snackBar.open('JSON parsed and decoded successfully!', 'Close', { duration: 3000 });
     } catch (error: any) {
       this.snackBar.open(`Invalid JSON: ${error.message}`, 'Close', { panelClass: 'snackbar-error' });
