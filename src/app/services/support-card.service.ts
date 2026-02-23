@@ -4,8 +4,8 @@ import { from, Observable } from 'rxjs';
 import { SupportCard, SupportCardEffectData } from '../interfaces/support-card';
 import { map } from 'rxjs/operators';
 import { DisplaySupportCard, Rarity } from '../interfaces/display-support-card';
-import { effectMap } from '../maps/effect.map';
-import { EffectId } from '../interfaces/effect-id.enum';
+import {effectMap, uniqEffectMap} from '../maps/effect.map';
+import {EffectId, UniqEffectId} from '../interfaces/effect-id.enum';
 import { IMAGEKIT_CONFIG } from '../imagekit.config';
 import { SupportCardType } from '../interfaces/support-card-type.enum';
 
@@ -49,6 +49,7 @@ export class SupportCardService {
 
   mapToSupportCardEffectData(card: DisplaySupportCard, effIds?: number[]): SupportCardEffectData {
     const effectIds = effIds ?? (Object.values(EffectId).filter(value => typeof value === 'number') as number[]);
+    // console.log('card', card);
     const data: SupportCardEffectData = {
       support_id: card.support_id,
       char_name: card.char_name,
@@ -62,14 +63,24 @@ export class SupportCardService {
     const currentLevel = card.level || rarityLevelMap[card.rarity].default;
 
     if (card.unique) {
+      // console.log('Uniq', card.unique);
       const uniqueLevel = card.unique.level;
       const isCardUniqueLocked = currentLevel < uniqueLevel;
 
-      const effectsDisplay = card.unique.effects.map(ue => ({
-        shortName: effectMap[ue.type as EffectId]?.short || `Effect ${ue.type}`,
-        longName: effectMap[ue.type as EffectId]?.long || `Effect ${ue.type}`,
-        value: ue.value,
-      }));
+      const effectsDisplay = card.unique.effects.map(ue => {
+        if (Object.values(UniqEffectId).includes(ue.type as UniqEffectId)) {
+          // if uniq complex effect
+          return {
+            shortName: uniqEffectMap[ue.type as UniqEffectId]?.short(ue) || `UniqEffect ${ue.type}`,
+            longName: uniqEffectMap[ue.type as UniqEffectId]?.long(ue) || `UniqEffect ${ue.type}`,
+          }
+        }
+        return {
+          shortName: effectMap[ue.type as EffectId]?.short || `Effect ${ue.type}`,
+          longName: effectMap[ue.type as EffectId]?.long || `Effect ${ue.type}`,
+          value: ue.value,
+        }
+      });
 
       data.uniqueDisplayData = {
         levelDisplay: `Lvl ${uniqueLevel}`,
@@ -112,6 +123,7 @@ export class SupportCardService {
         }
       }
     }
+    // console.log('data', data)
     return data;
   }
 

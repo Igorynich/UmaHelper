@@ -1,4 +1,5 @@
-import { EffectId } from '../interfaces/effect-id.enum';
+import {EffectId, UniqEffectId} from '../interfaces/effect-id.enum';
+import {UniqueEffect} from '../interfaces/support-card';
 
 export const effectMap: Record<EffectId, { short: string; long: string; unit?: string; }> = {
   [EffectId.FRIENDSHIP_BONUS]: { short: 'FRD', long: 'Friendship Bonus', unit: '%' },
@@ -27,4 +28,20 @@ export const effectMap: Record<EffectId, { short: string; long: string; unit?: s
   [EffectId.SKILL_POINT_BONUS]: { short: '+SP', long: 'Skill Point Bonus' },
   [EffectId.WIT_FRIENDSHIP_RECOVERY]: { short: 'WIT REC', long: 'Wit Friendship Recovery' },
   [EffectId.INITIAL_SKILL_POINTS]: { short: 'INIT SP', long: 'Initial Skill Points' },
+};
+
+export type UniqEffectToStringFn = (ue: UniqueEffect) => string;
+export type UniqEffectToEffectIdFn = (ue: UniqueEffect) => EffectId;
+
+export const uniqEffectMap: Record<UniqEffectId, { short: UniqEffectToStringFn; long: UniqEffectToStringFn; unit?: string; effect?: UniqEffectToEffectIdFn}> = {
+  [UniqEffectId.EFFECT_BONUS_DEPENDENT_ON_GAUGE]: {
+    short: (ue) => `${effectMap[ue.value_1 as EffectId]?.short}(${ue.value_2}) At FRD>=${ue.value}`,
+    long: (ue) => `${effectMap[ue.value_1 as EffectId]?.long}(${ue.value_2}) At Friendship Gauge>=${ue.value}`,
+    effect: (ue) => ue.value_1 as EffectId
+  },
+  [UniqEffectId.NON_SPEC_TR_EF_DEPENDENT_ON_GAUGE]: {
+    short: (ue) => `NON-SPEC TR EF(${ue.value_1}) AT FRD>=${ue.value}`, // 'COND NON-SPEC TREF',
+    long: (ue) => `Non-Spec Training Effectiveness(${ue.value_1}) AT Friendship Gauge>=${ue.value}`,  //'Non-spec Tr.Effect When Bond Gauge Higher Than 80'
+    effect: (ue) => EffectId.TRAINING_EFFECTIVENESS
+  },
 };

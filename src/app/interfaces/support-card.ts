@@ -157,7 +157,7 @@ export interface SupportCardEffectData {
 
 export interface UniqueColumnDisplayData {
   levelDisplay: string;
-  effectsDisplay: { shortName: string; longName: string; value: number; }[];
+  effectsDisplay: { shortName: string; longName: string; value?: number; }[];
   isCardUniqueLocked: boolean;
   tooltip: string;
 }

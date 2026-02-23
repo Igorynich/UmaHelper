@@ -4,7 +4,7 @@ import { DataGrid } from '../../../components/common/data-grid/data-grid';
 import { DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
 import { DisplaySupportCard, Rarity } from '../../../interfaces/display-support-card';
 import { effectMap } from '../../../maps/effect.map';
-import { EffectId } from '../../../interfaces/effect-id.enum';
+import {EffectId, UniqEffectId} from '../../../interfaces/effect-id.enum';
 import { SupportCardFilter } from '../../../interfaces/user-support-cards-data';
 import { debounceTime, startWith } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -178,7 +178,9 @@ export class SupportCardListViewComponent {
     const allEffectIds = this.supportCardsWithLevels()
       .flatMap(card => {
         const regularEffects = card.effects.map(effect => effect[0] as EffectId);
-        const uniqueEffects = card.unique?.effects.map(effect => effect.type as EffectId) || [];
+        const uniqueEffects = card.unique?.effects
+          .map(effect => effect.type as EffectId | UniqEffectId)
+          .filter(type => !Object.values(UniqEffectId).includes(type as UniqEffectId)) || [];
         return [ ...regularEffects, ...uniqueEffects ];
       })
       .filter((value, index, self) => self.indexOf(value) === index)
@@ -186,8 +188,8 @@ export class SupportCardListViewComponent {
 
     const effectColumns: DataGridColumn[] = allEffectIds.map(id => ({
       key: id.toString(),
-      header: effectMap[id]?.short || `Effect ${id}`,
-      tooltip: effectMap[id]?.long || `Unknown Effect ${id}`,
+      header: effectMap[id as EffectId]?.short || `Effect ${id}`,
+      tooltip: effectMap[id as EffectId]?.long || `Unknown Effect ${id}`,
       width: '50px',
       type: 'effect',
       sortType: SortType.Number,

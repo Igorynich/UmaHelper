@@ -26,3 +26,8 @@ export enum EffectId {
   WIT_FRIENDSHIP_RECOVERY = 31,   // c
   INITIAL_SKILL_POINTS = 32,      // c
 }
+
+export enum UniqEffectId {
+  EFFECT_BONUS_DEPENDENT_ON_GAUGE = 101,
+  NON_SPEC_TR_EF_DEPENDENT_ON_GAUGE = 102
+}
