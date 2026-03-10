@@ -1,19 +1,21 @@
 <div class="data-grid-container mat-elevation-z8">
   <div class="data-grid-toolbar">
-    <button mat-icon-button [matMenuTriggerFor]="columnMenu">
-      <mat-icon>view_column</mat-icon>
-    </button>
-    <mat-menu #columnMenu="matMenu">
-      @for (column of columns(); track column.key) {
-        <div (click)="$event.stopPropagation()">
-          <mat-checkbox
-            [checked]="isColumnVisible(column.key)"
-            (change)="toggleColumn(column.key)">
-            {{ column.header }}
-          </mat-checkbox>
-        </div>
-      }
-    </mat-menu>
+    @if (showColumnSelector()) {
+      <button mat-icon-button [matMenuTriggerFor]="columnMenu">
+        <mat-icon>view_column</mat-icon>
+      </button>
+      <mat-menu #columnMenu="matMenu">
+        @for (column of columns(); track column.key) {
+          <div (click)="$event.stopPropagation()">
+            <mat-checkbox
+              [checked]="isColumnVisible(column.key)"
+              (change)="toggleColumn(column.key)">
+              {{ column.header }}
+            </mat-checkbox>
+          </div>
+        }
+      </mat-menu>
+    }
     <div class="active-sorts">
       @for (sort of activeSorts(); track sort.key) {
         <div class="active-sort">

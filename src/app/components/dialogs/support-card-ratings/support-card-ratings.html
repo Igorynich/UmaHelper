@@ -1,0 +1,39 @@
+<h2 mat-dialog-title style="text-align: center;">
+  Support Card Ratings
+  <button mat-icon-button mat-dialog-close style="float: right;">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+
+<div style="display: flex; gap: 16px; margin-bottom: 16px;">
+  <mat-form-field>
+    <mat-label>Scenario</mat-label>
+    <mat-select [value]="selectedScenarioSig()" (selectionChange)="onScenarioChange($event.value)">
+      @for (opt of scenarioOptions; track opt) {
+        <mat-option [value]="opt">{{opt}}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Strategy</mat-label>
+    <mat-select [value]="selectedStrategySig()" (selectionChange)="onStrategyChange($event.value)">
+      @for (opt of strategyOptions; track opt) {
+        <mat-option [value]="opt">{{opt}}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<mat-dialog-content>
+  <app-data-grid
+    [data]="cardsWithRatings()"
+    [columns]="columns"
+    [rarityLevelMap]="rarityLevelMap"
+    [pageSize]="20"
+    [multiSort]="true"
+    [showColumnSelector]="false"
+    (levelChanged)="onLevelChanged($event)"
+    (imageClick)="onImageClick($event)">
+  </app-data-grid>
+</mat-dialog-content>

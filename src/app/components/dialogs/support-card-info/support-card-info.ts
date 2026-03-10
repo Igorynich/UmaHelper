@@ -8,7 +8,7 @@ import { take } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { SkillDisplay } from '../../common/skill-display/skill-display';
 import {MatCard} from '@angular/material/card';
-import {EventsService, eventTypes, evntTypeConvertFn} from '../../../services/events.service';
+import {EventsService, evntTypeConvertFn} from '../../../services/events.service';
 import { DecodedEventsContainer, DecodedSkillReward } from '../../../interfaces/event';
 import { SupportCardEffectData } from '../../../interfaces/support-card';
 import { SupportCardService, rarityLevelMap } from '../../../services/support-card.service';
@@ -21,6 +21,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import {effectTypeMap} from '../../../maps/skill-effect.map'; // New import
 import { EffectValuePipe } from '../../../pipes/effect-value.pipe';
+import {RatingsService} from '../../../services/ratings.service';
+import { getEffectValueFn } from '../../../utils/effect-data-utils';
 
 @Component({
   selector: 'app-support-card-info',
@@ -35,6 +37,7 @@ export class SupportCardInfo {
   private readonly skillsService = inject(SkillsService);
   private readonly eventsService = inject(EventsService);
   private readonly supportCardService = inject(SupportCardService);
+  private readonly ratingsService = inject(RatingsService);
 
   protected readonly rarityLevelMap = rarityLevelMap;
   protected readonly level: WritableSignal<number> = signal(this.rawCardData().level || rarityLevelMap[this.rawCardData().rarity].default);
@@ -88,20 +91,8 @@ export class SupportCardInfo {
       const currentValue = (current as any)[key];
       const prevValue = (previous as any)[key];
 
-      // Helper function to extract numeric value
-      const getNumericValue = (value: any): number => {
-        if (typeof value === 'number') {
-          return value;
-        }
-        if (typeof value === 'object' && value !== null && 'value' in value) {
-          const objValue = value.value;
-          return typeof objValue === 'number' ? objValue : 0;
-        }
-        return 0;
-      };
-
-      const currentNum = getNumericValue(currentValue);
-      const prevNum = getNumericValue(prevValue);
+      const currentNum = getEffectValueFn(currentValue);
+      const prevNum = getEffectValueFn(prevValue);
 
       const diff = currentNum - prevNum;
       if (diff !== 0) {
@@ -113,8 +104,18 @@ export class SupportCardInfo {
 
   constructor() {
     effect(() => {
-      // console.log('Rawdata', this.rawCardData());
-      // console.log('Processed data', this.processedCardData());
+      console.log('Rawdata', this.rawCardData());
+      console.log('Processed data', this.processedCardData());
+      // console.log('Training results', this.ratingsService.calcSCTraining(this.processedCardData(), TRAINING_TYPE.Speed, LEVEL.lv1));
+      // console.warn('FULL Training results', this.ratingsService.calcFullTraining(this.processedCardData()));
+      // console.warn('AGGREGATED FULL Training results', this.ratingsService.aggregateTrainingStats(this.processedCardData()));
+      console.warn('DIRRERENCE', this.ratingsService.calcCardsDiff(this.processedCardData()));
+      /*console.warn(`ONLY ${TRAINING_TYPE.Speed}`, this.ratingsService.calcCardsDiff(this.processedCardData(), TRAINING_TYPE.Speed));
+      console.warn(`ONLY ${TRAINING_TYPE.Stamina}`, this.ratingsService.calcCardsDiff(this.processedCardData(), TRAINING_TYPE.Stamina));
+      console.warn(`ONLY ${TRAINING_TYPE.Power}`, this.ratingsService.calcCardsDiff(this.processedCardData(), TRAINING_TYPE.Power));
+      console.warn(`ONLY ${TRAINING_TYPE.Guts}`, this.ratingsService.calcCardsDiff(this.processedCardData(), TRAINING_TYPE.Guts));
+      console.warn(`ONLY ${TRAINING_TYPE.Intelligence}`, this.ratingsService.calcCardsDiff(this.processedCardData(), TRAINING_TYPE.Intelligence));*/
+      // console.warn(`ONLY ${this.processedCardData().type}`, this.ratingsService.calcCardsDiff(this.processedCardData(), this.processedCardData().type as unknown as TRAINING_TYPE));
       // console.log('trainingEvents', this.trainingEvents());
       console.log('statGains', this.statGains());
     });

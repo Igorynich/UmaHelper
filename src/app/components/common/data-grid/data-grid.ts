@@ -67,6 +67,7 @@ export class DataGrid<T> implements AfterViewInit {
   addMenu = input<MatMenu>();
   tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
   isActive = input<boolean>(false); // Whether this tab is currently active
+  showColumnSelector = input(true);
 
   levelChanged = output<{ row: T; level: number }>();
   imageClick = output<T>();

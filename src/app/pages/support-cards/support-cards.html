@@ -6,15 +6,18 @@
       <mat-tab label="All Cards">
         <div class="tab-content">
           <div class="bulk-actions-container">
-            <button
-              mat-raised-button
-              color="primary"
-              [matMenuTriggerFor]="addMenu"
-              [disabled]="!hasSelectedCards()"
-              matTooltip="Add selected cards to tab">
-              <mat-icon>add</mat-icon>
-              Add Selected
-            </button>
+            <div class="left-buttons">
+              <button
+                matButton="outlined"
+                color="primary"
+                [matMenuTriggerFor]="addMenu"
+                [disabled]="!hasSelectedCards()"
+                matTooltip="Add selected cards to tab">
+                <mat-icon>add</mat-icon>
+                Add Selected
+              </button>
+            </div>
+            <button matButton="filled" (click)="saveData()">Save Data</button>
           </div>
           <app-support-card-list-view
             [cards]="allCardsWithDefaults()"
@@ -35,7 +38,7 @@
             <div class="tab-label">
               <span>{{ tab.name }}</span>
               <button
-                mat-icon-button
+                matIconButton
                 class="close-tab-button"
                 (click)="removeTab($event, $index)"
                 matTooltip="Remove tab">
@@ -45,24 +48,26 @@
           </ng-template>
           <div class="tab-content">
             <div class="bulk-actions-container">
-              <button
-                mat-raised-button
-                color="primary"
-                [disabled]="!hasSelectedCards()"
-                [matMenuTriggerFor]="addMenu"
-                matTooltip="Add selected cards to tab">
-                <mat-icon>add</mat-icon>
-                Add Selected
-              </button>
-              <button
-                mat-raised-button
-                color="warn"
-                [disabled]="!hasSelectedCards()"
-                (click)="onBulkRemove($index)"
-                matTooltip="Remove selected cards from this tab">
-                <mat-icon>remove</mat-icon>
-                Remove Selected
-              </button>
+              <div class="left-buttons">
+                <button
+                  matButton="outlined"
+                  [disabled]="!hasSelectedCards()"
+                  [matMenuTriggerFor]="addMenu"
+                  matTooltip="Add selected cards to tab">
+                  <mat-icon>add</mat-icon>
+                  Add Selected
+                </button>
+                <button
+                  matButton="outlined"
+                  color="warn"
+                  [disabled]="!hasSelectedCards()"
+                  (click)="onBulkRemove($index)"
+                  matTooltip="Remove selected cards from this tab">
+                  <mat-icon>remove</mat-icon>
+                  Remove Selected
+                </button>
+              </div>
+              <button matButton="filled" color="warn" (click)="saveData()">Save Data</button>
             </div>
             <app-support-card-list-view
               [cards]="tab.cards"

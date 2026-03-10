@@ -16,11 +16,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { SupportCardType } from '../../../interfaces/support-card-type.enum';
 import { MatDialog } from '@angular/material/dialog';
 import { SupportCardInfo } from '../../../components/dialogs/support-card-info/support-card-info';
+import {SupportCardRatings} from '../../../components/dialogs/support-card-ratings/support-card-ratings';
 import {MatMenu} from '@angular/material/menu';
 import { DataGridStateService } from '../../../services/data-grid-state.service';
 import { SupportCardEffectData }
 from '../../../interfaces/support-card';
 import {rarityLevelMap, SupportCardService } from '../../../services/support-card.service';
+import {RatingsService} from '../../../services/ratings.service';
 
 type Operator = '>=' | '<=' | '>' | '<' | '=';
 
@@ -44,6 +46,7 @@ export class SupportCardListViewComponent {
   private dialog = inject(MatDialog);
   private dataGridStateService = inject(DataGridStateService);
   private supportCardService = inject(SupportCardService);
+  private readonly ratingsService = inject(RatingsService);
 
   cards = input<DisplaySupportCard[]>([]);
   isFirstTab = input<boolean>(false);
@@ -111,6 +114,16 @@ export class SupportCardListViewComponent {
         this.filterChanged.emit(completeFilter);
       }
     });
+
+   /* effect(() => {
+      if (this.tabIndex() === 2) {
+        this.processedData().forEach(card => {
+          const rating = this.ratingsService.getRatings(card);
+          console.log(`${card.char_name}-${card.type}-${card.rarity} ++> ${rating}`);
+        });
+      }
+
+    });*/
   }
 
   protected readonly Rarity = Rarity;
@@ -307,6 +320,14 @@ export class SupportCardListViewComponent {
         maxHeight: '90vh',
       });
     }
+  }
+
+  protected openRatingsModal(): void {
+    const dialogRef = this.dialog.open(SupportCardRatings, {
+      data: { cards: this.filteredCards, fullCards: this.supportCardsWithLevels },
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+    });
   }
 
   protected onSetAllFilteredToMax(): void {

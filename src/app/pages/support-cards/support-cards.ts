@@ -1,39 +1,42 @@
-import { Component, computed, effect, inject, signal, ViewChild } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {rarityLevelMap, SupportCardService} from '../../services/support-card.service';
 import { SupportCardsDataService } from '../../services/support-cards-data.service';
-import { DisplaySupportCard, Rarity } from '../../interfaces/display-support-card';
+import { DisplaySupportCard } from '../../interfaces/display-support-card';
 import {SupportCard, SupportCardEffectData} from '../../interfaces/support-card';
-import { UserSupportCardsData, SupportCardFilter } from '../../interfaces/user-support-cards-data';
-import { MatTabsModule } from '@angular/material/tabs';
+import { SupportCardFilter } from '../../interfaces/user-support-cards-data';
+import {MatTab, MatTabGroup, MatTabLabel} from '@angular/material/tabs';
 import {
   SupportCardListViewComponent
 } from './support-card-list-view/support-card-list-view';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
+import {MatIcon} from '@angular/material/icon';
+import {MatButton, MatButtonModule} from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { NewTabDialogComponent } from './new-tab-dialog/new-tab-dialog';
 import { filter } from 'rxjs';
 import { ConfirmationDialog } from '../../components/common/confirmation-dialog/confirmation-dialog';
 import { map } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatMenuTrigger } from '@angular/material/menu';
+import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import { DataGridStateService, TabState } from '../../services/data-grid-state.service';
 import { MatTooltip } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
-import { CheckboxSelection } from '../../components/common/data-grid/data-grid.types';
 import { IMAGEKIT_CONFIG } from '../../imagekit.config';
 
 @Component({
   selector: 'app-support-cards',
   standalone: true,
   imports: [
-    MatTabsModule,
+    MatTabGroup,
+    MatTab,
+    MatTabLabel,
     SupportCardListViewComponent,
-    MatIconModule,
+    MatIcon,
+    MatButton,
     MatButtonModule,
     MatTooltip,
-    MatMenuModule,
+    MatMenu,
+    MatMenuItem,
+    MatMenuTrigger,
   ],
   templateUrl: './support-cards.html',
   styleUrl: './support-cards.css'
@@ -415,7 +418,7 @@ export class SupportCards {
     return [];
   }
 
-  private async saveData(): Promise<void> {
+  async saveData(): Promise<void> {
     if (this.isLoadingData()) return;
 
     try {
