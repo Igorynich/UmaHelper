@@ -147,6 +147,7 @@ export interface SupportCardEffectData {
   characterImageUrl: string;
   event_skills: number[];
   hints: SupportCardHints;
+  release_en?: string;
   uniqueDisplayData?: UniqueColumnDisplayData;
   [key: string]: number | string | undefined | { value: string; isLocked: boolean } | {
     value: number;

@@ -13,6 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SupportCardType } from '../../../interfaces/support-card-type.enum';
 import { MatDialog } from '@angular/material/dialog';
 import { SupportCardInfo } from '../../../components/dialogs/support-card-info/support-card-info';
@@ -36,7 +37,8 @@ type Operator = '>=' | '<=' | '>' | '<' | '=';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
+    MatCheckboxModule
   ],
   templateUrl: './support-card-list-view.html',
   styleUrl: './support-card-list-view.css'
@@ -109,21 +111,12 @@ export class SupportCardListViewComponent {
           type: filterValue.type || [],
           effectId: filterValue.effectId || '',
           operator: filterValue.operator || '>=',
-          value: filterValue.value ?? null
+          value: filterValue.value ?? null,
+          showUpcomingCards: filterValue.showUpcomingCards ?? false
         };
         this.filterChanged.emit(completeFilter);
       }
     });
-
-   /* effect(() => {
-      if (this.tabIndex() === 2) {
-        this.processedData().forEach(card => {
-          const rating = this.ratingsService.getRatings(card);
-          console.log(`${card.char_name}-${card.type}-${card.rarity} ++> ${rating}`);
-        });
-      }
-
-    });*/
   }
 
   protected readonly Rarity = Rarity;
@@ -144,7 +137,8 @@ export class SupportCardListViewComponent {
     type: new FormControl<SupportCardType[]>([], { nonNullable: true }),
     effectId: new FormControl<EffectId | ''>('', { nonNullable: true }),
     operator: new FormControl<Operator>('>=', { nonNullable: true }),
-    value: new FormControl<number | null>(null)
+    value: new FormControl<number | null>(null),
+    showUpcomingCards: new FormControl<boolean>(false, { nonNullable: true })
   });
 
   private readonly filters = toSignal(
@@ -237,11 +231,15 @@ export class SupportCardListViewComponent {
     const effectId = filters?.effectId || '';
     const operator = filters?.operator || '>=';
     const value = filters?.value;
+    const showUpcomingCards = filters?.showUpcomingCards ?? false;
 
     return data.filter(card => {
       const nameMatch = !name || card.char_name.toLowerCase().includes(name);
       const rarityMatch = rarities.length === 0 || rarities.includes(card.rarity);
       const typeMatch = types.length === 0 || types.includes(card.type);
+      
+      // Filter by release_en - show upcoming cards (no release_en) only if checkbox is checked
+      const upcomingMatch = showUpcomingCards || card.release_en;
 
       let effectMatch = true;
       if (effectId && value != null) {
@@ -263,7 +261,7 @@ export class SupportCardListViewComponent {
         }
       }
 
-      return nameMatch && rarityMatch && typeMatch && effectMatch;
+      return nameMatch && rarityMatch && typeMatch && upcomingMatch && effectMatch;
     });
   });
 
@@ -305,7 +303,8 @@ export class SupportCardListViewComponent {
       type: [],
       effectId: '',
       operator: '>=',
-      value: null
+      value: null,
+      showUpcomingCards: false
     });
   }
 

@@ -24,6 +24,7 @@ export const rarityLevelMap = {
 })
 export class SupportCardService {
   private firestore = inject(Firestore);
+  private effectDataCache = new Map<string, SupportCardEffectData>();
 
   getRawSupportCards(): Observable<SupportCard[]> {
     const supportCardsCollection = collection(this.firestore, 'support_cards');
@@ -49,6 +50,14 @@ export class SupportCardService {
 
   mapToSupportCardEffectData(card: DisplaySupportCard, effIds?: number[]): SupportCardEffectData {
     const effectIds = effIds ?? (Object.values(EffectId).filter(value => typeof value === 'number') as number[]);
+    const level = card.level ?? rarityLevelMap[card.rarity].default;
+    const cacheKey = `${card.support_id}_${level}`;
+    
+    const cached = this.effectDataCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    
     // console.log('card', card);
     const data: SupportCardEffectData = {
       support_id: card.support_id,
@@ -59,6 +68,7 @@ export class SupportCardService {
       characterImageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/sup_cards/tex_support_card_${card.support_id}.png`,
       event_skills: card.event_skills,
       hints: card.hints,
+      release_en: card.release_en,
     };
     const currentLevel = card.level || rarityLevelMap[card.rarity].default;
 
@@ -124,6 +134,7 @@ export class SupportCardService {
       }
     }
     // console.log('data', data)
+    this.effectDataCache.set(cacheKey, data);
     return data;
   }
 

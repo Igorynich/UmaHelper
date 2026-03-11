@@ -8,6 +8,7 @@ export interface SupportCardFilter {
   effectId: number | '';
   operator: '>=' | '<=' | '>' | '<' | '=';
   value: number | null;
+  showUpcomingCards: boolean;
 }
 
 export interface SupportCardTab {

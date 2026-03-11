@@ -50,11 +50,17 @@ export class SupportCards {
 
   protected allCards = toSignal<SupportCard[], SupportCard[]>(
     this.supportCardService.getRawSupportCards().pipe(
-      map(cards => cards.filter(card => card.release_en).sort((a: SupportCard, b: SupportCard) => {
+      map(cards => cards.sort((a: SupportCard, b: SupportCard) => {
         if (a.rarity !== b.rarity) {
           return b.rarity - a.rarity;
         }
-        return new Date(b.release_en!).getTime() - new Date(a.release_en!).getTime();
+        // Cards without release_en (upcoming) go first
+        if (!a.release_en && b.release_en) return -1;
+        if (a.release_en && !b.release_en) return 1;
+        // Both have release_en or both don't - sort by date descending (latest first)
+        const dateA = a.release_en ? new Date(a.release_en).getTime() : new Date(a.release).getTime();
+        const dateB = b.release_en ? new Date(b.release_en).getTime() : new Date(b.release).getTime();
+        return dateB - dateA;
       }))
     ),
     { initialValue: [] }

@@ -111,7 +111,7 @@
                   height="56"
                 >
               }
-              <span>{{ $any(row).char_name }}</span>
+              <span [class.upcoming-card]="!row.release_en">{{ $any(row).char_name }}</span>
             } @else {
               <span
                 [class]="(row[column.key] | effectValue:column.key)?.cssClass">{{ (row[column.key] | effectValue:column.key).value }}</span>

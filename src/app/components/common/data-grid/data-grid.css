@@ -197,3 +197,9 @@
   align-items: center;
   justify-content: flex-start; /* Align content to the left */
 }
+
+/* Style for upcoming cards (no release_en date) */
+.upcoming-card {
+  color: #e91e63;
+  font-style: italic;
+}
