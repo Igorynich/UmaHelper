@@ -143,19 +143,19 @@ export interface TraineeEvoSkillLoc {
 }
 
 export interface Trainee {
-  isCharCard: boolean; // Example: true
-  itemData: TraineeItemData;
+  isCharCard: boolean; // Example: true     keep?
+  itemData: TraineeItemData;    // keep
   // exclude - can be decoded with event service - confirmed, but check for sus Unknown events
-  eventData: { // Event data in different languages
+  /*eventData: { // Event data in different languages
     ja: string; // Japanese event data stringified JSON
     ko: string; // Korean event data stringified JSON
     zh_tw: string; // Traditional Chinese event data stringified JSON
     en: string; // English event data stringified JSON
-  };
-  objectiveData: TraineeObjective[];
-  charData: TraineeCharData;
-  profileData: TraineeProfileData;
-  profileArtMeta: { // Metadata for profile art
+  };*/
+  objectiveData: TraineeObjective[];    // keep
+  charData: TraineeCharData;      // keep, but a lot of irl stuff - check later
+  // profileData: TraineeProfileData;      // mb exclude - secrets, family and shit
+  /*profileArtMeta: { // Metadata for profile art   exclude - uniforms
     url_name: string; // Example: "tm-opera-o"
     images: { // Image availability flags
       uniform: boolean; // Example: true
@@ -163,16 +163,16 @@ export interface Trainee {
       concept: boolean; // Example: true
       'starting-future': boolean; // Example: true
     };
-  };
-  evoLocData: { // Evolution localization data
+  };*/
+  /*evoLocData: { // Evolution localization data        exculde
     card_id: number; // Example: 101502
     skills: { // Skills object with skillId as key
       [skillId: string]: TraineeEvoSkillLoc; // Example: {"101502111": {ja: [[...]], ko: [[...]], zh_tw: [[...]]}}
     };
-  };
+  };*/
 }
 
 export interface TraineeData {
   pageProps: Trainee; // The main trainee data
-  __N_SSG: boolean; // Example: true
+  __N_SSG: boolean; // Example: true        exclude
 }
