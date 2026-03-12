@@ -14,6 +14,8 @@ import { SkillSchema } from '../../interfaces/skill.schema';
 import { SupportCardSchema } from '../../interfaces/support-card.schema';
 import { ImagekitioAngularModule } from 'imagekitio-angular';
 import { EventUploadDialog } from '../../components/dialogs/event-upload-dialog/event-upload-dialog';
+import {TraineeSchema} from '../../interfaces/trainee.schema';
+import {Trainee} from '../../interfaces/trainee';
 
 @Component({
   selector: 'app-admin',
@@ -34,10 +36,15 @@ export class AdminComponent {
   skillComparisonResult: WritableSignal<SkillComparison | null> = signal(null);
 
   loadedSupportCards = signal<SupportCard[] | null>(null);
+  loadedTrainee = signal<Trainee | null>(null);
   supportCardFileName = signal<string | null>(null);
+  traineeFileName = signal<string | null>(null);
   isSupportCardLoading = signal(false);
+  isTraineeLoading = signal(false);
   supportCardUploadProgress = signal<UploadProgress | null>(null);
+  traineeUploadProgress = signal<UploadProgress | null>(null);
   supportCardComparisonResult: WritableSignal<SupportCardComparison | null> = signal(null);
+  traineeComparisonResult: WritableSignal<SupportCardComparison | null> = signal(null);
 
   hasSkillChanges = computed(() => {
     const result = this.skillComparisonResult();
@@ -48,8 +55,12 @@ export class AdminComponent {
     const result = this.supportCardComparisonResult();
     return result && (result.added.length > 0 || result.changed.length > 0);
   });
+  hasTraineeChanges = computed(() => {
+    const result = this.traineeComparisonResult();
+    return result && (result.added.length > 0 || result.changed.length > 0);
+  });
 
-  onFileSelected(event: Event, type: 'skills' | 'support-cards') {
+  onFileSelected(event: Event, type: 'skills' | 'support-cards' | 'trainee') {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) {
       return;
@@ -61,35 +72,62 @@ export class AdminComponent {
     reader.onload = () => {
       try {
         const rawData = JSON.parse(reader.result as string);
-        if (type === 'skills') {
-          const validatedData = this.adminService.validateData(rawData, SkillSchema);
-          this.loadedSkills.set(validatedData);
-          this.skillFileName.set(file.name);
-          this.skillComparisonResult.set(null); // Clear previous comparison results
-          this.snackBar.open(`Successfully loaded and validated ${file.name} (${validatedData.length} skills).`, 'Close', { duration: 3000 });
-        } else {
-          const validatedData = this.adminService.validateData(rawData, SupportCardSchema);
-          this.loadedSupportCards.set(validatedData);
-          this.supportCardFileName.set(file.name);
-          this.supportCardComparisonResult.set(null); // Clear previous comparison results
-          this.snackBar.open(`Successfully loaded and validated ${file.name} (${validatedData.length} support cards).`, 'Close', { duration: 3000 });
+        switch (type) {
+          case "skills":{
+            const validatedData = this.adminService.validateData(rawData, SkillSchema);
+            this.loadedSkills.set(validatedData);
+            this.skillFileName.set(file.name);
+            this.skillComparisonResult.set(null); // Clear previous comparison results
+            this.snackBar.open(`Successfully loaded and validated ${file.name} (${validatedData.length} skills).`, 'Close', { duration: 3000 });
+            break;
+          }
+
+          case "support-cards": {
+            const validatedData = this.adminService.validateData(rawData, SupportCardSchema);
+            this.loadedSupportCards.set(validatedData);
+            this.supportCardFileName.set(file.name);
+            this.supportCardComparisonResult.set(null); // Clear previous comparison results
+            this.snackBar.open(`Successfully loaded and validated ${file.name} (${validatedData.length} support cards).`, 'Close', { duration: 3000 });
+            break;
+          }
+
+          case "trainee": {
+            const validatedData = this.adminService.validateTraineeData(rawData, TraineeSchema);
+            this.loadedTrainee.set(validatedData);
+            this.traineeFileName.set(file.name);
+            this.traineeComparisonResult.set(null); // Clear previous comparison results
+            this.snackBar.open(`Successfully loaded and validated ${file.name}.`, 'Close', { duration: 3000 });
+            break;
+          }
         }
       } catch (error: any) {
         this.snackBar.open(`Error processing ${file.name}: ${error.message}`, 'Close', { panelClass: 'snackbar-error' });
-        if (type === 'skills') {
-          this.clearSkillData();
-        } else {
-          this.clearSupportCardData();
+        switch (type) {
+          case "skills":
+            this.clearSkillData();
+            break;
+          case "support-cards":
+            this.clearSupportCardData();
+            break;
+          case "trainee":
+            this.clearTraineeData();
+            break;
         }
       }
     };
 
     reader.onerror = () => {
       this.snackBar.open(`Error reading file ${file.name}.`, 'Close', { panelClass: 'snackbar-error' });
-      if (type === 'skills') {
-        this.clearSkillData();
-      } else {
-        this.clearSupportCardData();
+      switch (type) {
+        case "skills":
+          this.clearSkillData();
+          break;
+        case "support-cards":
+          this.clearSupportCardData();
+          break;
+        case "trainee":
+          this.clearTraineeData();
+          break;
       }
     };
 
@@ -109,6 +147,13 @@ export class AdminComponent {
     this.supportCardComparisonResult.set(null);
     this.supportCardUploadProgress.set(null);
   }
+  clearTraineeData() {
+    this.loadedTrainee.set(null);
+    this.traineeFileName.set(null);
+    this.traineeComparisonResult.set(null);
+    this.traineeUploadProgress.set(null);
+  }
+
   onUploadSkills() {
     const skills = this.loadedSkills();
     if (!skills) {
@@ -254,6 +299,48 @@ export class AdminComponent {
                 panelClass: ['snackbar-error'],
               });
               this.isSupportCardLoading.set(false);
+            },
+          });
+        }
+      });
+  }
+
+  onUploadTrainees() {
+    const trainee = this.loadedTrainee();
+    if (!trainee) {
+      this.snackBar.open('No trainee data loaded. Please load a file first.', 'Close', { panelClass: 'snackbar-error' });
+      return;
+    }
+    this.dialog
+      .open(ConfirmationDialog, {
+        data: {
+          title: `Upload "${trainee.charData.en_name}" Data`,
+          message:
+            'Are you sure you want to perform an upload? This will overwrite the data in Firebase.',
+        },
+      })
+      .afterClosed()
+      .subscribe((result) => {
+        if (result) {
+          this.isTraineeLoading.set(true);
+          this.traineeUploadProgress.set({ completed: 0, total: 0, successful: 0, failed: 0 });
+          this.adminService.uploadTrainee(trainee).subscribe({
+            next: (progress) => {
+              this.traineeUploadProgress.set(progress);
+              if (progress.completed === progress.total) {
+                this.snackBar.open(
+                  `Upload complete: ${progress.successful} successful, ${progress.failed} failed.`,
+                  'Close',
+                  { panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success'] }
+                );
+                this.isTraineeLoading.set(false);
+              }
+            },
+            error: (err) => {
+              this.snackBar.open(`Upload failed: ${err.message}`, 'Close', {
+                panelClass: ['snackbar-error'],
+              });
+              this.isTraineeLoading.set(false);
             },
           });
         }

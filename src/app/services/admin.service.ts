@@ -11,9 +11,8 @@ import { concatMap, forkJoin, from, map, Observable, of, take, tap } from 'rxjs'
 import { SkillsService } from './skills.service';
 import { SupportCard } from '../interfaces/support-card';
 import { z, ZodError } from 'zod';
-import { SupportCardSchema } from '../interfaces/support-card.schema';
-import { SkillSchema } from '../interfaces/skill.schema';
 import { SupportCardService } from './support-card.service';
+import {Trainee, TraineeData} from '../interfaces/trainee';
 
 export interface UploadProgress {
   completed: number;
@@ -37,7 +36,6 @@ export interface SupportCardComparison {
 })
 export class AdminService {
   private firestore = inject(Firestore);
-  private http = inject(HttpClient);
   private skillsService = inject(SkillsService);
   private supportCardService = inject(SupportCardService);
 
@@ -139,6 +137,15 @@ export class AdminService {
     );
   }
 
+  uploadTrainee(trainee: Trainee): Observable<UploadProgress> {
+    return this._uploadCollection(
+      [trainee],
+      'trainees',
+      (item) => this.prepareTraineeForUpload(item),
+      (item) => item.itemData.card_id.toString()
+    );
+  }
+
   uploadEvents(cardId: string, events: any): Observable<void> {
     const eventDocRef = doc(this.firestore, `events/${cardId}`);
     return from(setDoc(eventDocRef, events));
@@ -208,6 +215,11 @@ export class AdminService {
     return { ...rest, effects: effectsAsObjects };
   }
 
+  private prepareTraineeForUpload(trainee: Trainee): any {
+    const { isCharCard, itemData, objectiveData, charData, ...rest } = trainee;
+    return { isCharCard, itemData, objectiveData, charData };
+  }
+
   private deepDiff(obj1: any, obj2: any): any {
     const changes: { [key: string]: any } = {};
 
@@ -250,6 +262,18 @@ export class AdminService {
   public validateData<T>(data: T[], schema: z.Schema<T>): T[] {
     try {
       return data.map(item => schema.parse(item));
+    } catch (error) {
+      if (error instanceof ZodError) {
+        console.error('Zod Validation Error:', error); // Log the full ZodError object
+        throw new Error(`Data validation failed: ${error.issues.map(e => `[${e.path.join('.')}] ${e.message}`).join(', ')}`);
+      }
+      throw error;
+    }
+  }
+
+  public validateTraineeData(data: TraineeData, schema: z.Schema<Trainee>): Trainee {
+    try {
+      return schema.parse(data.pageProps);
     } catch (error) {
       if (error instanceof ZodError) {
         console.error('Zod Validation Error:', error); // Log the full ZodError object

@@ -14,7 +14,7 @@ const TraineeItemDataSchema = z.object({
   name_jp: z.string(),
   name_ko: z.string(),
   name_tw: z.string(),
-  version: z.string(),
+  version: z.string().optional(),
   title: z.string(),
   title_jp: z.string(),
   title_ko: z.string(),
@@ -106,7 +106,7 @@ const TraineeCharDataSchema = z.object({
   race: z.string(),
   rl: z.object({
     country: z.string(),
-    death: z.string().optional(),
+    death: z.string().nullish(),
     races: z.number(),
     wins: z.number(),
     record: z.string(),

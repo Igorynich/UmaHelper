@@ -167,5 +167,65 @@
         </div>
       </mat-card-content>
     </mat-card>
+
+    <h1 class="main-header">Trainee Data Management</h1>
+
+    <mat-card class="admin-card">
+      <mat-card-header>
+        <mat-card-title>Load Trainees from File</mat-card-title>
+        <mat-card-subtitle>Select a local JSON file containing trainee data.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="button-row">
+          <input type="file" #traineeFileInput style="display: none" (change)="onFileSelected($event, 'trainee')" accept=".json" multiple>
+          <button mat-raised-button color="primary" (click)="traineeFileInput.click()">
+            <mat-icon>folder_open</mat-icon> Load Trainee File
+          </button>
+          @if (loadedTrainee()) {
+            <button mat-raised-button color="warn" (click)="clearTraineeData()">
+              <mat-icon>clear</mat-icon> Clear Loaded Data
+            </button>
+          }
+        </div>
+        @if (traineeFileName()) {
+          <p>Files loaded: <strong>{{ traineeFileName() }}</strong></p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="admin-card">
+      <mat-card-header>
+        <mat-card-title>Actions</mat-card-title>
+        <mat-card-subtitle>Upload the loaded trainee data to Firebase.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="button-row">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="onUploadTrainees()"
+            [disabled]="isTraineeLoading() || !loadedTrainee()"
+          >
+            Upload Loaded Trainee
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Shared Progress Bar Section -->
+    @if (isTraineeLoading() && traineeUploadProgress()) {
+      <div class="progress-card">
+        <p>
+          Processing trainees: {{ traineeUploadProgress()?.completed }} / {{ traineeUploadProgress()?.total }} ({{
+            traineeUploadProgress()?.successful
+          }}
+          successful, {{ traineeUploadProgress()?.failed }} failed)
+        </p>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="(traineeUploadProgress()!.completed / traineeUploadProgress()!.total) * 100"
+        ></mat-progress-bar>
+      </div>
+    }
   </div>
 </div>

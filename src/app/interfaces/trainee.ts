@@ -12,7 +12,7 @@ export interface TraineeItemData {
   name_jp: string; // Example: "テイエムオペラオー"
   name_ko: string; // Example: "티엠 오페라 오"
   name_tw: string; // Example: "好歌劇"
-  version: string; // Example: "new_year"
+  version?: string; // Example: "new_year"
   title: string; // Example: "Blue Dazzle"
   title_jp: string; // Example: "[初晴・青き絢爛]"
   title_ko: string; // Example: "[새해 창천・푸르른 현란]"
@@ -104,7 +104,7 @@ export interface TraineeCharData {
   race: string; // Example: "uma"
   rl: { // Example: {country: "jp", death: "2018-05-17", ...}
     country: string;
-    death?: string;
+    death?: string | null;
     races: number;
     wins: number;
     record: string;
