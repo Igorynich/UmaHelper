@@ -44,4 +44,14 @@ export const uniqEffectMap: Record<UniqEffectId, { short: UniqEffectToStringFn; 
     long: (ue) => `Non-Spec Training Effectiveness(${ue.value_1}) AT Friendship Gauge>=${ue.value}`,  //'Non-spec Tr.Effect When Bond Gauge Higher Than 80'
     effect: (ue) => EffectId.TRAINING_EFFECTIVENESS
   },
+  [UniqEffectId.INCREASED_TR_EF_ON_AMOUNT_DIFFERENT_SUP_CARDS_IN_DECK]: {
+    short: (ue) => `TR EF(+${ue.value_1}) ON DIFF CARD TYPES>=${ue.value}`,
+    long: (ue) => `Training Effectiveness(+${ue.value_1}), When At Least ${ue.value} Different Types of Support Cards in Your Deck`,  //'Non-spec Tr.Effect When Bond Gauge Higher Than 80'
+    effect: (ue) => EffectId.TRAINING_EFFECTIVENESS
+  },
+  [UniqEffectId.INCREASED_TR_EF_ON_FANS]: {
+    short: (ue) => `TR EF +1(TO +20) PER ${ue.value} FANS`,
+    long: (ue) => `Training Effectiveness +1(up to +20) Per ${ue.value} fans`,  //'Non-spec Tr.Effect When Bond Gauge Higher Than 80'
+    effect: (ue) => EffectId.TRAINING_EFFECTIVENESS
+  },
 };
