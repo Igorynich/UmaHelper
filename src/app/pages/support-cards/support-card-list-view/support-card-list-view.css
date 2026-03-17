@@ -96,7 +96,8 @@
   min-height: 108px;
 }
 
-.rarity-toggles {
+.rarity-toggles,
+.type-toggles {
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -104,7 +105,8 @@
   min-height: 56px;
 }
 
-.rarity-toggle-btn {
+.rarity-toggle-btn,
+.type-toggle-btn {
   padding: 0.4rem 1rem;
   border: 2px solid transparent;
   border-radius: 999px;
@@ -115,12 +117,40 @@
   color: #666;
 }
 
-.rarity-toggle-btn:hover {
+.rarity-toggle-btn:hover,
+.type-toggle-btn:hover {
   filter: brightness(0.95);
 }
 
 .rarity-toggle-btn.selected {
   color: #333;
+}
+
+.type-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 40px;
+  padding: 0.4rem 0.9rem;
+  color: #333;
+}
+
+.type-toggle-btn.selected {
+  background: #d4d4d4;
+  border-color: #bfbfbf;
+}
+
+.type-toggle-btn:focus,
+.type-toggle-btn:focus-visible,
+.rarity-toggle-btn:focus,
+.rarity-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.type-toggle-btn img {
+  display: block;
 }
 
 .rarity-toggle-btn.selected.rarity-ssr {
@@ -140,7 +170,8 @@
   color: #333;
 }
 
-.rarity-toggle-btn:not(.selected) {
+.rarity-toggle-btn:not(.selected),
+.type-toggle-btn:not(.selected) {
   opacity: 0.5;
   background: #e0e0e0;
 }
@@ -153,6 +184,25 @@
 
 .action-buttons {
   display: flex;
+  align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.ratings-button {
+  margin-left: auto;
+  background: linear-gradient(135deg, #7b61ff, #4f8cff);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(79, 140, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.ratings-button:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 8px 20px rgba(79, 140, 255, 0.34);
+}
+
+.ratings-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.25), 0 8px 20px rgba(79, 140, 255, 0.34);
 }

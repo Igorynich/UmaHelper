@@ -19,11 +19,11 @@
           <button
             type="button"
             class="rarity-toggle-btn"
-            [class.selected]="isRaritySelected(rarityValue)"
+            [class.selected]="isFilterItemSelected('rarity', rarityValue)"
             [class.rarity-ssr]="rarityValue === Rarity.SSR"
             [class.rarity-sr]="rarityValue === Rarity.SR"
             [class.rarity-r]="rarityValue === Rarity.R"
-            (click)="toggleRarity(rarityValue)">
+            (click)="toggleFilterItem('rarity', rarityValue)">
             {{ rarityValue | rarity }}
           </button>
         }
@@ -32,22 +32,17 @@
 
     <div class="filter-group">
       <label class="filter-group-label">Type</label>
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-select formControlName="type" multiple>
-          <mat-select-trigger>
-            <div class="selected-types-container">
-              @for (cardType of filterForm.get('type')?.value || []; track cardType) {
-                <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24" class="selected-type-image">
-              }
-            </div>
-          </mat-select-trigger>
-          @for (cardType of Object.values(SupportCardType); track cardType) {
-            <mat-option [value]="cardType">
-              <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24">
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <div class="type-toggles">
+        @for (cardType of Object.values(SupportCardType); track cardType) {
+          <button
+            type="button"
+            class="type-toggle-btn"
+            [class.selected]="isFilterItemSelected('type', cardType)"
+            (click)="toggleFilterItem('type', cardType)">
+            <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24">
+          </button>
+        }
+      </div>
     </div>
 
     <div class="filter-group effect-group">
@@ -84,7 +79,7 @@
 
   <div class="action-buttons">
     <button mat-raised-button type="button" (click)="resetFilters()">Reset Filters</button>
-    <button mat-raised-button type="button" (click)="openRatingsModal()">Ratings</button>
+    <button mat-raised-button type="button" class="ratings-button" (click)="openRatingsModal()">Ratings</button>
   </div>
 </form>
 

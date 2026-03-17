@@ -136,30 +136,56 @@ export class SupportCardListViewComponent {
 
   protected readonly SupportCardType = SupportCardType;
 
+  private readonly allSupportTypes = Object.values(SupportCardType) as SupportCardType[];
+  private readonly allRarities = [Rarity.SSR, Rarity.SR, Rarity.R] as const;
+
   protected readonly filterForm = new FormGroup({
     name: new FormControl('', { nonNullable: true }),
-    rarity: new FormControl<Rarity[]>([Rarity.SSR, Rarity.SR, Rarity.R], { nonNullable: true }),
-    type: new FormControl<SupportCardType[]>([], { nonNullable: true }),
+    rarity: new FormControl<Rarity[]>([...this.allRarities], { nonNullable: true }),
+    type: new FormControl<SupportCardType[]>([...this.allSupportTypes], { nonNullable: true }),
     effectId: new FormControl<EffectId | ''>('', { nonNullable: true }),
     operator: new FormControl<Operator>('>=', { nonNullable: true }),
     value: new FormControl<number | null>(null),
     showUpcomingCards: new FormControl<boolean>(false, { nonNullable: true })
   });
 
-  protected readonly rarityOptions = [Rarity.SSR, Rarity.SR, Rarity.R] as const;
+  protected readonly rarityOptions = [...this.allRarities];
 
-  protected toggleRarity(rarity: Rarity): void {
-    const current = this.filterForm.get('rarity')?.value || [];
-    const isSelected = current.includes(rarity);
-    if (isSelected) {
-      this.filterForm.get('rarity')?.setValue(current.filter(r => r !== rarity));
-    } else {
-      this.filterForm.get('rarity')?.setValue([...current, rarity]);
+  protected toggleFilterItem(controlName: 'rarity', item: Rarity): void;
+  protected toggleFilterItem(controlName: 'type', item: SupportCardType): void;
+  protected toggleFilterItem(
+    controlName: 'rarity' | 'type',
+    item: Rarity | SupportCardType
+  ): void {
+    if (controlName === 'rarity') {
+      const control = this.filterForm.get('rarity');
+      const current = control?.value ?? [];
+      const updated = current.includes(item as Rarity)
+        ? current.filter(value => value !== item)
+        : [...current, item as Rarity];
+      control?.setValue(updated);
+      return;
     }
+
+    const control = this.filterForm.get('type');
+    const current = control?.value ?? [];
+    const updated = current.includes(item as SupportCardType)
+      ? current.filter(value => value !== item)
+      : [...current, item as SupportCardType];
+    control?.setValue(updated);
   }
 
-  protected isRaritySelected(rarity: Rarity): boolean {
-    return this.filterForm.get('rarity')?.value?.includes(rarity) ?? false;
+  protected isFilterItemSelected(controlName: 'rarity', item: Rarity): boolean;
+  protected isFilterItemSelected(controlName: 'type', item: SupportCardType): boolean;
+  protected isFilterItemSelected(
+    controlName: 'rarity' | 'type',
+    item: Rarity | SupportCardType
+  ): boolean {
+    if (controlName === 'rarity') {
+      return this.filterForm.get('rarity')?.value.includes(item as Rarity) ?? false;
+    }
+
+    return this.filterForm.get('type')?.value.includes(item as SupportCardType) ?? false;
   }
 
   private readonly filters = toSignal(
@@ -320,8 +346,8 @@ export class SupportCardListViewComponent {
   protected resetFilters(): void {
     this.filterForm.reset({
       name: '',
-      rarity: [Rarity.SSR, Rarity.SR, Rarity.R],
-      type: [],
+      rarity: [...this.allRarities],
+      type: [...this.allSupportTypes],
       effectId: '',
       operator: '>=',
       value: null,
