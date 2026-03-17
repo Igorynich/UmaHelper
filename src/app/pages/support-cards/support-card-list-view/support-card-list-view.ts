@@ -14,6 +14,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatIconModule } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
 import { SupportCardType } from '../../../interfaces/support-card-type.enum';
 import { MatDialog } from '@angular/material/dialog';
 import { SupportCardInfo } from '../../../components/dialogs/support-card-info/support-card-info';
@@ -24,6 +26,7 @@ import { SupportCardEffectData }
 from '../../../interfaces/support-card';
 import {rarityLevelMap, SupportCardService } from '../../../services/support-card.service';
 import {RatingsService} from '../../../services/ratings.service';
+import { matchesNameFilter } from '../../../utils/name-filter.utils';
 
 type Operator = '>=' | '<=' | '>' | '<' | '=';
 
@@ -38,7 +41,9 @@ type Operator = '>=' | '<=' | '>' | '<' | '=';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatIconModule,
+    MatIconButton
   ],
   templateUrl: './support-card-list-view.html',
   styleUrl: './support-card-list-view.css'
@@ -133,13 +138,29 @@ export class SupportCardListViewComponent {
 
   protected readonly filterForm = new FormGroup({
     name: new FormControl('', { nonNullable: true }),
-    rarity: new FormControl<Rarity[]>([], { nonNullable: true }),
+    rarity: new FormControl<Rarity[]>([Rarity.SSR, Rarity.SR, Rarity.R], { nonNullable: true }),
     type: new FormControl<SupportCardType[]>([], { nonNullable: true }),
     effectId: new FormControl<EffectId | ''>('', { nonNullable: true }),
     operator: new FormControl<Operator>('>=', { nonNullable: true }),
     value: new FormControl<number | null>(null),
     showUpcomingCards: new FormControl<boolean>(false, { nonNullable: true })
   });
+
+  protected readonly rarityOptions = [Rarity.SSR, Rarity.SR, Rarity.R] as const;
+
+  protected toggleRarity(rarity: Rarity): void {
+    const current = this.filterForm.get('rarity')?.value || [];
+    const isSelected = current.includes(rarity);
+    if (isSelected) {
+      this.filterForm.get('rarity')?.setValue(current.filter(r => r !== rarity));
+    } else {
+      this.filterForm.get('rarity')?.setValue([...current, rarity]);
+    }
+  }
+
+  protected isRaritySelected(rarity: Rarity): boolean {
+    return this.filterForm.get('rarity')?.value?.includes(rarity) ?? false;
+  }
 
   private readonly filters = toSignal(
     this.filterForm.valueChanges.pipe(
@@ -225,7 +246,7 @@ export class SupportCardListViewComponent {
     const data = this.processedData();
     const filters = this.filters();
 
-    const name = filters?.name?.toLowerCase() || '';
+    const name = filters?.name || '';
     const rarities = filters?.rarity || [];
     const types = filters?.type || [];
     const effectId = filters?.effectId || '';
@@ -234,10 +255,10 @@ export class SupportCardListViewComponent {
     const showUpcomingCards = filters?.showUpcomingCards ?? false;
 
     return data.filter(card => {
-      const nameMatch = !name || card.char_name.toLowerCase().includes(name);
+      const nameMatch = matchesNameFilter(name, card.char_name);
       const rarityMatch = rarities.length === 0 || rarities.includes(card.rarity);
       const typeMatch = types.length === 0 || types.includes(card.type);
-      
+
       // Filter by release_en - show upcoming cards (no release_en) only if checkbox is checked
       const upcomingMatch = showUpcomingCards || card.release_en;
 
@@ -299,13 +320,17 @@ export class SupportCardListViewComponent {
   protected resetFilters(): void {
     this.filterForm.reset({
       name: '',
-      rarity: [],
+      rarity: [Rarity.SSR, Rarity.SR, Rarity.R],
       type: [],
       effectId: '',
       operator: '>=',
       value: null,
       showUpcomingCards: false
     });
+  }
+
+  protected clearNameFilter(): void {
+    this.filterForm.get('name')?.setValue('');
   }
 
   protected readonly Object = Object;

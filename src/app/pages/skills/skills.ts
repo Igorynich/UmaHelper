@@ -15,6 +15,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {toSignal} from '@angular/core/rxjs-interop';
 import { SkillDisplay } from '../../components/common/skill-display/skill-display';
+import { matchesNameFilter } from '../../utils/name-filter.utils';
 
 @Component({
   selector: 'app-skills',
@@ -47,8 +48,8 @@ export class SkillsComponent {
 
   private skills = signal<Skill[]>([]);
   filteredSkills = computed(() => {
-    const filter = this.filter$()?.toLowerCase() || '';
-    return this.skills().filter(skill => (skill.name_en ?? skill.enname).toLowerCase().includes(filter));
+    const filter = this.filter$() || '';
+    return this.skills().filter(skill => matchesNameFilter(filter, skill.name_en ?? skill.enname));
   });
 
 

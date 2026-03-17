@@ -4,9 +4,11 @@
     <mat-form-field appearance="outline" class="filter-field">
       <mat-label>Filter by name</mat-label>
       <input matInput [formControl]="filterControl">
-      <button *ngIf="filterControl.value" matSuffix mat-icon-button aria-label="Clear" (click)="clearFilter()">
-        <mat-icon>close</mat-icon>
-      </button>
+      @if (filterControl.value) {
+        <button matSuffix mat-icon-button aria-label="Clear" (click)="clearFilter()">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
     </mat-form-field>
   </div>
   <div class="skills-list">

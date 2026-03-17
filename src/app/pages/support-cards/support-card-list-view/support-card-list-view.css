@@ -29,3 +29,69 @@
 .selected-type-image {
   display: inline-block;
 }
+
+/* Rarity Filter Group */
+.rarity-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.filter-group-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+/* Rarity Toggle Buttons */
+.rarity-toggles {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.rarity-toggle-btn {
+  padding: 0.4rem 1rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #e0e0e0;
+  color: #666;
+}
+
+.rarity-toggle-btn:hover {
+  filter: brightness(0.95);
+}
+
+.rarity-toggle-btn.selected {
+  color: #333;
+}
+
+.rarity-toggle-btn.selected.rarity-ssr {
+  background: linear-gradient(124deg, #e67e73, #e6c27e, #e6e673, #73e673, #73c7e6, #c773e6);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.rarity-toggle-btn.selected.rarity-sr {
+  background: #e6d573;
+  border-color: #d4c45a;
+  color: #333;
+}
+
+.rarity-toggle-btn.selected.rarity-r {
+  background: #d4d4d4;
+  border-color: #bfbfbf;
+  color: #333;
+}
+
+.rarity-toggle-btn:not(.selected) {
+  opacity: 0.5;
+  background: #e0e0e0;
+}
