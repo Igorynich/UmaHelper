@@ -1,78 +1,91 @@
 <form [formGroup]="filterForm" class="filter-container">
-  <mat-form-field class="name-filter-field">
-    <mat-label>Name</mat-label>
-    <input matInput formControlName="name" placeholder="Enter card name">
-    @if (filterForm.get('name')?.value) {
-      <button matSuffix mat-icon-button aria-label="Clear" (click)="clearNameFilter()">
-        <mat-icon>close</mat-icon>
-      </button>
-    }
-  </mat-form-field>
+  <div class="filter-row">
+    <div class="filter-group">
+      <label class="filter-group-label">Name</label>
+      <mat-form-field appearance="outline" class="filter-field name-field">
+        <input matInput formControlName="name" placeholder="Enter card name">
+        @if (filterForm.get('name')?.value) {
+          <button matSuffix mat-icon-button aria-label="Clear" (click)="clearNameFilter()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
 
-  <div class="rarity-filter-group">
-    <label class="filter-group-label">Rarity</label>
-    <div class="rarity-toggles">
-      @for (rarityValue of rarityOptions; track rarityValue) {
-        <button
-          type="button"
-          class="rarity-toggle-btn"
-          [class.selected]="isRaritySelected(rarityValue)"
-          [class.rarity-ssr]="rarityValue === Rarity.SSR"
-          [class.rarity-sr]="rarityValue === Rarity.SR"
-          [class.rarity-r]="rarityValue === Rarity.R"
-          (click)="toggleRarity(rarityValue)">
-          {{ rarityValue | rarity }}
-        </button>
-      }
+    <div class="rarity-filter-group">
+      <label class="filter-group-label">Rarity</label>
+      <div class="rarity-toggles">
+        @for (rarityValue of rarityOptions; track rarityValue) {
+          <button
+            type="button"
+            class="rarity-toggle-btn"
+            [class.selected]="isRaritySelected(rarityValue)"
+            [class.rarity-ssr]="rarityValue === Rarity.SSR"
+            [class.rarity-sr]="rarityValue === Rarity.SR"
+            [class.rarity-r]="rarityValue === Rarity.R"
+            (click)="toggleRarity(rarityValue)">
+            {{ rarityValue | rarity }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-group-label">Type</label>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-select formControlName="type" multiple>
+          <mat-select-trigger>
+            <div class="selected-types-container">
+              @for (cardType of filterForm.get('type')?.value || []; track cardType) {
+                <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24" class="selected-type-image">
+              }
+            </div>
+          </mat-select-trigger>
+          @for (cardType of Object.values(SupportCardType); track cardType) {
+            <mat-option [value]="cardType">
+              <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24">
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="filter-group effect-group">
+      <label class="filter-group-label">Effect</label>
+      <div class="effect-controls">
+        <mat-form-field appearance="outline" class="filter-field effect-field">
+          <mat-select formControlName="effectId">
+            <mat-option value="">All</mat-option>
+            @for (effect of allEffects(); track effect.id) {
+              <mat-option [value]="effect.id" [title]="effect.tooltip">{{ effect.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <div class="value-inputs">
+          <mat-form-field appearance="outline" class="operator-field">
+            <mat-select formControlName="operator">
+              @for (op of operatorOptions; track op.value) {
+                <mat-option [value]="op.value">{{ op.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="value-field">
+            <input matInput type="number" formControlName="value" placeholder="Enter value">
+          </mat-form-field>
+        </div>
+      </div>
     </div>
   </div>
 
-  <mat-form-field>
-    <mat-label>Type</mat-label>
-    <mat-select formControlName="type" multiple>
-      <mat-select-trigger>
-        <div class="selected-types-container">
-          @for (cardType of filterForm.get('type')?.value || []; track cardType) {
-            <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24" class="selected-type-image">
-          }
-        </div>
-      </mat-select-trigger>
-      @for (cardType of Object.values(SupportCardType); track cardType) {
-        <mat-option [value]="cardType">
-          <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24">
-        </mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+  <div class="checkbox-row">
+    <mat-checkbox formControlName="showUpcomingCards">Show Upcoming Cards</mat-checkbox>
+  </div>
 
-  <mat-form-field>
-    <mat-label>Effect</mat-label>
-    <mat-select formControlName="effectId">
-      <mat-option value="">All</mat-option>
-      @for (effect of allEffects(); track effect.id) {
-        <mat-option [value]="effect.id" [title]="effect.tooltip">{{ effect.name }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field class="operator-field">
-    <mat-label>Operator</mat-label>
-    <mat-select formControlName="operator">
-      @for (op of operatorOptions; track op.value) {
-        <mat-option [value]="op.value">{{ op.label }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Value</mat-label>
-    <input matInput type="number" formControlName="value" placeholder="Enter value">
-  </mat-form-field>
-
-  <mat-checkbox formControlName="showUpcomingCards">Show Upcoming Cards</mat-checkbox>
-
-  <button mat-raised-button type="button" (click)="resetFilters()">Reset Filters</button>
-  <button mat-raised-button type="button" (click)="openRatingsModal()">Ratings</button>
+  <div class="action-buttons">
+    <button mat-raised-button type="button" (click)="resetFilters()">Reset Filters</button>
+    <button mat-raised-button type="button" (click)="openRatingsModal()">Ratings</button>
+  </div>
 </form>
 
 <app-data-grid
