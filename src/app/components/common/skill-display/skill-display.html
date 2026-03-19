@@ -1,5 +1,5 @@
 @if (!simpleView) {
-  <mat-card class="skill-card">
+  <mat-card [class]="getRarityClass()">
     <div class="skill-icon-wrapper">
       <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
       </ik-image>
@@ -13,7 +13,7 @@
     </button>
   </mat-card>
 } @else {
-  <span class="simple-skill-view" (click)="openSkillDialog(skill)">
+  <span [class]="getRarityClass()" (click)="openSkillDialog(skill)">
     {{ skill.name_en }}
   </span>
 }

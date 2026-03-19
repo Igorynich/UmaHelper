@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { ImagekitioAngularModule } from 'imagekitio-angular';
-import { Skill } from '../../../interfaces/skill';
+import { Skill, Rarity } from '../../../interfaces/skill';
 import { MatDialog } from '@angular/material/dialog';
 import {SkillDialogComponent} from '../skill-dialog/skill-dialog';
 import {MatIconButton} from '@angular/material/button';
@@ -20,6 +20,22 @@ export class SkillDisplay {
   @Input() simpleView: boolean = false;
 
   constructor(private dialog: MatDialog) {}
+
+  getRarityClass(): string {
+    const rarity = this.skill.rarity;
+    const baseClass = this.simpleView ? 'simple-skill-view' : 'skill-card';
+    const raritySuffix = this.simpleView ? '-simple' : '';
+
+    if (rarity === Rarity.Normal) {
+      return `${baseClass} rarity${raritySuffix}-normal`;
+    } else if (rarity === Rarity.Rare) {
+      return `${baseClass} rarity${raritySuffix}-rare`;
+    } else if (rarity >= Rarity.Unique) {
+      return `${baseClass} rarity${raritySuffix}-unique`;
+    }
+
+    return baseClass;
+  }
 
   openSkillDialog(skill: Skill): void {
     this.dialog.open(SkillDialogComponent, {

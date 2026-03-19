@@ -9,9 +9,23 @@
   align-items: center;
   gap: 1rem;
   padding: 0.5rem;
-  background-color: #FFF0F5; /* Consistent with skills page */
   border-radius: 5px;
   box-sizing: border-box;
+}
+
+/* Rarity 1 (Normal): белый слева до серебрянного справа */
+.skill-card.rarity-normal {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(192, 192, 192, 0.7) 100%);
+}
+
+/* Rarity 2 (Rare): белый на золотой */
+.skill-card.rarity-rare {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 215, 0, 0.7) 100%);
+}
+
+/* Rarity 3+ (Unique и выше): белый на розовый */
+.skill-card.rarity-unique {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 105, 180, 0.7) 100%);
 }
 
 .skill-icon-wrapper {
@@ -55,8 +69,25 @@
 .simple-skill-view {
   cursor: pointer;
   color: #3f51b5; /* Standard link color */
+  padding: 4px 8px;
+  border-radius: 3px;
+  display: inline-block;
+  transition: background-color 0.2s;
 }
 
 .simple-skill-view:hover {
   text-decoration: underline;
+}
+
+/* Simple view rarity backgrounds */
+.simple-skill-view.rarity-simple-normal {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(192, 192, 192, 0.7) 100%);
+}
+
+.simple-skill-view.rarity-simple-rare {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 215, 0, 0.7) 100%);
+}
+
+.simple-skill-view.rarity-simple-unique {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 105, 180, 0.7) 100%);
 }
