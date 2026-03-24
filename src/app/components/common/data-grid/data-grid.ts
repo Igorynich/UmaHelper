@@ -128,8 +128,8 @@ export class DataGrid<T> implements AfterViewInit {
       const selection = this.selection();
       const tabIndex = this.tabIndex();
 
-      // Only save if we have a valid tab index and we're on the correct tab
-      if (tabIndex >= 0 && this.currentTabIndex() === tabIndex) {
+      // Only save if we're on the correct tab
+      if (this.currentTabIndex() === tabIndex) {
         this.dataGridStateService.updateTabSelection(tabIndex, selection);
       }
     });

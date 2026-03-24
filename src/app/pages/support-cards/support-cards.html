@@ -2,7 +2,7 @@
   <h2>Support Cards</h2>
 
   <div class="tab-container">
-    <mat-tab-group class="tab-group" animationDuration="0ms" [selectedIndex]="selectedTabIndex()" (selectedIndexChange)="onTabChange($event)">
+    <mat-tab-group class="tab-group" animationDuration="0ms" [selectedIndex]="selectedTabIndex() + 1" (selectedIndexChange)="onTabChange($event)">
       <mat-tab label="All Cards">
         <div class="tab-content">
           <div class="bulk-actions-container">
@@ -17,15 +17,15 @@
                 Add Selected
               </button>
             </div>
-            <button matButton="filled" (click)="saveData()">Save Data</button>
+            <button matButton="filled" (click)="saveData(true)">Save Data</button>
           </div>
           <app-support-card-list-view
             [cards]="allCardsWithDefaults()"
             (add)="onAddCard($event)"
             [isFirstTab]="true"
             [addMenu]="addMenu"
-            [tabIndex]="0"
-            [isActive]="selectedTabIndex() === 0"
+            [tabIndex]="ALL_CARDS_TAB_INDEX"
+            [isActive]="selectedTabIndex() === ALL_CARDS_TAB_INDEX"
             (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
           >
           </app-support-card-list-view>
@@ -71,9 +71,8 @@
             </div>
             <app-support-card-list-view
               [cards]="tab.cards"
-              [filterState]="tabFilters().get($index) || null"
-              [tabIndex]="$index + 1"
-              [isActive]="selectedTabIndex() === $index + 1"
+              [tabIndex]="$index"
+              [isActive]="selectedTabIndex() === $index"
               (levelChangedInTab)="onLevelChangedInDynamicTab($index, $event)"
               (add)="onAddCard($event)"
               (remove)="onRemoveCard($index, $event)"

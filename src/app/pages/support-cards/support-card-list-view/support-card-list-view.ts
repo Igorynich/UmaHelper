@@ -6,7 +6,7 @@ import { DisplaySupportCard, Rarity } from '../../../interfaces/display-support-
 import { effectMap } from '../../../maps/effect.map';
 import {EffectId, UniqEffectId} from '../../../interfaces/effect-id.enum';
 import { SupportCardFilter } from '../../../interfaces/user-support-cards-data';
-import { debounceTime, startWith } from 'rxjs';
+import {debounceTime} from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RarityPipe } from '../../../pipes/rarity.pipe';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -27,6 +27,7 @@ from '../../../interfaces/support-card';
 import {rarityLevelMap, SupportCardService } from '../../../services/support-card.service';
 import {RatingsService} from '../../../services/ratings.service';
 import { matchesNameFilter } from '../../../utils/name-filter.utils';
+import {tap} from 'rxjs/operators';
 
 type Operator = '>=' | '<=' | '>' | '<' | '=';
 
@@ -53,12 +54,10 @@ export class SupportCardListViewComponent {
   private dialog = inject(MatDialog);
   private dataGridStateService = inject(DataGridStateService);
   private supportCardService = inject(SupportCardService);
-  private readonly ratingsService = inject(RatingsService);
 
   cards = input<DisplaySupportCard[]>([]);
   isFirstTab = input<boolean>(false);
   addMenu = input<MatMenu>();
-  filterState = input<SupportCardFilter | null>(null);
   tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
   isActive = input<boolean>(false); // Whether this tab is currently active
 
@@ -92,34 +91,11 @@ export class SupportCardListViewComponent {
     });
 
     effect(() => {
-      const filter = this.filterState();
-      if (filter) {
-        this.filterForm.patchValue(filter, { emitEvent: false });
-      }
-    });
-
-    effect(() => {
       // Sync filter state with service when tab changes
       const tabIndex = this.tabIndex();
       const tabState = this.dataGridStateService.getTabState(tabIndex);
       if (tabState.filter) {
         this.filterForm.patchValue(tabState.filter, { emitEvent: false });
-      }
-    });
-
-    effect(() => {
-      const filterValue = this.filters();
-      if (filterValue) {
-        const completeFilter: SupportCardFilter = {
-          name: filterValue.name || '',
-          rarity: filterValue.rarity || [],
-          type: filterValue.type || [],
-          effectId: filterValue.effectId || '',
-          operator: filterValue.operator || '>=',
-          value: filterValue.value ?? null,
-          showUpcomingCards: filterValue.showUpcomingCards ?? false
-        };
-        this.filterChanged.emit(completeFilter);
       }
     });
   }
@@ -141,8 +117,8 @@ export class SupportCardListViewComponent {
 
   protected readonly filterForm = new FormGroup({
     name: new FormControl('', { nonNullable: true }),
-    rarity: new FormControl<Rarity[]>([...this.allRarities], { nonNullable: true }),
-    type: new FormControl<SupportCardType[]>([...this.allSupportTypes], { nonNullable: true }),
+    rarity: new FormControl<Rarity[]>([], { nonNullable: true }),
+    type: new FormControl<SupportCardType[]>([], { nonNullable: true }),
     effectId: new FormControl<EffectId | ''>('', { nonNullable: true }),
     operator: new FormControl<Operator>('>=', { nonNullable: true }),
     value: new FormControl<number | null>(null),
@@ -190,8 +166,20 @@ export class SupportCardListViewComponent {
 
   private readonly filters = toSignal(
     this.filterForm.valueChanges.pipe(
-      startWith(this.filterForm.getRawValue()),
       debounceTime(300),
+      tap(filterValue => {
+        if (filterValue) {
+          const completeFilter: SupportCardFilter = {
+            name: filterValue.name || '',
+            rarity: filterValue.rarity || [],
+            type: filterValue.type || [],
+            effectId: filterValue.effectId || '',
+            operator: filterValue.operator || '>=',
+            value: filterValue.value ?? null,
+            showUpcomingCards: filterValue.showUpcomingCards ?? false
+          };
+          this.filterChanged.emit(completeFilter);
+      }}),
       takeUntilDestroyed(this.destroyRef)
     )
   );
@@ -346,8 +334,8 @@ export class SupportCardListViewComponent {
   protected resetFilters(): void {
     this.filterForm.reset({
       name: '',
-      rarity: [...this.allRarities],
-      type: [...this.allSupportTypes],
+      rarity: [],
+      type: [],
       effectId: '',
       operator: '>=',
       value: null,

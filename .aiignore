@@ -1,0 +1,82 @@
+# ===========================================
+# Node.js и зависимости
+# ===========================================
+node_modules/
+.npm/
+yarn.lock
+package-lock.json
+
+# ===========================================
+# Angular build артефакты
+# ===========================================
+dist/
+.angular/
+out-tsc/
+.bazel-cache/
+
+# ===========================================
+# Конфигурация и секреты
+# ===========================================
+.env
+.env.local
+.env.development
+.env.production
+*.env
+firebase.config.ts
+firebase.config.js
+google-services.json
+GoogleService-Info.plist
+
+# ===========================================
+# Git и IDE
+# ===========================================
+.git/
+.idea/
+.vscode/
+*.iml
+
+# ===========================================
+# Логи и временные файлы
+# ===========================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+coverage/
+.nyc_output/
+
+# ===========================================
+# ImageKit и медиа кэш
+# ===========================================
+.cache/
+imagekit-cache/
+
+# ===========================================
+# Тесты и отчёты
+# ===========================================
+karma.conf.js.coverage
+test-results/
+playwright-report/
+
+# ===========================================
+# Большие файлы данных
+# ===========================================
+*.mdx
+*.pdf
+*.zip
+*.tar.gz
+src/assets/large-*
+
+# Тестовые файлы (если они в Git)
+*.spec.ts
+**/*.spec.ts
+
+# Большие документы
+CHANGELOG.md
+docs/archive/
+
+# Большие assets
+src/assets/*.png
+src/assets/*.jpg
+src/assets/*.svg

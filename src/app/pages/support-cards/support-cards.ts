@@ -74,7 +74,6 @@ export class SupportCards {
   });
 
   protected dynamicTabs = signal<{ name: string; cards: { id: number; level: number }[] }[]>([]);
-  protected tabFilters = signal<Map<number, SupportCardFilter>>(new Map());
   private isLoadingData = signal(true);
 
   protected hydratedTabsData = computed(() => {
@@ -96,19 +95,17 @@ export class SupportCards {
 
   protected readonly rarityLevelMap = rarityLevelMap;
 
-  protected selectedTabIndex = signal(0);
+  readonly ALL_CARDS_TAB_INDEX: number = -1;
+  protected selectedTabIndex = signal(this.ALL_CARDS_TAB_INDEX);
   protected selectedCard = signal<SupportCardEffectData | null>(null);
   protected firstTabSupportCardsWithLevels = signal<DisplaySupportCard[]>([]);
 
   constructor() {
     effect(() => {
-      // console.log('Effect 1 triggered');
       const savedData = this.supportCardsDataService.userSupportCardsData();
       if (savedData) {
         this.dynamicTabs.set(savedData.tabs);
-        if (savedData.selectedTabIndex !== this.selectedTabIndex()) {
-          this.selectedTabIndex.set(savedData.selectedTabIndex);
-        }
+        this.selectedTabIndex.set(savedData.selectedTabIndex || this.ALL_CARDS_TAB_INDEX);
 
         // Load filter and sort states into the service
         const tabStates = new Map<number, TabState>();
@@ -116,17 +113,17 @@ export class SupportCards {
         // Preserve existing selection states from service
         const existingStates = this.dataGridStateService.getAllTabStates();   // TODO rewrite to use single(current) tab state
 
-        // Add state for "All Cards" tab (0) - preserve existing selection or use empty
-        const existingAllCardsState = existingStates.get(0);
+        // Add state for "All Cards" tab (this.ALL_CARDS_TAB_INDEX) - preserve existing selection or use empty
+        const existingAllCardsState = existingStates.get(this.ALL_CARDS_TAB_INDEX);
         const allCardsTabState: TabState = {
           sort: [],
           selection: existingAllCardsState?.selection || {}
         };
         // Ignore stale allCardsSelection from Firebase - we don't persist selection anymore
-        tabStates.set(0, allCardsTabState);
+        tabStates.set(this.ALL_CARDS_TAB_INDEX, allCardsTabState);
 
         savedData.tabs.forEach((tab, index) => {
-          const existingTabState = existingStates.get(index + 1);
+          const existingTabState = existingStates.get(index);
           const tabState: TabState = {
             sort: tab.sort || [],
             selection: existingTabState?.selection || {} // Preserve existing selection
@@ -135,49 +132,35 @@ export class SupportCards {
             tabState.filter = tab.filter;
           }
           // Ignore stale tab.selection from Firebase - we don't persist selection anymore
-          tabStates.set(index + 1, tabState);
+          tabStates.set(index, tabState);
         });
-
-        // Load filter states for local signal (for template compatibility)
-        const filtersMap = new Map<number, SupportCardFilter>();
-        savedData.tabs.forEach((tab, index) => {
-          if (tab.filter) {
-            filtersMap.set(index, tab.filter);
-          }
-        });
-        this.tabFilters.set(filtersMap);
+        this.dataGridStateService.loadTabStates(tabStates);
 
         this.isLoadingData.set(false);
       } else {
         this.dynamicTabs.set([]);
-        this.selectedTabIndex.set(0);
-        this.tabFilters.set(new Map());
+        this.selectedTabIndex.set(this.ALL_CARDS_TAB_INDEX);
 
         // Initialize service with empty states
         const tabStates = new Map<number, TabState>();
-        // Add empty state for "All Cards" tab (0)
-        tabStates.set(0, { sort: [], selection: {} });
+        // Add empty state for "All Cards" tab (this.ALL_CARDS_TAB_INDEX)
+        tabStates.set(this.ALL_CARDS_TAB_INDEX, { sort: [], selection: {} });
         this.dataGridStateService.loadTabStates(tabStates);
 
         this.isLoadingData.set(false);
       }
     });
-
-    // Update active tab in service when tab changes
-    effect(() => {
-      this.dataGridStateService.setActiveTab(this.selectedTabIndex());
-    });
   }
 
   protected availableTabs = computed(() => {
     return this.dynamicTabs()
-      .map((tab, index) => ({ name: tab.name, index: index + 1 }))
+      .map((tab, index) => ({ name: tab.name, index: index }))
       .filter(tab => tab.index !== this.selectedTabIndex());
   });
 
   protected onTabChange(newIndex: number): void {
-    console.log('onTabChange', newIndex);
-    this.selectedTabIndex.set(newIndex);
+    // console.log('onTabChange', newIndex - 1);
+    this.selectedTabIndex.set(newIndex - 1);    // -1 needed bc $event of mat-tab-group !== $index of hydratedTabsData(), $event: 0 - All Cards, $index: -1 - All Cards
     this.saveData();
   }
 
@@ -201,12 +184,10 @@ export class SupportCards {
 
     dialogRef.afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
       this.dynamicTabs.update(tabs => tabs.filter((_, i) => i !== index));
-      const removedTabIndex = index + 1; // Convert to actual tab index
-      if (this.selectedTabIndex() > removedTabIndex) {
+      if (this.selectedTabIndex() >= index) {
         this.selectedTabIndex.update(prev => prev - 1);
-      } else if (this.selectedTabIndex() === removedTabIndex) {
-        this.selectedTabIndex.set(0);
       }
+      this.dataGridStateService.removeTabState(index);
       this.saveData();
     });
   }
@@ -235,7 +216,7 @@ export class SupportCards {
 
   protected addCardToTab(card: SupportCardEffectData | null, targetTabIndex: number): void {
 
-    const tabIndex = targetTabIndex - 1;
+    const tabIndex = targetTabIndex;
     // Check if this is a bulk operation (no single card selected)
     if (!card && this.hasSelectedCards()) {
       const selectedCards = this.getSelectedCardsFromCurrentGrid();
@@ -246,7 +227,6 @@ export class SupportCards {
     if (!card) return;
 
     this.dynamicTabs.update(tabs => {
-      console.log('Tabs', tabs, targetTabIndex);
       const newTabs = [...tabs];
       const tabToUpdate = { ...newTabs[tabIndex] };
 
@@ -297,11 +277,6 @@ export class SupportCards {
   }
 
   protected onFilterChanged(tabIndex: number, filter: SupportCardFilter): void {
-    this.tabFilters.update(filters => {
-      const newFilters = new Map(filters);
-      newFilters.set(tabIndex, filter);
-      return newFilters;
-    });
     // Update service with filter state
     this.dataGridStateService.updateTabFilter(tabIndex, filter);
     this.saveData();
@@ -389,7 +364,7 @@ export class SupportCards {
     const currentTabIndex = this.selectedTabIndex();
     const currentSelection = this.dataGridStateService.getTabSelection(currentTabIndex);
 
-    if (currentTabIndex === 0) {
+    if (currentTabIndex === this.ALL_CARDS_TAB_INDEX) {
       // All Cards tab
       return this.firstTabSupportCardsWithLevels().filter(card =>
         currentSelection[card.support_id.toString()]
@@ -405,7 +380,7 @@ export class SupportCards {
       } as SupportCardEffectData));
     } else {
       // Dynamic tab
-      const tabData = this.hydratedTabsData()[currentTabIndex - 1];
+      const tabData = this.hydratedTabsData()[currentTabIndex];
       if (tabData) {
         return tabData.cards.filter(card =>
           currentSelection[card.support_id.toString()]
@@ -424,15 +399,20 @@ export class SupportCards {
     return [];
   }
 
-  async saveData(): Promise<void> {
+  async saveData(manualTrigger: boolean = false): Promise<void> {
+    // enable save only on manual trigger
+    if (!manualTrigger) {
+      return;
+    }
+
     if (this.isLoadingData()) return;
 
     try {
       const tabsWithFiltersAndSorts = this.dynamicTabs().map((tab, index) => {
-        const filter = this.tabFilters().get(index);
-        const tabState = this.dataGridStateService.getTabState(index + 1);
+        // const filter = this.tabFilters().get(index);
+        const tabState = this.dataGridStateService.getTabState(index);
         const result: any = { ...tab };
-        if (filter) result.filter = filter;
+        if (tabState.filter) result.filter = filter;
         if (tabState.sort && tabState.sort.length > 0) result.sort = tabState.sort;
         // Intentionally exclude selection from being saved to Firebase
         return result;
