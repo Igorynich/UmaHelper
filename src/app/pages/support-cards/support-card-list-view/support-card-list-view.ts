@@ -127,8 +127,6 @@ export class SupportCardListViewComponent {
 
   protected readonly rarityOptions = [...this.allRarities];
 
-  protected toggleFilterItem(controlName: 'rarity', item: Rarity): void;
-  protected toggleFilterItem(controlName: 'type', item: SupportCardType): void;
   protected toggleFilterItem(
     controlName: 'rarity' | 'type',
     item: Rarity | SupportCardType
