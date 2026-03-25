@@ -17,6 +17,22 @@ export const eventTypes: Record<string, { name: string }> = {
   },
   special: {
     name: 'Special Events'
+  },
+  // trainee events
+  wchoice: {
+    name: 'Event With Choices'
+  },
+  nochoice: {
+    name: 'Events Without Choices'
+  },
+  version: {
+    name: 'Costume Events'
+  },
+  outings: {
+    name: 'Date Events'
+  },
+  secret: {
+    name: 'Secret Events'
   }
 };
 
@@ -108,7 +124,9 @@ export class EventsService {
       sr: 'Skill Random',    // TODO: make custom template
       '5s': 'All Stats',
       rs: '1 Random Stat',
-      fe: 'Full Energy Recovery'
+      fe: 'Full Energy Recovery',
+      no: 'Nothing Happens',
+      ct: 'Chance of Practice Perfect ○ status'
     };
 
     const eventData = events.en || events;
@@ -143,10 +161,24 @@ export class EventsService {
     });
 
     return Object.keys(eventData).reduce((acc, key) => {
-      return {
-        ...acc,
-        [key]: eventData[key].map(mapEvent)
-      };
+      if (Array.isArray(eventData[key])) {
+        return {
+          ...acc,
+          [key]: eventData[key].map(mapEvent)
+        };
+      }
+      return acc;
     }, {});
+  }
+
+  filterParsedEventData(events: any): Record<string, UmaEvent[]> {
+    const eventData = events.en || events;
+    return Object.keys(eventData).reduce((acc: Record<string, UmaEvent[]>, eventGroupKey: string) => {
+      const eventGroup = eventData[eventGroupKey as keyof typeof eventData];
+      if (Array.isArray(eventGroup) && eventGroup.every((event: UmaEvent | any) => typeof event === 'object')) {
+        acc[eventGroupKey] = eventGroup;
+      }
+      return acc;
+    }, {} as Record<string, UmaEvent[]>);
   }
 }

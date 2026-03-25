@@ -1,13 +1,13 @@
-<h2 mat-dialog-title>Add Events For a Card</h2>
+<h2 mat-dialog-title>Add Events For Entity</h2>
 
 <mat-dialog-content class="dialog-content">
   <div class="input-row">
     <mat-form-field class="id-input">
-      <mat-label>Support Card ID</mat-label>
-      <input matInput [(ngModel)]="supportCardId" (ngModelChange)="supportCardId.set($event)" placeholder="Enter card ID (e.g., 30107)">
+      <mat-label>Entity ID</mat-label>
+      <input matInput [(ngModel)]="entityId" (ngModelChange)="entityId.set($event)" placeholder="Enter card or trainee ID (e.g., 30107 or 102701)">
     </mat-form-field>
-    <button mat-flat-button color="primary" (click)="checkCard()" [disabled]="!supportCardId() || isCardChecking()">
-      @if(isCardChecking()) {
+    <button mat-flat-button color="primary" (click)="checkEntity()" [disabled]="!entityId() || isChecking()">
+      @if(isChecking()) {
         <mat-spinner diameter="20"></mat-spinner>
       } @else {
         Check
@@ -15,9 +15,13 @@
     </button>
   </div>
 
-  @if (foundCard(); as card) {
+  @if (foundEntity(); as entity) {
     <p class="card-found-text">
-      Card Found: <strong>{{ card.url_name }}</strong>
+      @if (entityType() === 'card') {
+        Support Card Found: <strong>{{ entityName() }}</strong>
+      } @else if (entityType() === 'trainee') {
+        Trainee Found: <strong>{{ entityName() }}</strong>
+      }
     </p>
   }
 

@@ -10,9 +10,12 @@ import { AdminService } from '../../../services/admin.service';
 import { SupportCard } from '../../../interfaces/support-card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SupportCardService } from '../../../services/support-card.service';
-import { EventChoice, EventReward, UmaEvent, DecodedEvent, DecodedEventsContainer } from '../../../interfaces/event'; // Updated import
+import { EventChoice, EventReward, UmaEvent, DecodedEvent, DecodedEventsContainer } from '../../../interfaces/event';
 import {EventsService, evntTypeConvertFn} from '../../../services/events.service';
-import {group} from '@angular/animations'; // New import
+import { Trainee } from '../../../interfaces/trainee';
+import { TraineeService } from '../../../services/trainee.service';
+import { combineLatest } from 'rxjs';
+import {cleanNestedArrays} from '../../../utils/helpers';
 
 @Component({
   selector: 'app-event-upload-dialog',
@@ -33,45 +36,70 @@ export class EventUploadDialog {
   private dialogRef = inject(MatDialogRef<EventUploadDialog>);
   private adminService = inject(AdminService);
   private supportCardService = inject(SupportCardService);
+  private traineeService = inject(TraineeService);
   private eventsService = inject(EventsService); // New injection
   private snackBar = inject(MatSnackBar);
 
-  supportCardId = signal('');
+  entityId = signal('');
   eventJsonString = signal('');
 
-  isCardChecking = signal(false);
+  isChecking = signal(false);
   isJsonChecking = signal(false);
   isUploading = signal(false);
 
-  foundCard: WritableSignal<SupportCard | null> = signal(null);
+  foundEntity: WritableSignal<SupportCard | Trainee | null> = signal(null);
+  entityType: WritableSignal<'card' | 'trainee' | null> = signal(null);
+  entityName = computed(() => {
+    if (this.entityType() === 'card') {
+      return (this.foundEntity() as SupportCard).url_name;
+    } else if (this.entityType() === 'trainee') {
+      return (this.foundEntity() as Trainee).itemData?.name_en;
+    }
+    return '';
+  });
   parsedEvents: WritableSignal<any | null> = signal(null);
   decodedEvents: WritableSignal<DecodedEventsContainer | null> = signal(null);
   displayedDecodedEvents= computed(() => evntTypeConvertFn(this.decodedEvents()));
 
   get isUploadDisabled(): boolean {
-    return !this.foundCard() || !this.parsedEvents();
+    return !this.foundEntity() || !this.parsedEvents();
   }
 
-  checkCard() {
-    const id = this.supportCardId();
+  checkEntity() {
+    const id = this.entityId();
     if (!id) return;
 
-    this.isCardChecking.set(true);
-    this.foundCard.set(null);
-    this.supportCardService.getSupportCardById(id).subscribe({
-      next: (card) => {
-        if (card) {
-          this.foundCard.set(card);
+    this.isChecking.set(true);
+    this.foundEntity.set(null);
+    this.entityType.set(null);
+    combineLatest([
+      this.supportCardService.getSupportCardById(id),
+      this.traineeService.getTraineeById(id)
+    ]).subscribe({
+      next: ([card, trainee]) => {
+        if (card && trainee) {
+          this.snackBar.open(`Conflict: Both support card and trainee found with ID: ${id}`, 'Close', { panelClass: 'snackbar-error' });
+          console.error('Conflict found - both card and trainee exist:', { card, trainee });
+        } else if (card) {
+          this.foundEntity.set(card);
+          this.entityType.set('card');
           this.snackBar.open(`Found card: ${card.url_name}`, 'Close', { duration: 3000 });
           console.log('Found card:', card);
+        } else if (trainee) {
+          this.foundEntity.set(trainee);
+          this.entityType.set('trainee');
+          const traineeId = trainee.itemData?.card_id || id;
+          const traineeName = trainee.itemData?.name_en || `Trainee ${traineeId}`;
+          this.snackBar.open(`Found trainee: ${traineeName}`, 'Close', { duration: 3000 });
+          console.log('Found trainee:', trainee);
         } else {
-          this.snackBar.open('Support card with this ID does not exist.', 'Close', { panelClass: 'snackbar-error' });
+          this.snackBar.open('No support card or trainee found with this ID.', 'Close', { panelClass: 'snackbar-error' });
         }
-        this.isCardChecking.set(false);
+        this.isChecking.set(false);
       },
       error: (err) => {
-        this.snackBar.open(`Error checking card: ${err.message}`, 'Close', { panelClass: 'snackbar-error' });
-        this.isCardChecking.set(false);
+        this.snackBar.open(`Error checking entity: ${err.message}`, 'Close', { panelClass: 'snackbar-error' });
+        this.isChecking.set(false);
       }
     });
   }
@@ -92,11 +120,9 @@ export class EventUploadDialog {
         parsed = JSON.parse(parsed);
       }
 
-      this.parsedEvents.set(parsed);
-      console.log('parsedEvents', this.parsedEvents());
-      const decodedEvnts = this.eventsService.decodeEvents(parsed);
+      this.parsedEvents.set(this.eventsService.filterParsedEventData(parsed));
+      const decodedEvnts = this.eventsService.decodeEvents(this.parsedEvents());
       this.decodedEvents.set(decodedEvnts); // Changed call
-      console.log('decodedEvents', this.decodedEvents());
       const eventGroups = evntTypeConvertFn(decodedEvnts);
       if (!eventGroups?.length || !eventGroups.map(group  => group.events).flat()?.length) {
         throw new Error('No events found in the JSON.');
@@ -104,30 +130,45 @@ export class EventUploadDialog {
       this.snackBar.open('JSON parsed and decoded successfully!', 'Close', { duration: 3000 });
     } catch (error: any) {
       this.snackBar.open(`Invalid JSON: ${error.message}`, 'Close', { panelClass: 'snackbar-error' });
+      console.log(error);
     } finally {
       this.isJsonChecking.set(false);
     }
   }
 
   uploadEvents() {
-    const cardId = this.foundCard()?.support_id;
+    const entity = this.foundEntity();
+    const entityType = this.entityType();
     const events = this.parsedEvents();
 
-    if (!cardId || !events) {
-      this.snackBar.open('Card ID not verified or JSON not parsed.', 'Close', { panelClass: 'snackbar-error' });
+    if (!entity || !entityType || !events) {
+      this.snackBar.open('Entity not verified or JSON not parsed.', 'Close', { panelClass: 'snackbar-error' });
+      return;
+    }
+
+    let entityId: string;
+    if (entityType === 'card') {
+      entityId = (entity as SupportCard).support_id.toString();
+    } else if (entityType === 'trainee') {
+      entityId = (entity as Trainee).itemData?.card_id?.toString() || this.entityId();
+    } else {
+      this.snackBar.open('Unknown entity type.', 'Close', { panelClass: 'snackbar-error' });
       return;
     }
 
     this.isUploading.set(true);
-    this.adminService.uploadEvents(cardId.toString(), events).subscribe({
+    const cleanedEvents = cleanNestedArrays(events);
+    this.adminService.uploadEvents(entityId, cleanedEvents).subscribe({
       next: () => {
         this.isUploading.set(false);
-        this.snackBar.open('Events uploaded successfully!', 'Close', { panelClass: 'snackbar-success' });
+        const entityTypeName = entityType === 'card' ? 'support card' : 'trainee';
+        this.snackBar.open(`Events uploaded successfully for ${entityTypeName}!`, 'Close', { panelClass: 'snackbar-success' });
         this.dialogRef.close(true);
       },
       error: (err) => {
         this.isUploading.set(false);
         this.snackBar.open(`Upload failed: ${err.message}`, 'Close', { panelClass: ['snackbar-error'] });
+        console.log(err);
       }
     });
   }
