@@ -1,12 +1,13 @@
-import { Component, Input } from '@angular/core';
+import { Component, inject, signal, computed, input, booleanAttribute, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { ImagekitioAngularModule } from 'imagekitio-angular';
 import { Skill, Rarity } from '../../../interfaces/skill';
 import { MatDialog } from '@angular/material/dialog';
-import {SkillDialogComponent} from '../skill-dialog/skill-dialog';
-import {MatIconButton} from '@angular/material/button';
+import { SkillDialogComponent } from '../skill-dialog/skill-dialog';
+import { MatIconButton } from '@angular/material/button';
+import { SkillsService } from '../../../services/skills.service';
 
 @Component({
   selector: 'app-skill-display',
@@ -16,15 +17,67 @@ import {MatIconButton} from '@angular/material/button';
   styleUrls: ['./skill-display.css']
 })
 export class SkillDisplay {
-  @Input({ required: true }) skill!: Skill;
-  @Input() simpleView: boolean = false;
+  skill = input<Skill | undefined>(undefined);
+  skillId = input<number | undefined>(undefined);
+  simpleView = input(false, { transform: booleanAttribute });
 
-  constructor(private dialog: MatDialog) {}
+  private skillsService = inject(SkillsService);
+  private dialog = inject(MatDialog);
 
-  getRarityClass(): string {
-    const rarity = this.skill.rarity;
-    const baseClass = this.simpleView ? 'simple-skill-view' : 'skill-card';
-    const raritySuffix = this.simpleView ? '-simple' : '';
+  private skillLoaded = signal(false);
+  loading = signal(false);
+  private loadedSkill = signal<Skill | undefined>(undefined);
+
+  constructor() {
+    effect(() => {
+      const id = this.skillId();
+      const inputSkill = this.skill();
+
+      if (inputSkill) {
+        this.loadedSkill.set(undefined);
+        this.skillLoaded.set(true);
+        return;
+      }
+
+      if (id !== undefined && !this.skillLoaded()) {
+        this.loading.set(true);
+        this.loadSkill(id);
+      }
+    });
+  }
+
+  private loadSkill(id: number): void {
+    this.skillsService.getSkillsByIds([id]).subscribe({
+      next: (skills) => {
+        if (skills.length > 0) {
+          this.loadedSkill.set(skills[0]);
+        }
+        this.skillLoaded.set(true);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.skillLoaded.set(true);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  readonly skillSignal = computed(() => {
+    const inputSkill = this.skill();
+    if (inputSkill) {
+      return inputSkill;
+    }
+
+    return this.loadedSkill();
+  });
+
+  readonly rarityClass = computed(() => {
+    const skill = this.skillSignal();
+    if (!skill) return '';
+
+    const rarity = skill.rarity;
+    const baseClass = this.simpleView() ? 'simple-skill-view' : 'skill-card';
+    const raritySuffix = this.simpleView() ? '-simple' : '';
 
     if (rarity === Rarity.Normal) {
       return `${baseClass} rarity${raritySuffix}-normal`;
@@ -35,7 +88,7 @@ export class SkillDisplay {
     }
 
     return baseClass;
-  }
+  });
 
   openSkillDialog(skill: Skill): void {
     this.dialog.open(SkillDialogComponent, {

@@ -1,19 +1,27 @@
-@if (!simpleView) {
-  <mat-card [class]="getRarityClass()">
-    <div class="skill-icon-wrapper">
-      <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
-      </ik-image>
-    </div>
-    <div class="skill-info">
-      <div class="skill-name">{{ skill.name_en }}</div>
-      <div class="skill-desc">{{ skill.desc_en }}</div>
-    </div>
-    <button mat-icon-button class="skill-details-button" (click)="openSkillDialog(skill)">
-      <mat-icon>more_vert</mat-icon>
-    </button>
-  </mat-card>
+@if (skillSignal(); as skill) {
+  @if (!simpleView()) {
+    <mat-card [class]="rarityClass()">
+      <div class="skill-icon-wrapper">
+        <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
+        </ik-image>
+      </div>
+      <div class="skill-info">
+        <div class="skill-name">{{ skill.name_en }}</div>
+        <div class="skill-desc">{{ skill.desc_en }}</div>
+      </div>
+      <button mat-icon-button class="skill-details-button" (click)="openSkillDialog(skill)">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </mat-card>
+  } @else {
+    <span [class]="rarityClass()" (click)="openSkillDialog(skill)">
+      {{ skill.name_en }}
+    </span>
+  }
+} @else if (loading()) {
+  <div class="overlay">
+    <div class="spinner"></div>
+  </div>
 } @else {
-  <span [class]="getRarityClass()" (click)="openSkillDialog(skill)">
-    {{ skill.name_en }}
-  </span>
+  <span>Skill Not Found</span>
 }
