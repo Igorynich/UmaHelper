@@ -31,6 +31,9 @@ import {
   CheckboxSelection
 } from './data-grid.types';
 import {EffectValuePipe} from '../../../pipes/effect-value.pipe';
+import { SkillDisplay } from '../skill-display/skill-display';
+import { RarityStarsPipe } from '../../../pipes/rarity-stars.pipe';
+
 
 
 @Component({
@@ -50,6 +53,7 @@ import {EffectValuePipe} from '../../../pipes/effect-value.pipe';
     RarityPipe,
     RarityClassPipe,
     EffectValuePipe,
+    SkillDisplay
   ],
   templateUrl: './data-grid.html',
   styleUrl: './data-grid.css',
@@ -367,8 +371,10 @@ export class DataGrid<T> implements AfterViewInit {
   }
 
   private getRowId(row: T): string {
-    // Try to get support_id first, fallback to a generic approach
-    return (row as any).support_id?.toString() || JSON.stringify(row);
+    // Try to get support_id or traineeId first, fallback to a generic approach
+    return (row as any).support_id?.toString()
+      ?? (row as any).traineeId?.toString()
+      ?? JSON.stringify(row);
   }
 
   private cleanupSelection(): void {
@@ -398,6 +404,10 @@ export class DataGrid<T> implements AfterViewInit {
       const rowId = this.getRowId(row);
       return selectedIds.includes(rowId);
     });
+  }
+
+  protected starsArray(rarity: number): number[] {
+    return Array.from({ length: rarity });
   }
 }
 

@@ -1,0 +1,132 @@
+/* src/app/pages/trainees/trainee-list-view/trainee-list-view.css */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 1rem;
+}
+
+.filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.filter-group,
+.rarity-filter-group {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fafafa;
+  box-sizing: border-box;
+  width: fit-content;
+  min-height: 108px;
+}
+
+.effect-group {
+  min-width: 480px;
+}
+
+.filter-group-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 0.1rem;
+}
+
+.name-field {
+  width: 260px;
+}
+
+.filter-field {
+  width: 260px;
+}
+
+.effect-field {
+  width: 180px;
+  flex: 0 0 180px;
+}
+
+.operator-field {
+  width: 80px;
+  flex: 0 0 80px;
+}
+
+.value-field {
+  width: 120px;
+  flex: 0 0 120px;
+}
+
+.grade-field {
+  width: 80px;
+  flex: 0 0 80px;
+}
+
+.effect-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+
+.value-inputs {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+
+.rarity-toggles {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 56px;
+}
+
+.rarity-toggle-btn {
+  padding: 0.4rem 0.75rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #e0e0e0;
+  color: #999;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.rarity-toggle-btn:not(.selected) {
+  opacity: 0.5;
+}
+
+.rarity-toggle-btn.selected {
+  background: #f5c518;
+  border-color: #e0a800;
+  color: #5a3e00;
+}
+
+.rarity-toggle-btn:focus,
+.rarity-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}

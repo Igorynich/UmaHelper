@@ -1,3 +1,89 @@
 <div class="page-container">
-  
+  <h2>Trainees</h2>
+
+  <div class="tab-container">
+    <mat-tab-group class="tab-group" animationDuration="0ms"
+                   [selectedIndex]="selectedTabIndex() + 1"
+                   (selectedIndexChange)="onTabChange($event)">
+
+      <mat-tab label="All Trainees">
+        <div class="tab-content">
+          <div class="bulk-actions-container">
+            <div class="left-buttons">
+              <button matButton="outlined" color="primary"
+                      [matMenuTriggerFor]="addMenu"
+                      [disabled]="!hasSelectedCards()"
+                      matTooltip="Add selected trainees to tab">
+                <mat-icon>add</mat-icon>
+                Add Selected
+              </button>
+            </div>
+            <button matButton="filled" (click)="saveData(true)">Save Data</button>
+          </div>
+          <app-trainee-list-view
+            [trainees]="allTrainees()"
+            [isFirstTab]="true"
+            [addMenu]="addMenu"
+            [tabIndex]="ALL_TAB_INDEX"
+            [isActive]="selectedTabIndex() === ALL_TAB_INDEX"
+            (add)="onAddTrainee($event)">
+          </app-trainee-list-view>
+        </div>
+      </mat-tab>
+
+      @for (tab of hydratedTabsData(); track $index) {
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <div class="tab-label">
+              <span>{{ tab.name }}</span>
+              <button matIconButton class="close-tab-button"
+                      (click)="removeTab($event, $index)"
+                      matTooltip="Remove tab">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </ng-template>
+          <div class="tab-content">
+            <div class="bulk-actions-container">
+              <div class="left-buttons">
+                <button matButton="outlined"
+                        [disabled]="!hasSelectedCards()"
+                        [matMenuTriggerFor]="addMenu"
+                        matTooltip="Add selected trainees to another tab">
+                  <mat-icon>add</mat-icon>
+                  Add Selected
+                </button>
+                <button matButton="outlined" color="warn"
+                        [disabled]="!hasSelectedCards()"
+                        (click)="onBulkRemove($index)"
+                        matTooltip="Remove selected from this tab">
+                  <mat-icon>remove</mat-icon>
+                  Remove Selected
+                </button>
+              </div>
+              <button matButton="filled" (click)="saveData(true)">Save Data</button>
+            </div>
+            <app-trainee-list-view
+              [trainees]="tab.cards"
+              [tabIndex]="$index"
+              [isActive]="selectedTabIndex() === $index"
+              (add)="onAddTrainee($event)"
+              (remove)="onRemoveTrainee($index, $event)"
+              [addMenu]="addMenu">
+            </app-trainee-list-view>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+
+    <button mat-icon-button (click)="addTab()" class="add-tab-button" matTooltip="Add new tab">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
 </div>
+
+<mat-menu #addMenu="matMenu">
+  @for (tab of availableTabs(); track tab.index) {
+    <button mat-menu-item (click)="addTraineeToTab(selectedTrainee(), tab.index)">{{ tab.name }}</button>
+  }
+</mat-menu>

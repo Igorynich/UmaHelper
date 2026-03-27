@@ -1,0 +1,122 @@
+<form [formGroup]="filterForm" class="filter-container">
+  <div class="filter-row">
+
+    <div class="filter-group">
+      <label class="filter-group-label">Name</label>
+      <mat-form-field appearance="outline" class="filter-field name-field">
+        <input matInput formControlName="name" placeholder="Enter trainee name">
+        @if (filterForm.get('name')?.value) {
+          <button matSuffix mat-icon-button aria-label="Clear" (click)="clearNameFilter()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="rarity-filter-group">
+      <label class="filter-group-label">Rarity</label>
+      <div class="rarity-toggles">
+        @for (r of rarityOptions; track r) {
+          <button type="button" class="rarity-toggle-btn"
+                  [class.selected]="isRaritySelected(r)"
+                  (click)="toggleRarity(r)">
+            @for (star of [].constructor(r); track $index) {
+              ★
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="filter-group effect-group">
+      <label class="filter-group-label">Stat Bonus</label>
+      <div class="effect-controls">
+        <mat-form-field appearance="outline" class="filter-field effect-field">
+          <mat-select formControlName="statBonusStat" placeholder="Stat">
+            <mat-option value="">All</mat-option>
+            @for (stat of trainingTypeOptions; track stat) {
+              <mat-option [value]="stat">{{ stat | titlecase }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <div class="value-inputs">
+          <mat-form-field appearance="outline" class="operator-field">
+            <mat-select formControlName="statBonusOperator">
+              @for (op of operatorOptions; track op.value) {
+                <mat-option [value]="op.value">{{ op.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="value-field">
+            <input matInput type="number" formControlName="statBonusValue" placeholder="Value">
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-group effect-group">
+      <label class="filter-group-label">Aptitude</label>
+      <div class="effect-controls">
+        <mat-form-field appearance="outline" class="filter-field effect-field">
+          <mat-select formControlName="aptitudeStat" placeholder="Aptitude">
+            <mat-option value="">All</mat-option>
+            @for (group of aptitudeGroups; track group.label) {
+              <mat-optgroup [label]="group.label">
+                @for (opt of group.options; track opt.value) {
+                  <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                }
+              </mat-optgroup>
+            }
+          </mat-select>
+        </mat-form-field>
+        <div class="value-inputs">
+          <mat-form-field appearance="outline" class="operator-field">
+            <mat-select formControlName="aptitudeOperator">
+              @for (op of operatorOptions; track op.value) {
+                <mat-option [value]="op.value">{{ op.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="grade-field">
+            <mat-select formControlName="aptitudeValue" placeholder="Grade">
+              <mat-option value="">-</mat-option>
+              @for (g of gradeOptions; track g) {
+                <mat-option [value]="g">{{ g }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-group-label">Unique Skill</label>
+      <mat-form-field appearance="outline" class="filter-field name-field">
+        <input matInput formControlName="uniqName" placeholder="Unique skill name">
+        @if (filterForm.get('uniqName')?.value) {
+          <button matSuffix mat-icon-button aria-label="Clear" (click)="clearUniqFilter()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
+
+  </div>
+
+  <div class="action-buttons">
+    <button mat-raised-button type="button" (click)="resetFilters()">Reset Filters</button>
+  </div>
+</form>
+
+<app-data-grid
+  [data]="filteredRows()"
+  [columns]="columns()"
+  [multiSort]="true"
+  [pageSize]="20"
+  [isFirstTab]="isFirstTab()"
+  [addMenu]="addMenu()"
+  [tabIndex]="tabIndex()"
+  [isActive]="isActive()"
+  (addClicked)="onAdd($event)"
+  (removeClicked)="onRemove($event)">
+</app-data-grid>

@@ -112,6 +112,33 @@
                 >
               }
               <span [class.upcoming-card]="!row.release_en">{{ $any(row).char_name }}</span>
+            } @else if (column.type === 'traineeImage') {
+              @if ($any(row).imageUrl) {
+                <img
+                  [src]="$any(row).imageUrl"
+                  [alt]="$any(row).name"
+                  class="character-image"
+                  width="48"
+                  height="56"
+                >
+              }
+              <span>{{ $any(row).name }}</span>
+            } @else if (column.type === 'traineeRarity') {
+              <span class="trainee-stars">
+                @for (star of starsArray($any(row).rarity); track $index) {
+                  <span class="star">★</span>
+                }
+              </span>
+            } @else if (column.type === 'traineeUniq') {
+              <div class="uniq-skills">
+                @for (skillId of $any(row).skills_unique; track skillId) {
+                  <app-skill-display [skillId]="skillId" [simpleView]="true"></app-skill-display>
+                }
+              </div>
+            } @else if (column.type === 'statBonus') {
+              <span>{{ row[column.key] }}</span>
+            } @else if (column.type === 'aptitude') {
+              <span class="aptitude-grade" [class]="'grade-' + row[column.key]">{{ row[column.key] }}</span>
             } @else {
               <span
                 [class]="(row[column.key] | effectValue:column.key)?.cssClass">{{ (row[column.key] | effectValue:column.key).value }}</span>
