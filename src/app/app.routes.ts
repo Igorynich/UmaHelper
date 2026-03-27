@@ -31,7 +31,8 @@ export const routes: Routes = [
       },
     ]
   },
-  { path: 'trainees', redirectTo: '/under-construction', pathMatch: 'full' },
+  // { path: 'trainees', redirectTo: '/under-construction', pathMatch: 'full' },
+  { path: 'trainees', loadComponent: () => import('./pages/trainees/trainees').then(m => m.Trainees), data: { title: 'Trainees' } },
   { path: 'support-cards', loadComponent: () => import('./pages/support-cards/support-cards').then(m => m.SupportCards), data: { title: 'Support Cards' } },
   { path: 'useful-info', loadComponent: () => import('./pages/useful-info/useful-info').then(m => m.UsefulInfo), data: { title: 'Useful Info' } },
   {
