@@ -33,10 +33,21 @@
     </div>
   </div>
   <table mat-table class="data-grid-table" [dataSource]="dataSource" matSort (matSortChange)="handleSort($event)">
+
+    @if (columnGroups().length) {
+      @for (group of columnGroups(); track group.name) {
+        <ng-container [matColumnDef]="group.name">
+          <th mat-header-cell *matHeaderCellDef [attr.colspan]="group.colspan" [style.width]="group.width"
+              class="group-header"> {{ group.name }}
+          </th>
+        </ng-container>
+      }
+    }
+
     @for (column of columns(); track column.key) {
       <ng-container [matColumnDef]="column.key" [stickyEnd]="column.stickyEnd">
         <th mat-header-cell *matHeaderCellDef mat-sort-header [id]="column.key" [arrowPosition]="'before'"
-            [matTooltip]="column.tooltip || ''" [style.width]="column.width">
+            [matTooltip]="column.tooltip || ''" [style.width]="column.width" [attr.rowspan]="2">
           <div class="header-content-wrapper">
             @if (column.type === 'checkbox') {
               <mat-checkbox
@@ -79,7 +90,9 @@
                 <div [class.locked-effect]="row.uniqueDisplayData.isCardUniqueLocked">
                   <span>{{ row.uniqueDisplayData.levelDisplay }}</span>
                   @for (effect of row.uniqueDisplayData.effectsDisplay; track $index) {
-                    <div>{{ effect.shortName }}@if (effect.value) { <span>: {{ effect.value }}</span> }</div>
+                    <div>{{ effect.shortName }}@if (effect.value) {
+                      <span>: {{ effect.value }}</span>
+                    }</div>
                   }
                 </div>
               } @else {
@@ -148,7 +161,10 @@
       </ng-container>
     }
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+    <tr mat-header-row *matHeaderRowDef="notGroupedColumns()"></tr>
+    @if (columnGroups().length) {
+      <tr mat-header-row *matHeaderRowDef="groupedColumns()"></tr>
+    }
     <tr mat-row *matRowDef="let row; columns: displayedColumns()" [class]="row.rarity | rarityClass"></tr>
   </table>
   <mat-paginator [pageSize]="pageSize()" [pageSizeOptions]="[10, 20, 50, 100]" showFirstLastButtons></mat-paginator>

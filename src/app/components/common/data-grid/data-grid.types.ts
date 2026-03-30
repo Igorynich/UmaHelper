@@ -13,6 +13,7 @@ export interface DataGridColumn {
   type?: string;
   sortType?: SortType;
   stickyEnd?: boolean;
+  group?: string;
 }
 
 export interface ActiveSort {

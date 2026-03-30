@@ -242,3 +242,11 @@
   align-items: center;
   justify-content: flex-start;
 }
+
+/* Add at the end of the file */
+.group-header {
+  text-align: center;
+  background-color: #f5f5f5;
+  font-weight: bold;
+  border: 2px solid #ddd;
+}

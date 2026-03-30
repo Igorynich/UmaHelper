@@ -6,7 +6,7 @@ import {
   effect,
   inject,
   input,
-  output,
+  output, Signal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -82,6 +82,37 @@ export class DataGrid<T> implements AfterViewInit {
   protected readonly allColumnKeys = computed(() => this.columns().map((c) => c.key));
   protected readonly visibleColumns = signal<string[]>([]);
   protected readonly displayedColumns = computed(() => this.visibleColumns());
+  readonly columnGroups = computed(() => {
+    const rawGroups = this.columns().reduce((acc, col) => {
+      const name = col.group;
+      if (!name) return acc;
+
+      const colWidth = parseInt(col.width || '0') || 0;
+      const last = acc[acc.length - 1];
+
+      if (last?.name === name) {
+        last.colspan++;
+        last.totalWidth += colWidth;
+      } else {
+        acc.push({ name, colspan: 1, totalWidth: colWidth });
+      }
+      return acc;
+    }, [] as { name: string; colspan: number; totalWidth: number }[]);
+
+    return rawGroups.map(g => ({
+      name: g.name,
+      colspan: g.colspan,
+      width: g.totalWidth ? `${g.totalWidth}px` : 'auto'
+    }));
+  });
+
+  readonly notGroupedColumns: Signal<string[]> = computed(() => {
+    return [...new Set(this.columns().map(col => col.group || col.key))];
+  });
+
+  readonly groupedColumns: Signal<string[]> = computed(() => {
+    return this.columns().filter((c) => c.group).map((c) => c.key);
+  });
   protected readonly dataSource = new MatTableDataSource<T>([]);
   protected readonly activeSorts = signal<ActiveSort[]>([]);
   protected readonly selection = signal<CheckboxSelection>({});
@@ -409,6 +440,8 @@ export class DataGrid<T> implements AfterViewInit {
   protected starsArray(rarity: number): number[] {
     return Array.from({ length: rarity });
   }
+
+  protected readonly parseInt = parseInt;
 }
 
 
