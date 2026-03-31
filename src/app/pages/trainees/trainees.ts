@@ -255,7 +255,8 @@ export class Trainees {
     return {
       ...t,
       traineeId: t.itemData.card_id,
-      imageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/trainees/char_${t.itemData.char_id}_${t.itemData.card_id}.png`,     // char_1033_103301.png
+      imageUrl: `/trainees/char_${t.itemData.char_id}_${t.itemData.card_id}.png`,
+      // imageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/trainees/char_${t.itemData.char_id}_${t.itemData.card_id}.png`,     // char_1033_103301.png
     };
   }
 

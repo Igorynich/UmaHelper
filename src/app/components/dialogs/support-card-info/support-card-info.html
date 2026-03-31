@@ -7,7 +7,7 @@
 </div>
 <mat-dialog-content class="dialog-content-wrapper">
   <div class="image-section">
-    <img [src]="processedCardData().characterImageUrl" [alt]="rawCardData().char_name">
+    <ik-image [path]=processedCardData().characterImageUrl [attr.alt]="rawCardData().char_name"></ik-image>
 
     <app-level
       [minLevel]="1"

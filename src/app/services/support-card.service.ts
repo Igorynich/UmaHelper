@@ -52,12 +52,12 @@ export class SupportCardService {
     const effectIds = effIds ?? (Object.values(EffectId).filter(value => typeof value === 'number') as number[]);
     const level = card.level ?? rarityLevelMap[card.rarity].default;
     const cacheKey = `${card.support_id}_${level}`;
-    
+
     const cached = this.effectDataCache.get(cacheKey);
     if (cached) {
       return cached;
     }
-    
+
     // console.log('card', card);
     const data: SupportCardEffectData = {
       support_id: card.support_id,
@@ -65,7 +65,7 @@ export class SupportCardService {
       level: card.level,
       rarity: card.rarity,
       type: card.type,
-      characterImageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/sup_cards/tex_support_card_${card.support_id}.png`,
+      characterImageUrl: `/sup_cards/tex_support_card_${card.support_id}.png`,
       event_skills: card.event_skills,
       hints: card.hints,
       release_en: card.release_en,

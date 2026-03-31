@@ -176,7 +176,7 @@
 }
 
 .character-image {
-  margin: 8px; /* Space around the image */
+  margin: 4px; /* Space around the image */
   vertical-align: middle; /* Align image with text */
 }
 

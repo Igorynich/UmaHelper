@@ -23,11 +23,12 @@ import {effectTypeMap} from '../../../maps/skill-effect.map'; // New import
 import { EffectValuePipe } from '../../../pipes/effect-value.pipe';
 import {RatingsService} from '../../../services/ratings.service';
 import { getEffectValueFn } from '../../../utils/effect-data-utils';
+import {ImagekitioAngularModule} from 'imagekitio-angular';
 
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule],
+  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule, ImagekitioAngularModule],
   templateUrl: './support-card-info.html',
   styleUrl: './support-card-info.css'
 })

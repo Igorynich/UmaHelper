@@ -33,6 +33,7 @@ import {
 import {EffectValuePipe} from '../../../pipes/effect-value.pipe';
 import { SkillDisplay } from '../skill-display/skill-display';
 import { RarityStarsPipe } from '../../../pipes/rarity-stars.pipe';
+import {ImagekitioAngularModule} from 'imagekitio-angular';
 
 
 
@@ -53,7 +54,8 @@ import { RarityStarsPipe } from '../../../pipes/rarity-stars.pipe';
     RarityPipe,
     RarityClassPipe,
     EffectValuePipe,
-    SkillDisplay
+    SkillDisplay,
+    ImagekitioAngularModule
   ],
   templateUrl: './data-grid.html',
   styleUrl: './data-grid.css',

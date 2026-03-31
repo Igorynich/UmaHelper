@@ -92,8 +92,8 @@ export class TraineeListViewComponent {
   protected readonly AptitudeGrade = AptitudeGrade;
 
   protected readonly rarityOptions = [
-    TraineeRarity.FiveStar,
-    TraineeRarity.FourStar,
+    // TraineeRarity.FiveStar,
+    // TraineeRarity.FourStar,
     TraineeRarity.ThreeStar,
     TraineeRarity.TwoStar,
     TraineeRarity.OneStar,
@@ -261,7 +261,7 @@ export class TraineeListViewComponent {
   protected readonly columns = computed((): DataGridColumn[] => [
     { key: 'select', header: '', width: '50px', type: 'checkbox' },
     { key: 'name', header: 'Trainee', width: '140px', type: 'traineeImage', sortType: SortType.String },
-    { key: 'rarity', header: 'Rarity', width: '100px', type: 'traineeRarity', sortType: SortType.Number },
+    { key: 'rarity', header: 'Rarity', width: '50px', type: 'traineeRarity', sortType: SortType.Number },
     { key: 'skills_unique', header: 'Uniq', width: '120px', type: 'traineeUniq' },
     { key: 'speed', header: 'Spd', tooltip: 'Speed Bonus', width: '50px', type: 'statBonus', sortType: SortType.Number, group: 'Stat Bonuses' },
     { key: 'stamina', header: 'Stm', tooltip: 'Stamina Bonus', width: '50px', type: 'statBonus', sortType: SortType.Number, group: 'Stat Bonuses' },

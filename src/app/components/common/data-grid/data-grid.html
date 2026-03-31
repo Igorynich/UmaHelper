@@ -49,20 +49,29 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header [id]="column.key" [arrowPosition]="'before'"
             [matTooltip]="column.tooltip || ''" [style.width]="column.width" [attr.rowspan]="2">
           <div class="header-content-wrapper">
-            @if (column.type === 'checkbox') {
-              <mat-checkbox
-                [checked]="isAllSelected()"
-                [indeterminate]="isSomeSelected()"
-                (change)="masterToggle()"
-                (click)="$event.stopPropagation()">
-              </mat-checkbox>
-            } @else {
-              <span>{{ column.header }}</span>
-              @if (column.key === 'level') {
-                <button mat-icon-button (click)="onSetAllToMax($event)" matTooltip="Set all to max level"
-                        class="header-button">
-                  <mat-icon>trending_up</mat-icon>
-                </button>
+            @switch (column.type) {
+              @case ('checkbox') {
+                <mat-checkbox
+                  [checked]="isAllSelected()"
+                  [indeterminate]="isSomeSelected()"
+                  (change)="masterToggle()"
+                  (click)="$event.stopPropagation()">
+                </mat-checkbox>
+              }
+              @case ('statBonus') {
+                <img [src]="'assets/types/' + (column.key === 'wits' ? 'intelligence' : column.key).toLowerCase() + '.png'"
+                     [alt]="column.header"
+                     width="24"
+                >
+              }
+              @default {
+                <span>{{ column.header }}</span>
+                @if (column.key === 'level') {
+                  <button mat-icon-button (click)="onSetAllToMax($event)" matTooltip="Set all to max level"
+                          class="header-button">
+                    <mat-icon>trending_up</mat-icon>
+                  </button>
+                }
               }
             }
           </div>
@@ -72,89 +81,100 @@
             <div class="ssr-background-layer"></div>
           }
           <div class="cell-content-wrapper">
-            @if (column.type === 'checkbox') {
-              <mat-checkbox
-                [checked]="isRowSelected(row)"
-                [indeterminate]="false"
-                (change)="toggleRow(row)"
-                (click)="$event.stopPropagation()">
-              </mat-checkbox>
-            } @else if (column.type === 'level') {
-              <app-level
-                [currentLevel]="row[column.key] || rarityLevelMap()[row.rarity].default"
-                [maxLevel]="rarityLevelMap()[row.rarity].max"
-                (levelChange)="onLevelChanged(row, $event)"
-              ></app-level>
-            } @else if (column.type === 'unique') {
-              @if (row.uniqueDisplayData) {
-                <div [class.locked-effect]="row.uniqueDisplayData.isCardUniqueLocked">
-                  <span>{{ row.uniqueDisplayData.levelDisplay }}</span>
-                  @for (effect of row.uniqueDisplayData.effectsDisplay; track $index) {
-                    <div>{{ effect.shortName }}@if (effect.value) {
-                      <span>: {{ effect.value }}</span>
-                    }</div>
+            @switch (column.type) {
+              @case ('checkbox') {
+                <mat-checkbox
+                  [checked]="isRowSelected(row)"
+                  [indeterminate]="false"
+                  (change)="toggleRow(row)"
+                  (click)="$event.stopPropagation()">
+                </mat-checkbox>
+              }
+              @case ('level') {
+                <app-level
+                  [currentLevel]="row[column.key] || rarityLevelMap()[row.rarity].default"
+                  [maxLevel]="rarityLevelMap()[row.rarity].max"
+                  (levelChange)="onLevelChanged(row, $event)"
+                ></app-level>
+              }
+              @case ('unique') {
+                @if (row.uniqueDisplayData) {
+                  <div [class.locked-effect]="row.uniqueDisplayData.isCardUniqueLocked">
+                    <span>{{ row.uniqueDisplayData.levelDisplay }}</span>
+                    @for (effect of row.uniqueDisplayData.effectsDisplay; track $index) {
+                      <div>{{ effect.shortName }}@if (effect.value) {
+                        <span>: {{ effect.value }}</span>
+                      }</div>
+                    }
+                  </div>
+                } @else {
+                  -
+                }
+              }
+              @case ('rarity') {
+                {{ row[column.key] | rarity }}
+              }
+              @case ('type') {
+                <img [src]="'assets/types/' + row[column.key].toLowerCase() + '.png'"
+                     [alt]="row[column.key]"
+                     width="24"
+                >
+              }
+              @case ('actions') {
+                <mat-icon color="primary" [matMenuTriggerFor]="addMenu() || null" matTooltip="Add Action"
+                          (click)="onActionClick('add', row)">add
+                </mat-icon>
+                <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action"
+                          [class.disabled-button]="isFirstTab()">remove
+                </mat-icon>
+              }
+              @case ('characterImage') {
+                @if ($any(row).characterImageUrl) {
+                  <ik-image [path]=$any(row).characterImageUrl [transformation]="[{height: '56', aspectRatio: '3:4'}]" (click)="onImageClick(row)" class="character-image character-image-hover" matTooltip="View details">
+                  </ik-image>
+                  <!--<img
+                    (click)="onImageClick(row)"
+                    [src]="$any(row).characterImageUrl"
+                    [alt]="$any(row).char_name"
+                    class="character-image character-image-hover"
+                    matTooltip="View details"
+                    width="48"
+                    height="56"
+                  >-->
+                }
+                <span [class.upcoming-card]="!row.release_en">{{ $any(row).char_name }}</span>
+              }
+              @case ('traineeImage') {
+                @if ($any(row).imageUrl) {
+                  <ik-image [path]=$any(row).imageUrl [transformation]="[{'height': '56', 'width': '48'}]">
+                  </ik-image>
+                }
+                <span>{{ $any(row).name }}</span>
+              }
+              @case ('traineeRarity') {
+                <span class="trainee-stars">
+                      @for (star of starsArray($any(row).rarity); track $index) {
+                        <span class="star">★</span>
+                      }
+                    </span>
+              }
+              @case ('traineeUniq') {
+                <div class="uniq-skills">
+                  @for (skillId of $any(row).skills_unique; track skillId) {
+                    <app-skill-display [skillId]="skillId" [simpleView]="true"></app-skill-display>
                   }
                 </div>
-              } @else {
-                -
               }
-            } @else if (column.type === 'rarity') {
-              {{ row[column.key] | rarity }}
-            } @else if (column.type === 'type') {
-              <img [src]="'assets/types/' + row[column.key].toLowerCase() + '.png'"
-                   [alt]="row[column.key]"
-                   width="24"
-              >
-            } @else if (column.type === 'actions') {
-              <mat-icon color="primary" [matMenuTriggerFor]="addMenu() || null" matTooltip="Add Action"
-                        (click)="onActionClick('add', row)">add
-              </mat-icon>
-              <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action"
-                        [class.disabled-button]="isFirstTab()">remove
-              </mat-icon>
-            } @else if (column.type === 'characterImage') {
-              @if ($any(row).characterImageUrl) {
-                <img
-                  (click)="onImageClick(row)"
-                  [src]="$any(row).characterImageUrl"
-                  [alt]="$any(row).char_name"
-                  class="character-image character-image-hover"
-                  matTooltip="View details"
-                  width="48"
-                  height="56"
-                >
+              @case ('statBonus') {
+                <span>{{ row[column.key] }}%</span>
               }
-              <span [class.upcoming-card]="!row.release_en">{{ $any(row).char_name }}</span>
-            } @else if (column.type === 'traineeImage') {
-              @if ($any(row).imageUrl) {
-                <img
-                  [src]="$any(row).imageUrl"
-                  [alt]="$any(row).name"
-                  class="character-image"
-                  width="48"
-                  height="56"
-                >
+              @case ('aptitude') {
+                <span class="aptitude-grade" [class]="'grade-' + row[column.key]">{{ row[column.key] }}</span>
               }
-              <span>{{ $any(row).name }}</span>
-            } @else if (column.type === 'traineeRarity') {
-              <span class="trainee-stars">
-                @for (star of starsArray($any(row).rarity); track $index) {
-                  <span class="star">★</span>
-                }
-              </span>
-            } @else if (column.type === 'traineeUniq') {
-              <div class="uniq-skills">
-                @for (skillId of $any(row).skills_unique; track skillId) {
-                  <app-skill-display [skillId]="skillId" [simpleView]="true"></app-skill-display>
-                }
-              </div>
-            } @else if (column.type === 'statBonus') {
-              <span>{{ row[column.key] }}</span>
-            } @else if (column.type === 'aptitude') {
-              <span class="aptitude-grade" [class]="'grade-' + row[column.key]">{{ row[column.key] }}</span>
-            } @else {
-              <span
-                [class]="(row[column.key] | effectValue:column.key)?.cssClass">{{ (row[column.key] | effectValue:column.key).value }}</span>
+              @default {
+                <span
+                  [class]="(row[column.key] | effectValue:column.key)?.cssClass">{{ (row[column.key] | effectValue:column.key).value }}</span>
+              }
             }
           </div>
         </td>
