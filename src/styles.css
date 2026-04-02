@@ -29,3 +29,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .unique-effect {
   color: #DAA520; /* Brown-golden color */
 }
+
+.text-center {
+  text-align: center;
+}

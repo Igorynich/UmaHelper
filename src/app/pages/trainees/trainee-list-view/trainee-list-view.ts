@@ -220,6 +220,8 @@ export class TraineeListViewComponent {
       late: t.itemData.aptitude[8] ?? '-',
       end: t.itemData.aptitude[9] ?? '-',
       release_en: t.itemData.release_en,
+      title: t.itemData.title_en_gl,
+      version: t.itemData.version,
     }))
   );
 
@@ -260,7 +262,7 @@ export class TraineeListViewComponent {
 
   protected readonly columns = computed((): DataGridColumn[] => [
     { key: 'select', header: '', width: '50px', type: 'checkbox' },
-    { key: 'name', header: 'Trainee', width: '140px', type: 'traineeImage', sortType: SortType.String },
+    { key: 'name', header: 'Trainee', width: '160px', type: 'traineeImage', sortType: SortType.String },
     { key: 'rarity', header: 'Rarity', width: '50px', type: 'traineeRarity', sortType: SortType.Number },
     { key: 'skills_unique', header: 'Uniq', width: '120px', type: 'traineeUniq' },
     { key: 'speed', header: 'Spd', tooltip: 'Speed Bonus', width: '50px', type: 'statBonus', sortType: SortType.Number, group: 'Stat Bonuses' },

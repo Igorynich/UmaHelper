@@ -59,9 +59,10 @@
                 </mat-checkbox>
               }
               @case ('statBonus') {
-                <img [src]="'assets/types/' + (column.key === 'wits' ? 'intelligence' : column.key).toLowerCase() + '.png'"
-                     [alt]="column.header"
-                     width="24"
+                <img
+                  [src]="'assets/types/' + (column.key === 'wits' ? 'intelligence' : column.key).toLowerCase() + '.png'"
+                  [alt]="column.header"
+                  width="24"
                 >
               }
               @default {
@@ -121,16 +122,20 @@
                 >
               }
               @case ('actions') {
-                <mat-icon color="primary" [matMenuTriggerFor]="addMenu() || null" matTooltip="Add Action"
-                          (click)="onActionClick('add', row)">add
-                </mat-icon>
-                <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action"
-                          [class.disabled-button]="isFirstTab()">remove
-                </mat-icon>
+                <div class="text-center">
+                  <mat-icon color="primary" [matMenuTriggerFor]="addMenu() || null" matTooltip="Add Action"
+                            (click)="onActionClick('add', row)">add
+                  </mat-icon>
+                  <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action"
+                            [class.disabled-button]="isFirstTab()">remove
+                  </mat-icon>
+                </div>
               }
               @case ('characterImage') {
                 @if ($any(row).characterImageUrl) {
-                  <ik-image [path]=$any(row).characterImageUrl [transformation]="[{height: '56', aspectRatio: '3:4'}]" (click)="onImageClick(row)" class="character-image character-image-hover" matTooltip="View details">
+                  <ik-image [path]=$any(row).characterImageUrl [transformation]="[{height: '56', aspectRatio: '3:4'}]"
+                            (click)="onImageClick(row)" class="character-image character-image-hover"
+                            matTooltip="View details">
                   </ik-image>
                   <!--<img
                     (click)="onImageClick(row)"
@@ -145,11 +150,18 @@
                 <span [class.upcoming-card]="!row.release_en">{{ $any(row).char_name }}</span>
               }
               @case ('traineeImage') {
-                @if ($any(row).imageUrl) {
-                  <ik-image [path]=$any(row).imageUrl [transformation]="[{'height': '56', 'width': '48'}]">
-                  </ik-image>
-                }
-                <span>{{ $any(row).name }}</span>
+                <div class="trainee-cell-container">
+                  @if ($any(row).imageUrl) {
+                    <ik-image [path]=$any(row).imageUrl [transformation]="[{'height': '56', 'width': '48'}]"
+                              class="character-image">
+                    </ik-image>
+                  }
+                  <div class="trainee-info-wrapper">
+                    <div style="font-weight: bold;"  class="text-center">{{ $any(row).title }}</div>
+                    <div  class="text-center">{{ $any(row).name }}</div>
+                    <div style="font-size: 0.9em; opacity: 0.8;" class="text-center">{{ $any(row).version ? `(${$any(row).version | snakeToTitle})`  : "" }}</div>
+                  </div>
+                </div>
               }
               @case ('traineeRarity') {
                 <span class="trainee-stars">
@@ -166,14 +178,14 @@
                 </div>
               }
               @case ('statBonus') {
-                <span>{{ row[column.key] }}%</span>
+                <div class="text-center">{{ row[column.key] }}%</div>
               }
               @case ('aptitude') {
-                <span class="aptitude-grade" [class]="'grade-' + row[column.key]">{{ row[column.key] }}</span>
+                <div class="aptitude-grade text-center" [class]="'grade-' + row[column.key]">{{ row[column.key] }}</div>
               }
               @default {
-                <span
-                  [class]="(row[column.key] | effectValue:column.key)?.cssClass">{{ (row[column.key] | effectValue:column.key).value }}</span>
+                <div
+                  [class]="[(row[column.key] | effectValue:column.key)?.cssClass, 'text-center']">{{ (row[column.key] | effectValue:column.key).value }}</div>
               }
             }
           </div>

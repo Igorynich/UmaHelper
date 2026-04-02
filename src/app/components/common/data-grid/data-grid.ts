@@ -34,6 +34,7 @@ import {EffectValuePipe} from '../../../pipes/effect-value.pipe';
 import { SkillDisplay } from '../skill-display/skill-display';
 import { RarityStarsPipe } from '../../../pipes/rarity-stars.pipe';
 import {ImagekitioAngularModule} from 'imagekitio-angular';
+import {SnakeToTitlePipe} from '../../../pipes/snake-to-title.pipe';
 
 
 
@@ -55,7 +56,8 @@ import {ImagekitioAngularModule} from 'imagekitio-angular';
     RarityClassPipe,
     EffectValuePipe,
     SkillDisplay,
-    ImagekitioAngularModule
+    ImagekitioAngularModule,
+    SnakeToTitlePipe
   ],
   templateUrl: './data-grid.html',
   styleUrl: './data-grid.css',
