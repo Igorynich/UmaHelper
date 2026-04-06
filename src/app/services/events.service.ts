@@ -18,6 +18,9 @@ export const eventTypes: Record<string, { name: string }> = {
   special: {
     name: 'Special Events'
   },
+  dates_random: {
+    name: 'Dates'
+  },
   // trainee events
   wchoice: {
     name: 'Event With Choices'

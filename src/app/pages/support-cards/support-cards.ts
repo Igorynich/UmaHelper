@@ -412,7 +412,7 @@ export class SupportCards {
         // const filter = this.tabFilters().get(index);
         const tabState = this.dataGridStateService.getTabState(index);
         const result: any = { ...tab };
-        if (tabState.filter) result.filter = filter;
+        if (tabState.filter) result.filter = tabState.filter;
         if (tabState.sort && tabState.sort.length > 0) result.sort = tabState.sort;
         // Intentionally exclude selection from being saved to Firebase
         return result;

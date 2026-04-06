@@ -18,6 +18,7 @@ export class DataGridStateService {
 
   // Get state for specific tab
   getTabState(tabIndex: number): TabState {
+    // console.log(`tabStates for tab ${tabIndex}`, this.tabStates.get(tabIndex) || this.DEFAULT_STATE);
     return this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
   }
 
