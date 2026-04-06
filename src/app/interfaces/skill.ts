@@ -2,7 +2,7 @@ export enum Rarity {
   Normal = 1,
   Rare = 2,
   Unique = 3,
-  E1 = 4,
+  Upgraded_Unique = 4,
   E2 = 5,
   E3 = 6
 }

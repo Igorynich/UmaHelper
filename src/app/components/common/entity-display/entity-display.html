@@ -1,0 +1,37 @@
+@if (entityType() === 'trainee' && traineeSignal(); as trainee) {
+  @if (mode() === 'text') {
+    <span class="entity-name">{{ displayName() }}</span>
+  } @else {
+    <div class="entity-image-container">
+      @if (displayImage()) {
+        <ik-image
+          [path]="displayImage()!"
+          [transformation]="[{'height': '40'}]"
+          [attr.alt]="displayName()"
+          [matTooltip]="displayName()">
+        </ik-image>
+      }
+    </div>
+  }
+} @else if (entityType() === 'support-card' && supportCardSignal(); as supportCard) {
+  @if (mode() === 'text') {
+    <span class="entity-name">{{ displayName() }}</span>
+  } @else {
+    <div class="entity-image-container">
+      @if (displayImage()) {
+        <ik-image
+          [path]="displayImage()!"
+          [transformation]="[{'height': '40'}]"
+          [attr.alt]="displayName()"
+          [matTooltip]="displayName()">
+        </ik-image>
+      }
+    </div>
+  }
+} @else if (internalLoading()) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+  </div>
+} <!--@else {
+  <span class="entity-not-found">Entity Not Found</span>
+}-->

@@ -1,4 +1,3 @@
-// src/app/pages/trainees/trainees.ts
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TraineeService } from '../../services/trainee.service';
@@ -18,7 +17,6 @@ import { NewTabDialogComponent } from '../support-cards/new-tab-dialog/new-tab-d
 import { ConfirmationDialog } from '../../components/common/confirmation-dialog/confirmation-dialog';
 import { DataGridStateService, TabState } from '../../services/data-grid-state.service';
 import { TraineeListViewComponent } from './trainee-list-view/trainee-list-view';
-import { IMAGEKIT_CONFIG } from '../../imagekit.config';
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -255,8 +253,7 @@ export class Trainees {
     return {
       ...t,
       traineeId: t.itemData.card_id,
-      imageUrl: `/trainees/char_${t.itemData.char_id}_${t.itemData.card_id}.png`,
-      // imageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/trainees/char_${t.itemData.char_id}_${t.itemData.card_id}.png`,     // char_1033_103301.png
+      imageUrl: this.traineeService.getTraineeImageUrl(t)
     };
   }
 

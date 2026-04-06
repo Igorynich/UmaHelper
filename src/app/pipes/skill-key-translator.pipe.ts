@@ -13,6 +13,8 @@ export class SkillKeyTranslatorPipe implements PipeTransform {
         return 'Description (detailed)';
       case 'name_en':
         return 'Skill Name';
+      case 'char':
+        return 'Characters';
       case 'precondition':
         return 'Preconditions';
       case 'condition':

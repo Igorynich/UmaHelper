@@ -1,0 +1,43 @@
+.entity-name {
+  font-weight: 500;
+  color: var(--mat-sys-on-surface);
+}
+
+.entity-image-container {
+  display: inline-block;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.entity-image-container ik-image {
+  display: block;
+  border-radius: 8px;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  min-width: 60px;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.entity-not-found {
+  color: var(--mat-sys-error);
+  font-style: italic;
+}

@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {Component, computed, inject} from '@angular/core';
+import {Component, computed, effect, inject, signal} from '@angular/core';
 import {MatButton} from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
@@ -12,6 +12,10 @@ import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {Skill} from '../../../interfaces/skill';
 import {SkillFieldTranslatorPipe} from '../../../pipes/skill-field-translator.pipe';
 import {SkillKeyTranslatorPipe} from '../../../pipes/skill-key-translator.pipe';
+import {EntityDisplay} from '../entity-display/entity-display';
+import {TraineeService} from '../../../services/trainee.service';
+import {Trainee} from '../../../interfaces/trainee';
+import {forkJoin} from 'rxjs';
 
 export interface SkillDialogData {
   skill: Skill;
@@ -29,14 +33,43 @@ export interface SkillDialogData {
     MatDialogContent,
     MatDialogTitle,
     SkillFieldTranslatorPipe,
-    SkillKeyTranslatorPipe
+    SkillKeyTranslatorPipe,
+    EntityDisplay
   ],
   templateUrl: './skill-dialog.html',
   styleUrl: './skill-dialog.css',
 })
 export class SkillDialogComponent {
   data: SkillDialogData = inject(MAT_DIALOG_DATA);
-  filteredProps: string[];
+  // filteredProps: string[];
+  readonly displayedProps = ['desc_en', 'endesc', 'char', 'rarity', 'activation', 'cost'];
+
+  private traineeService = inject(TraineeService);
+
+  // Global loading state
+  private globalLoadingOperations = signal<Set<string>>(new Set());
+  readonly isLoading = computed(() => this.globalLoadingOperations().size > 0);
+
+  // Helper methods for global loading
+  private startLoading(operationId: string): void {
+    this.globalLoadingOperations.update(ops => new Set(ops).add(operationId));
+  }
+
+  private stopLoading(operationId: string): void {
+    this.globalLoadingOperations.update(ops => {
+      const newOps = new Set(ops);
+      newOps.delete(operationId);
+      return newOps;
+    });
+  }
+
+  // Store loaded trainees
+  private loadedTrainees = signal<Map<string, Trainee>>(new Map());
+  readonly characterTrainees = computed(() => {
+    const traineesMap = this.loadedTrainees();
+    const charIds = this.data.skill['char'] || [];
+    return charIds.map(id => traineesMap.get(id.toString())).filter(Boolean) as Trainee[];
+  });
 
   processedConditionGroups = computed(() => {
     const conditionGroups = this.data.skill.condition_groups;
@@ -71,18 +104,39 @@ export class SkillDialogComponent {
     });
   });
 
-
   constructor() {
-    const { props, displayedProps, excludedProps } = this.data;
+    // Load all trainees upfront when dialog opens
+    this.loadCharacterTrainees();
+  }
 
-    let finalExcludedProps = new Set(excludedProps || []);
-    finalExcludedProps.add('condition_groups'); // Exclude condition_groups from default display
+  private loadCharacterTrainees(): void {
+    const charIds = this.data.skill['char'] || [];
+    if (charIds.length === 0) return;
 
-    if (displayedProps?.length) {
-      this.filteredProps = displayedProps.filter(prop => !finalExcludedProps.has(prop));
-    } else {
-      this.filteredProps = props.filter(prop => !finalExcludedProps.has(prop)).sort();
-    }
+    this.startLoading('characters');
+
+    // Load all trainees in parallel
+    const traineeRequests = charIds.map(charId =>
+      this.traineeService.getTraineeById(charId.toString())
+    );
+
+    // Use forkJoin to wait for all requests to complete
+    forkJoin(traineeRequests).subscribe({
+      next: (trainees) => {
+        const traineesMap = new Map<string, Trainee>();
+        trainees.forEach((trainee, index) => {
+          if (trainee) {
+            traineesMap.set(charIds[index].toString(), trainee);
+          }
+        });
+        this.loadedTrainees.set(traineesMap);
+        console.log('Loaded trainees:', traineesMap);
+        this.stopLoading('characters');
+      },
+      error: () => {
+        this.stopLoading('characters');
+      }
+    });
   }
 }
 

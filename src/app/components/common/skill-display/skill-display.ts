@@ -83,7 +83,11 @@ export class SkillDisplay {
       return `${baseClass} rarity${raritySuffix}-normal`;
     } else if (rarity === Rarity.Rare) {
       return `${baseClass} rarity${raritySuffix}-rare`;
-    } else if (rarity >= Rarity.Unique) {
+    } else if (rarity === Rarity.Unique) {
+      return `${baseClass} rarity${raritySuffix}-unique`;
+    } else if (rarity === Rarity.Upgraded_Unique) {
+      return `${baseClass} rarity${raritySuffix}-upgraded-unique`;
+    } else if (rarity > Rarity.Upgraded_Unique) {
       return `${baseClass} rarity${raritySuffix}-unique`;
     }
 
@@ -94,8 +98,8 @@ export class SkillDisplay {
     this.dialog.open(SkillDialogComponent, {
       data: {
         skill,
-        props: Object.keys(skill),
-        displayedProps: ['desc_en', 'endesc', 'rarity', 'activation', 'cost'],
+        // props: Object.keys(skill),
+        // displayedProps: ['desc_en', 'endesc', 'rarity', 'activation', 'cost'],
         // excludedProps: ['jpdesc', 'desc_ko', 'name_ko', 'name_tw', 'desc_tw', 'jpname']
       }
     });

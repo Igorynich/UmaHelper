@@ -6,8 +6,6 @@ import {Skill} from '../../interfaces/skill';
 import {debounceTime, distinctUntilChanged, first, map, tap} from 'rxjs';
 import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {MatIconModule} from '@angular/material/icon';
-import {MatDialog, MatDialogModule} from '@angular/material/dialog';
-import {SkillDialogComponent} from '../../components/common/skill-dialog/skill-dialog';
 import {MatIconButton} from '@angular/material/button';
 import {SpinnerService} from '../../services/spinner';
 import {FormControl, ReactiveFormsModule} from '@angular/forms';
@@ -25,7 +23,6 @@ import { matchesNameFilter } from '../../utils/name-filter.utils';
     MatCardModule,
     ImagekitioAngularModule,
     MatIconModule,
-    MatDialogModule,
     MatIconButton,
     ReactiveFormsModule,
     MatFormFieldModule,
@@ -37,7 +34,6 @@ import { matchesNameFilter } from '../../utils/name-filter.utils';
 })
 export class SkillsComponent {
   private skillsService = inject(SkillsService);
-  private dialog = inject(MatDialog);
   private spinnerService = inject(SpinnerService);
 
   filterControl = new FormControl('');
@@ -68,20 +64,6 @@ export class SkillsComponent {
         });
       }),
     ).subscribe();
-  }
-
-  openSkillDialog(skill: Skill, closeAfter = false) {
-    const dialog = this.dialog.open(SkillDialogComponent, {
-      data: {
-        skill,
-        props: Object.keys(skill),
-        displayedProps: ['desc_en', 'endesc', 'rarity', 'activation', 'cost'],
-        // excludedProps: ['jpdesc', 'desc_ko', 'name_ko', 'name_tw', 'desc_tw', 'jpname']
-      }
-    });
-    if (closeAfter) {
-      dialog.close();      // Debug
-    }
   }
 
   clearFilter() {

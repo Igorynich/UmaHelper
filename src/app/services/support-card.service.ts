@@ -48,6 +48,16 @@ export class SupportCardService {
     );
   }
 
+  /**
+   * Returns the ImageKit URL of the support card image.
+   * @param supportCardOrId - The support card object or its ID.
+   * @returns The URL of the support card image.
+   */
+  getSupportCardImageUrl(supportCardOrId: DisplaySupportCard | number): string {
+    const id = typeof supportCardOrId === 'object' ? supportCardOrId.support_id : supportCardOrId;
+    return `/sup_cards/tex_support_card_${id}.png`;
+  }
+
   mapToSupportCardEffectData(card: DisplaySupportCard, effIds?: number[]): SupportCardEffectData {
     const effectIds = effIds ?? (Object.values(EffectId).filter(value => typeof value === 'number') as number[]);
     const level = card.level ?? rarityLevelMap[card.rarity].default;
@@ -65,7 +75,7 @@ export class SupportCardService {
       level: card.level,
       rarity: card.rarity,
       type: card.type,
-      characterImageUrl: `/sup_cards/tex_support_card_${card.support_id}.png`,
+      characterImageUrl: this.getSupportCardImageUrl(card.support_id), //`/sup_cards/tex_support_card_${card.support_id}.png`,
       event_skills: card.event_skills,
       hints: card.hints,
       release_en: card.release_en,

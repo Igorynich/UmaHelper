@@ -374,7 +374,7 @@ export class SupportCards {
         level: card.level,
         rarity: card.rarity,
         type: card.type,
-        characterImageUrl: `/sup_cards/tex_support_card_${card.support_id}.png`,      // TODO some sus duplicated mapping going on
+        characterImageUrl: this.supportCardService.getSupportCardImageUrl(card.support_id),   // TODO some sus duplicated mapping going on
         event_skills: card.event_skills,
         hints: card.hints,
       } as SupportCardEffectData));
@@ -390,7 +390,7 @@ export class SupportCards {
           level: card.level,
           rarity: card.rarity,
           type: card.type,
-          characterImageUrl: `/sup_cards/tex_support_card_${card.support_id}.png`,      // TODO some sus duplicated mapping going on
+          characterImageUrl: this.supportCardService.getSupportCardImageUrl(card.support_id),      // TODO some sus duplicated mapping going on
           event_skills: card.event_skills,
           hints: card.hints,
         } as SupportCardEffectData));

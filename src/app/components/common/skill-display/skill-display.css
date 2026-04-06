@@ -23,9 +23,16 @@
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 215, 0, 0.7) 100%);
 }
 
-/* Rarity 3+ (Unique и выше): белый на розовый */
+/* Rarity 3+ (Unique): белый на более яркий розовый */
 .skill-card.rarity-unique {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 105, 180, 0.7) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 130, 200, 0.7) 100%);
+  border: 3px solid #C0C0C0; /* Silver border */
+}
+
+/* Rarity 4 (Upgraded Unique): белый на более темный розовый с золотой рамкой */
+.skill-card.rarity-upgraded-unique {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 80, 160, 0.7) 100%);
+  border: 3px solid #FFD700; /* Golden border */
 }
 
 .skill-icon-wrapper {
@@ -89,7 +96,13 @@
 }
 
 .simple-skill-view.rarity-simple-unique {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 105, 180, 0.7) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 130, 200, 0.7) 100%);
+  border: 2px solid #C0C0C0; /* Silver border */
+}
+
+.simple-skill-view.rarity-simple-upgraded-unique {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 80, 160, 0.7) 100%);
+  border: 2px solid #FFD700; /* Golden border */
 }
 
 /* Добавьте эти стили для спиннера */

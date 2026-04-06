@@ -33,6 +33,16 @@ export class TraineeService {
     );
   }
 
+  /**
+   * Returns the ImageKit URL for the trainee's image.
+   * @param trainee The trainee object.
+   * @returns The URL for the trainee's image.
+   */
+  getTraineeImageUrl(trainee: Trainee): string {
+    return `/trainees/char_${trainee.itemData.char_id}_${trainee.itemData.card_id}.png`;
+    // imageUrl: `${IMAGEKIT_CONFIG.urlEndpoint}/trainees/char_${t.itemData.char_id}_${t.itemData.card_id}.png`,     // char_1033_103301.png
+  }
+
   private prepareTraineeForDisplay(trainee: any): Trainee {
     // Basic preparation - can be extended later if needed
     return trainee as Trainee;
