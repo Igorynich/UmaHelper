@@ -9,6 +9,9 @@ import { effectTypeMap } from '../maps/skill-effect.map';
 export class SkillFieldTranslatorPipe implements PipeTransform {
   private effectTypeMap: Record<SkillEffect, string> = effectTypeMap;
 
+  readonly CM_NUMBER_OF_RACERS = 9;
+  readonly LOH_NUMBER_OF_RACERS = 12;
+
   private conditionKeyMap: { [key: string]: string } = {
     'running_style': 'Running Strategy',
     'phase_random': 'Race Phase',
@@ -253,7 +256,9 @@ export class SkillFieldTranslatorPipe implements PipeTransform {
           case Rarity.Unique:
             return 'Unique';
           case Rarity.Upgraded_Unique:
-            return 'UpgradedUnique';
+            return 'Upgraded Unique';
+          case Rarity.Maxed_Unique:
+            return 'Max Unique';
           default:
             return String(value);
         }
@@ -318,7 +323,9 @@ export class SkillFieldTranslatorPipe implements PipeTransform {
     const translatedValue = this.conditionValueMap[key]?.[value] || value;
     switch (key) {
       case 'order_rate':
-        return `${translatedKey} ${translatedOperator} ${translatedValue}% of the Pack`;
+        const cmPosition = Math.round(+translatedValue / 100 * this.CM_NUMBER_OF_RACERS);
+        const lohPosition = Math.round(+translatedValue / 100 * this.LOH_NUMBER_OF_RACERS);
+        return `${translatedKey} ${translatedOperator} ${translatedValue}% of the Pack((CM ${translatedOperator} ${cmPosition} | LoH ${translatedOperator} ${lohPosition}))`;
       case 'distance_rate':
         return `${translatedKey} ${translatedOperator} ${translatedValue}% of the Track`;
       case 'distance_diff_rate':
