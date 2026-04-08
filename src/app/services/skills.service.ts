@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { collection, collectionData, Firestore, getDocs, query, where } from '@angular/fire/firestore';
-import { forkJoin, from, Observable, of } from 'rxjs';
+import { collection, Firestore, getDocs, query, where } from '@angular/fire/firestore';
+import {combineLatest, forkJoin, from, Observable, of, shareReplay} from 'rxjs';
 import { Skill } from '../interfaces/skill';
 import {map, mergeMap, tap} from 'rxjs/operators';
 
@@ -9,29 +9,60 @@ import {map, mergeMap, tap} from 'rxjs/operators';
 })
 export class SkillsService {
   private firestore = inject(Firestore);
+  private readonly SKILLS_COLLECTION = 'skills';
+  // private CURRENT_VERSION = 210051;
 
-  private CURRENT_VERSION = 210051;
+  private filteredSkillsCache$: Observable<Skill[]> | null = null;
+  private rawSkillsCache$: Observable<Skill[]> | null = null;
+  private individualSkillCache = new Map<string, { data$: Observable<Skill | null>, timestamp: number }>();
+  private lastFetchTime = {raw: 0, filtered: 0};
+  private readonly CACHE_DURATION = 60 * 60 * 1000; // 1 час в мс
 
-  private excludedSkillNames: string[] = [
-    // 'Voltage Hero',
-  ];
 
   // 400 should be
   getSkills(): Observable<Skill[]> {
-    const skillsCollection = collection(this.firestore, 'skills');
-    return from(getDocs(skillsCollection)).pipe(
+    const currentTime = Date.now();
+
+    if (this.filteredSkillsCache$ && (currentTime - this.lastFetchTime.filtered < this.CACHE_DURATION)) {
+      console.log('Returning filtered skills cache');
+      return this.filteredSkillsCache$;
+    }
+
+    if (this.rawSkillsCache$ && (currentTime - this.lastFetchTime.raw < this.CACHE_DURATION)) {
+      console.log('Returning raw skills cache');
+      return this.rawSkillsCache$!.pipe(map(skills => this.filterValidSkills(skills)));
+    }
+
+    const skillsCollection = collection(this.firestore, this.SKILLS_COLLECTION);
+    // Only filter out null values at the database level
+    const q = query(skillsCollection, where('name_en', '!=', null));
+    this.filteredSkillsCache$ =  from(getDocs(q)).pipe(
       map(snapshot => {
         const skills = snapshot.docs.map(doc => doc.data() as Skill);
         return this.filterValidSkills(skills);
-      })
+      }),
+      tap(() => this.lastFetchTime.filtered = Date.now()),
+      shareReplay(1)
     );
+    console.log('Fetched filtered skills');
+    return this.filteredSkillsCache$;
   }
 
   getRawSkills(): Observable<Skill[]> {
-    const skillsCollection = collection(this.firestore, 'skills');
-    return from(getDocs(skillsCollection)).pipe(
-      map(snapshot => snapshot.docs.map(doc => doc.data() as Skill))
+    const currentTime = Date.now();
+
+    if (this.rawSkillsCache$ && (currentTime - this.lastFetchTime.raw < this.CACHE_DURATION)) {
+      console.log('Returning raw skills cache');
+      return this.rawSkillsCache$;
+    }
+    const skillsCollection = collection(this.firestore, this.SKILLS_COLLECTION);
+    this.rawSkillsCache$ = from(getDocs(skillsCollection)).pipe(
+      map(snapshot => snapshot.docs.map(doc => doc.data() as Skill)),
+      tap(() => this.lastFetchTime.raw = Date.now()),
+      shareReplay(1)
     );
+    console.log('Fetched raw skills');
+    return this.rawSkillsCache$;
   }
 
   getSkillsByIds(ids: number[]): Observable<Skill[]> {
@@ -39,34 +70,96 @@ export class SkillsService {
       return of([]);
     }
 
+    const currentTime = Date.now();
+
+    if (this.rawSkillsCache$ && (currentTime - this.lastFetchTime.raw < this.CACHE_DURATION)) {
+      console.log('Returning from raw skills cache');
+      return this.rawSkillsCache$.pipe(
+        map(rawSkills => {
+          const filteredSkills = this.filterValidSkills(rawSkills);     // filtering to avoid displaying invalid skills
+          return filteredSkills.filter(s => ids.includes(s.id));
+        }
+      ));
+    }
+
+    if (this.filteredSkillsCache$ && (currentTime - this.lastFetchTime.filtered < this.CACHE_DURATION)) {
+      console.log('Returning from filtered skills cache');
+      return this.filteredSkillsCache$.pipe(
+        map(filteredSkills => {
+            return filteredSkills.filter(s => ids.includes(s.id));
+          }
+        ));
+    }
+
+    let cachedIds: number[] = [];
+    let uncachedIds: number[] = [];
+    const cachedArr = ids.reduce((arr, id) => {
+      const cached = this.individualSkillCache.get(id.toString());
+      if (cached && (currentTime - cached.timestamp < this.CACHE_DURATION)) {
+        cachedIds.push(id);
+        return [...arr, cached];
+      }
+      uncachedIds.push(id);
+      return arr;
+    }, [] as { data$: Observable<Skill | null>, timestamp: number }[]);
+
+    console.log(`Cached ${cachedIds.length} skills, uncached ${uncachedIds.length} skills`, ids);
+    if (cachedIds.length === ids.length) {
+      console.log('Returning all skills individual cache');
+      return forkJoin(cachedArr.map(c => c.data$ as Observable<Skill>));    // combineLatest if fails
+    }
+
+    const requestIds = uncachedIds.length ? uncachedIds : ids;    // should always be uncachedIds if we got here
     // Firestore 'in' query is limited to 30 elements.
     const chunkSize = 30;
     const chunks: number[][] = [];
-    for (let i = 0; i < ids.length; i += chunkSize) {
-      chunks.push(ids.slice(i, i + chunkSize));
+    for (let i = 0; i < requestIds.length; i += chunkSize) {
+      chunks.push(requestIds.slice(i, i + chunkSize));
     }
 
-    const skillsCollection = collection(this.firestore, 'skills');
+    const skillsCollection = collection(this.firestore, this.SKILLS_COLLECTION);
 
     const chunkObservables = chunks.map(chunk => {
       const q = query(skillsCollection, where('id', 'in', chunk));
       return from(getDocs(q)).pipe(
         map(snapshot => snapshot.docs.map(doc => doc.data() as Skill)),
-        tap(value => console.log('Chunk', value)),
+        // tap(value => console.log('Chunk', value)),
       );
     });
 
-    return forkJoin(chunkObservables).pipe(
-      mergeMap(chunkResults => of(this.filterValidSkills(chunkResults.flat())))
+    const partCached = cachedArr.map(c => c.data$ as Observable<Skill>);
+    const skills$ = forkJoin([...partCached, ...chunkObservables]).pipe(
+      mergeMap(chunkResults => {
+        const allSkills = this.filterValidSkills(chunkResults.flat());
+        allSkills.forEach((skill: Skill) => {
+          const cachedSkill = this.individualSkillCache.get(skill.id.toString());
+          const cachedSkillTimestamp = cachedSkill?.timestamp || 0;
+          const isTimestampUpdateRequired = (currentTime - cachedSkillTimestamp) > this.CACHE_DURATION;
+          // updating timestamp only if cached skill is stale, if skill is cached and timestamp still valid - keep that timestamp
+          this.individualSkillCache.set(skill.id.toString(), { data$: of(skill), timestamp: isTimestampUpdateRequired ? currentTime : cachedSkillTimestamp });
+        });
+        return of(allSkills
+          .sort((a, b) => {
+            const aIndex = ids.findIndex((id) => id === a.id);
+            const bIndex = ids.findIndex((id) => id === b.id);
+            return aIndex - bIndex;
+          }))
+      }),
+      shareReplay(1)
     );
+    console.log('Fetched skills by ids', requestIds);
+    return skills$;
   }
 
   private filterValidSkills(skills: Skill[]): Skill[] {
-    return skills.filter(skill => /*!skill.pre_evo && !skill.evo*/ skill.name_en && !this.excludedSkillNames.includes(skill.enname));
+    return skills.filter(skill =>
+      skill.name_en &&           // Not null/undefined
+      skill.name_en.trim() !== '' // Not empty or whitespace
+    );
   }
 
-  private isCurrentVersion(skillVersions: number[]): boolean {
+  /*private isCurrentVersion(skillVersions: number[]): boolean {
     return true;
     return skillVersions ? skillVersions.some(version => version <= this.CURRENT_VERSION) : true;
-  }
+  }*/
 }

@@ -1,8 +1,8 @@
-import { inject, Injectable } from '@angular/core';
-import { collection, collectionData, doc, Firestore, getDoc } from '@angular/fire/firestore';
-import { from, Observable } from 'rxjs';
-import { Trainee } from '../interfaces/trainee';
-import { map } from 'rxjs/operators';
+import {inject, Injectable} from '@angular/core';
+import {collection, doc, Firestore, getDoc, getDocs} from '@angular/fire/firestore';
+import {from, Observable, shareReplay} from 'rxjs';
+import {Trainee} from '../interfaces/trainee';
+import {map, tap} from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -11,26 +11,63 @@ export class TraineeService {
   private firestore = inject(Firestore);
 
   private readonly TRAINEE_COLLECTION = 'trainees';
+  private traineesCache$: Observable<Trainee[]> | null = null;
+  private individualTraineeCache = new Map<string, { data$: Observable<Trainee | null>, timestamp: number }>();
+  private lastFetchTime: number = 0;
+  private readonly CACHE_DURATION = 60 * 60 * 1000; // 1 час в мс
 
   getRawTrainees(): Observable<Trainee[]> {
+    const currentTime = Date.now();
+
+    if (this.traineesCache$ && (currentTime - this.lastFetchTime < this.CACHE_DURATION)) {
+      console.log('Returning TRAINEES cache');
+      return this.traineesCache$;
+    }
+
     const traineesCollection = collection(this.firestore, this.TRAINEE_COLLECTION);
-    return (collectionData(traineesCollection) as Observable<any[]>).pipe(
-      map(trainees => trainees.map(t => this.prepareTraineeForDisplay(t)))
+
+    this.traineesCache$ = from(getDocs(traineesCollection)).pipe(
+      map(snapshot => snapshot.docs.map(t => this.prepareTraineeForDisplay(t.data()))),
+      tap(() => this.lastFetchTime = Date.now()),
+      shareReplay(1)
     );
+    console.log('Fetched Trainees');
+    return this.traineesCache$;
   }
 
   getTraineeById(id: string): Observable<Trainee | null> {
+    const currentTime = Date.now();
+
+    // 1. Проверяем, есть ли живой общий кэш всех стажеров
+    if (this.traineesCache$ && (currentTime - this.lastFetchTime < this.CACHE_DURATION)) {
+      console.log('Returning from all trainees cache');
+      return this.traineesCache$.pipe(
+        map(trainees => trainees.find(t => t.itemData?.card_id === +id) || null)
+      );
+    }
+
+    // 2. Проверяем персональный кэш для этого конкретного стажера
+    const cached = this.individualTraineeCache.get(id);
+    if (cached && (currentTime - cached.timestamp < this.CACHE_DURATION)) {
+      console.log('Returning trainee individual cache');
+      return cached.data$;
+    }
+
+    // 3. Если ничего нет — делаем точечный запрос к Firestore
     const traineeDocRef = doc(this.firestore, `${this.TRAINEE_COLLECTION}/${id}`);
-    return from(getDoc(traineeDocRef)).pipe(
+    const trainee$ = from(getDoc(traineeDocRef)).pipe(
       map(docSnap => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          return this.prepareTraineeForDisplay(data) as Trainee;
-        } else {
-          return null;
+          return this.prepareTraineeForDisplay({ ...data, id: docSnap.id }) as Trainee;
         }
-      })
+        return null;
+      }),
+      shareReplay(1)
     );
+    console.log('Fetching individual trainee');
+    this.individualTraineeCache.set(id, { data$: trainee$, timestamp: currentTime });
+    return trainee$;
   }
 
   /**

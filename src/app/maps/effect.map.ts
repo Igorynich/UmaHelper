@@ -54,4 +54,13 @@ export const uniqEffectMap: Record<UniqEffectId, { short: UniqEffectToStringFn; 
     long: (ue) => `Training Effectiveness +1(up to +20) Per ${ue.value} fans`,  //'Non-spec Tr.Effect When Bond Gauge Higher Than 80'
     effect: (ue) => EffectId.TRAINING_EFFECTIVENESS
   },
+  [UniqEffectId.INIT_STAT_FOR_EVERY_CARD_IN_SUPPORT_DECK]: {
+    short: (ue) => `INIT SPEC STAT(+${ue.value}) FOR EVERY CARD`,
+    long: (ue) => `Gain Initial Stat (+${ue.value}), where Stat is the Type of the Card, for Every Card in your Support Deck (Friend and Group Types give (+${ue.value}) to every stat)`,  //'Non-spec Tr.Effect When Bond Gauge Higher Than 80'
+  },
+  [UniqEffectId.FRIENDSHIP_BONUS_ON_FRIENDSHIP_TRAININGS]: {
+    short: (ue) => `${effectMap[ue.value_1 as EffectId]?.short}(+${ue.value_2}) PER FRIEND TRAINING(${ue.value})`,
+    long: (ue) => `${effectMap[ue.value_1 as EffectId]?.long}(+${ue.value_2}) per Friendship Training(up to ${ue.value} times)`,
+    effect: (ue) => EffectId.FRIENDSHIP_BONUS
+  },
 };

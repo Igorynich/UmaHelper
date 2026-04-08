@@ -15,7 +15,9 @@ import {SkillKeyTranslatorPipe} from '../../../pipes/skill-key-translator.pipe';
 import {EntityDisplay} from '../entity-display/entity-display';
 import {TraineeService} from '../../../services/trainee.service';
 import {Trainee} from '../../../interfaces/trainee';
-import {forkJoin} from 'rxjs';
+import {combineLatest, forkJoin, of} from 'rxjs';
+import {rxResource} from '@angular/core/rxjs-interop';
+import {map} from 'rxjs/operators';
 
 export interface SkillDialogData {
   skill: Skill;
@@ -46,8 +48,33 @@ export class SkillDialogComponent {
 
   private traineeService = inject(TraineeService);
 
+  private traineesResource = rxResource({
+    params: () => ({
+      ids: (this.data.skill['char'] || [])
+    }),
+    stream: ({ params }) => {
+      if (params.ids.length === 0) return of([]);
+
+      const requests = params.ids.map(id =>
+        this.traineeService.getTraineeById(id.toString())
+      );
+
+      return combineLatest(requests).pipe(
+        map(results => results.filter((t): t is Trainee => !!t))
+      );
+    }
+  });
+
+  // Состояние загрузки теперь берется напрямую из ресурса
+  readonly isLoading = this.traineesResource.isLoading;
+
+  // Данные фильтруются автоматически
+  readonly characterTrainees = computed(() => {
+    const trainees = this.traineesResource.value() || [];
+    return trainees.filter((t): t is Trainee => !!t);
+  });
   // Global loading state
-  private globalLoadingOperations = signal<Set<string>>(new Set());
+  /*private globalLoadingOperations = signal<Set<string>>(new Set());
   readonly isLoading = computed(() => this.globalLoadingOperations().size > 0);
 
   // Helper methods for global loading
@@ -61,15 +88,15 @@ export class SkillDialogComponent {
       newOps.delete(operationId);
       return newOps;
     });
-  }
+  }*/
 
   // Store loaded trainees
-  private loadedTrainees = signal<Map<string, Trainee>>(new Map());
+  /*private loadedTrainees = signal<Map<string, Trainee>>(new Map());
   readonly characterTrainees = computed(() => {
     const traineesMap = this.loadedTrainees();
     const charIds = this.data.skill['char'] || [];
     return charIds.map(id => traineesMap.get(id.toString())).filter(Boolean) as Trainee[];
-  });
+  });*/
 
   processedConditionGroups = computed(() => {
     const conditionGroups = this.data.skill.condition_groups;
@@ -104,7 +131,7 @@ export class SkillDialogComponent {
     });
   });
 
-  constructor() {
+  /*constructor() {
     // Load all trainees upfront when dialog opens
     this.loadCharacterTrainees();
   }
@@ -121,7 +148,7 @@ export class SkillDialogComponent {
     );
 
     // Use forkJoin to wait for all requests to complete
-    forkJoin(traineeRequests).subscribe({
+    combineLatest(traineeRequests).subscribe({
       next: (trainees) => {
         const traineesMap = new Map<string, Trainee>();
         trainees.forEach((trainee, index) => {
@@ -137,6 +164,6 @@ export class SkillDialogComponent {
         this.stopLoading('characters');
       }
     });
-  }
+  }*/
 }
 

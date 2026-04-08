@@ -1,13 +1,12 @@
 import { inject, Injectable } from '@angular/core';
-import { collection, collectionData, doc, Firestore, getDoc } from '@angular/fire/firestore';
-import { from, Observable } from 'rxjs';
+import {collection, doc, Firestore, getDoc, getDocs} from '@angular/fire/firestore';
+import {from, Observable, shareReplay} from 'rxjs';
 import { SupportCard, SupportCardEffectData } from '../interfaces/support-card';
-import { map } from 'rxjs/operators';
+import {map, tap} from 'rxjs/operators';
 import { DisplaySupportCard, Rarity } from '../interfaces/display-support-card';
 import {effectMap, uniqEffectMap} from '../maps/effect.map';
 import {EffectId, UniqEffectId} from '../interfaces/effect-id.enum';
 import { IMAGEKIT_CONFIG } from '../imagekit.config';
-import { SupportCardType } from '../interfaces/support-card-type.enum';
 
 const LEVEL_TO_INDEX_MAP: { [level: number]: number } = {
   1: 1, 5: 2, 10: 3, 15: 4, 20: 5, 25: 6, 30: 7, 35: 8, 40: 9, 45: 10, 50: 11,
@@ -24,28 +23,63 @@ export const rarityLevelMap = {
 })
 export class SupportCardService {
   private firestore = inject(Firestore);
+  private readonly SUPPORT_CARDS_COLLECTION = 'support_cards';
+
   private effectDataCache = new Map<string, SupportCardEffectData>();
+  private supCardsCache$: Observable<SupportCard[]> | null = null;
+  private individualSupCardCache = new Map<string, { data$: Observable<SupportCard | null>, timestamp: number }>();
+  private lastFetchTime: number = 0;
+  private readonly CACHE_DURATION = 60 * 60 * 1000; // 1 час в мс
 
   getRawSupportCards(): Observable<SupportCard[]> {
-    const supportCardsCollection = collection(this.firestore, 'support_cards');
-    return (collectionData(supportCardsCollection) as Observable<any[]>).pipe(
-      map(supportCards => supportCards.map(sc => this.prepareSupportCardForDisplay(sc)))
+    const currentTime = Date.now();
+
+    if (this.supCardsCache$ && (currentTime - this.lastFetchTime < this.CACHE_DURATION)) {
+      console.log('Returning SUP_CARDS cache');
+      return this.supCardsCache$;
+    }
+    const supportCardsCollection = collection(this.firestore, this.SUPPORT_CARDS_COLLECTION);
+    this.supCardsCache$ = from(getDocs(supportCardsCollection)).pipe(
+      map(snapshot => snapshot.docs.map(sc => this.prepareSupportCardForDisplay(sc.data()))),
+      tap(() => this.lastFetchTime = Date.now()),
+      shareReplay(1)
     );
+    console.log('Fetched Sup Cards');
+    return this.supCardsCache$;
   }
 
   getSupportCardById(id: string): Observable<SupportCard | null> {
-    const supportCardDocRef = doc(this.firestore, `support_cards/${id}`);
-    return from(getDoc(supportCardDocRef)).pipe(
+    const currentTime = Date.now();
+
+    // 1. Проверяем, есть ли живой общий кэш всех карт
+    if (this.supCardsCache$ && (currentTime - this.lastFetchTime < this.CACHE_DURATION)) {
+      console.log('Returning from all sup cards cache');
+      return this.supCardsCache$.pipe(
+        map(supCard => supCard.find(t => t.support_id === +id) || null)
+      );
+    }
+    // 2. Проверяем персональный кэш для этого конкретного стажера
+    const cached = this.individualSupCardCache.get(id);
+    if (cached && (currentTime - cached.timestamp < this.CACHE_DURATION)) {
+      console.log('Returning sup card individual cache');
+      return cached.data$;
+    }
+    // 3. Если ничего нет — делаем точечный запрос к Firestore
+    const supportCardDocRef = doc(this.firestore, `${this.SUPPORT_CARDS_COLLECTION}/${id}`);
+    const supCard$ = from(getDoc(supportCardDocRef)).pipe(
       map(docSnap => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          // Assuming prepareSupportCardForDisplay is what you want to do
           return this.prepareSupportCardForDisplay(data) as SupportCard;
         } else {
           return null;
         }
-      })
+      }),
+      shareReplay(1)
     );
+    console.log('Fetching individual sup card');
+    this.individualSupCardCache.set(id, { data$: supCard$, timestamp: currentTime });
+    return supCard$;
   }
 
   /**
