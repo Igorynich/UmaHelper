@@ -3,7 +3,8 @@ export enum Rarity {
   Rare = 2,
   Unique = 3,
   Upgraded_Unique = 4,
-  Maxed_Unique = 5
+  ThreeStar_Unique = 5,
+  Omega_Unique = 6          // named for fun
 }
 
 export enum SkillEffect {

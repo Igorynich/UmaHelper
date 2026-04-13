@@ -257,7 +257,7 @@ export class SkillFieldTranslatorPipe implements PipeTransform {
             return 'Unique';
           case Rarity.Upgraded_Unique:
             return 'Upgraded Unique';
-          case Rarity.Maxed_Unique:
+          case Rarity.ThreeStar_Unique:
             return 'Max Unique';
           default:
             return String(value);
