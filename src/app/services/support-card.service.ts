@@ -31,10 +31,10 @@ export class SupportCardService {
   private lastFetchTime: number = 0;
   private readonly CACHE_DURATION = 60 * 60 * 1000; // 1 час в мс
 
-  getRawSupportCards(): Observable<SupportCard[]> {
+  getRawSupportCards(forceFetch?: boolean): Observable<SupportCard[]> {
     const currentTime = Date.now();
 
-    if (this.supCardsCache$ && (currentTime - this.lastFetchTime < this.CACHE_DURATION)) {
+    if (!forceFetch && this.supCardsCache$ && (currentTime - this.lastFetchTime < this.CACHE_DURATION)) {
       console.log('Returning SUP_CARDS cache');
       return this.supCardsCache$;
     }
@@ -44,7 +44,7 @@ export class SupportCardService {
       tap(() => this.lastFetchTime = Date.now()),
       shareReplay(1)
     );
-    console.log('Fetched Sup Cards');
+    console.log(forceFetch ? 'Force fetched Sup Cards' : 'Fetched Sup Cards');
     return this.supCardsCache$;
   }
 

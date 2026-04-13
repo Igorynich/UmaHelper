@@ -227,5 +227,29 @@
         ></mat-progress-bar>
       </div>
     }
+
+    <h1 class="main-header">Generate Skill Maps</h1>
+
+    <mat-card class="admin-card">
+      <mat-card-header>
+        <mat-card-title>Generate Skill Maps</mat-card-title>
+        <mat-card-subtitle>Generate skill maps by mapping skills to support cards based on event_skills and hints.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="button-row">
+          <button mat-raised-button color="accent" (click)="onGenerateSkillMaps()" [disabled]="isGeneratingSkillMaps()">
+            <mat-icon>auto_fix_high</mat-icon> Generate Skill Maps
+          </button>
+          @if (generatedSkillMaps()) {
+            <button mat-raised-button color="warn" (click)="onSaveSkillMaps()" [disabled]="isSavingSkillMaps()">
+              <mat-icon>save</mat-icon> Save Skill Maps ({{ generatedSkillMaps()?.length }} items)
+            </button>
+          }
+        </div>
+        @if (generatedSkillMaps()) {
+          <p>Generated <strong>{{ generatedSkillMaps()?.length }}</strong> skill maps. Check console for details.</p>
+        }
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>

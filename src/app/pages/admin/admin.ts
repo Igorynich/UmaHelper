@@ -16,6 +16,11 @@ import { ImagekitioAngularModule } from 'imagekitio-angular';
 import { EventUploadDialog } from '../../components/dialogs/event-upload-dialog/event-upload-dialog';
 import {TraineeSchema} from '../../interfaces/trainee.schema';
 import {Trainee} from '../../interfaces/trainee';
+import { SkillMap } from '../../interfaces/skill-map';
+import { SkillsService } from '../../services/skills.service';
+import { SupportCardService } from '../../services/support-card.service';
+import {forkJoin, of} from 'rxjs';
+import {catchError, switchMap, tap} from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin',
@@ -28,6 +33,8 @@ export class AdminComponent {
   private adminService = inject(AdminService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private skillsService = inject(SkillsService);
+  private supportCardService = inject(SupportCardService);
 
   loadedSkills = signal<Skill[] | null>(null);
   skillFileName = signal<string | null>(null);
@@ -45,6 +52,11 @@ export class AdminComponent {
   traineeUploadProgress = signal<UploadProgress | null>(null);
   supportCardComparisonResult: WritableSignal<SupportCardComparison | null> = signal(null);
   traineeComparisonResult: WritableSignal<SupportCardComparison | null> = signal(null);
+
+  // Skill Maps related signals
+  isGeneratingSkillMaps = signal(false);
+  generatedSkillMaps = signal<SkillMap[] | null>(null);
+  isSavingSkillMaps = signal(false);
 
   hasSkillChanges = computed(() => {
     const result = this.skillComparisonResult();
@@ -419,5 +431,113 @@ export class AdminComponent {
       width: '800px',
       maxWidth: '95vw',
     });
+  }
+
+  onGenerateSkillMaps() {
+    this.isGeneratingSkillMaps.set(true);
+    this.generatedSkillMaps.set(null);
+
+    // Fetch both skills and support cards in parallel
+    forkJoin({
+      skills: this.skillsService.getSkills(),
+      supportCards: this.supportCardService.getRawSupportCards(true)
+    }).subscribe({
+      next: ({ skills, supportCards }) => {
+        console.log('Fetched skills:', skills.length);
+        console.log('Fetched support cards:', supportCards.length);
+
+        // Generate skill maps
+        const skillMaps = this.generateSkillMapsFromData(skills, supportCards);
+        console.log('Generated skill maps:', skillMaps);
+        this.generatedSkillMaps.set(skillMaps);
+        this.isGeneratingSkillMaps.set(false);
+        this.snackBar.open(`Generated ${skillMaps.length} skill maps successfully. Check console for details.`, 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Error fetching data:', err);
+        this.snackBar.open(`Error fetching data: ${err.message}`, 'Close', { panelClass: ['snackbar-error'] });
+        this.isGeneratingSkillMaps.set(false);
+      }
+    });
+  }
+
+  private generateSkillMapsFromData(skills: Skill[], supportCards: SupportCard[]): SkillMap[] {
+    const skillMaps: SkillMap[] = [];
+
+    skills.forEach(skill => {
+      const skillMap: SkillMap = {
+        id: skill.id,
+        supCards: {
+          events: [],
+          hints: []
+        }
+      };
+
+      supportCards.forEach(supportCard => {
+        // Check if skill is in event_skills
+        if (supportCard.event_skills && supportCard.event_skills.includes(skill.id)) {
+          skillMap.supCards.events.push(supportCard.support_id);
+        }
+
+        // Check if skill is in hints.hint_skills
+        if (supportCard.hints && supportCard.hints.hint_skills.some(hint_skill => +hint_skill === +skill.id)) {
+          skillMap.supCards.hints.push(supportCard.support_id);
+        }
+      });
+
+      skillMaps.push(skillMap);
+    });
+
+    return skillMaps;
+  }
+
+  onSaveSkillMaps() {
+    const skillMaps = this.generatedSkillMaps();
+    if (!skillMaps || skillMaps.length === 0) {
+      this.snackBar.open('No skill maps to save. Please generate skill maps first.', 'Close', { panelClass: ['snackbar-error'] });
+      return;
+    }
+
+    this.dialog
+      .open(ConfirmationDialog, {
+        data: {
+          title: 'Save Skill Maps',
+          message: `Are you sure you want to save ${skillMaps.length} skill maps to Firebase?`,
+        },
+      })
+      .afterClosed()
+      .pipe(
+        switchMap(confirmed => {
+          if (!confirmed) return of(null);
+
+          this.isSavingSkillMaps.set(true);
+
+          return this.skillsService.saveSkillMaps(skillMaps).pipe(
+            tap(results => {
+              const successful = results.filter(r => r.success).length;
+              const failed = results.filter(r => !r.success).length;
+
+              this.snackBar.open(
+                `Save complete: ${successful} successful, ${failed} failed.`,
+                'Close',
+                { panelClass: failed > 0 ? ['snackbar-error'] : ['snackbar-success'] }
+              );
+              this.isSavingSkillMaps.set(false);
+
+              if (failed === 0) {
+                this.generatedSkillMaps.set(null); // Clear after successful save
+              }
+            }),
+            catchError(err => {
+              this.snackBar.open(`Save failed: ${err.message}`, 'Close', {
+                panelClass: ['snackbar-error'],
+              });
+              this.isSavingSkillMaps.set(false);
+              return of(null);
+            })
+          );
+        })
+      )
+      .subscribe();
   }
 }

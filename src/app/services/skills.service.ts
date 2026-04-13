@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { collection, Firestore, getDocs, query, where } from '@angular/fire/firestore';
+import {collection, doc, Firestore, getDoc, getDocs, query, setDoc, where} from '@angular/fire/firestore';
 import {combineLatest, forkJoin, from, Observable, of, shareReplay} from 'rxjs';
 import { Skill } from '../interfaces/skill';
+import { SkillMap } from '../interfaces/skill-map';
 import {map, mergeMap, tap} from 'rxjs/operators';
 
 @Injectable({
@@ -10,6 +11,7 @@ import {map, mergeMap, tap} from 'rxjs/operators';
 export class SkillsService {
   private firestore = inject(Firestore);
   private readonly SKILLS_COLLECTION = 'skills';
+  private readonly SKILL_MAPS_COLLECTION = 'skill_maps';
   // private CURRENT_VERSION = 210051;
 
   private filteredSkillsCache$: Observable<Skill[]> | null = null;
@@ -149,6 +151,59 @@ export class SkillsService {
     );
     console.log('Fetched skills by ids', requestIds);
     return skills$;
+  }
+
+  /**
+   * Saves an array of SkillMaps to the Firebase skill_maps collection
+   * Each SkillMap is saved independently - failures don't stop other saves
+   * @param skillMaps - Array of SkillMap objects to save
+   * @returns Observable with array of results: {id: number, success: boolean, error?: string}
+   */
+  saveSkillMaps(skillMaps: SkillMap[]): Observable<{id: number, success: boolean, error?: string}[]> {
+    if (!skillMaps || skillMaps.length === 0) {
+      return of([]);
+    }
+
+    const saveObservables = skillMaps.map(skillMap =>
+      from(this.saveSingleSkillMap(skillMap)).pipe(
+        map(result => ({ id: skillMap.id, ...result }))
+      )
+    );
+
+    return forkJoin(saveObservables);
+  }
+
+  private async saveSingleSkillMap(skillMap: SkillMap): Promise<{success: boolean, error?: string}> {
+    try {
+      const docRef = doc(this.firestore, this.SKILL_MAPS_COLLECTION, skillMap.id.toString());
+      await setDoc(docRef, skillMap);
+      console.log(`Saved skill map ${skillMap.id} to Firebase`);
+      return { success: true };
+    } catch (error) {
+      console.error(`Failed to save skill map ${skillMap.id}:`, error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
+   * Fetches a skill map by skill ID from the skill_maps collection
+   * @param skillId - The skill ID to fetch the skill map for
+   * @returns Observable<SkillMap | null> - The skill map or null if not found
+   */
+  getSkillMapById(skillId: number): Observable<SkillMap | null> {
+    const docRef = doc(this.firestore, this.SKILL_MAPS_COLLECTION, skillId.toString());
+    return from(getDoc(docRef)).pipe(
+      map(docSnap => {
+        if (docSnap.exists()) {
+          return docSnap.data() as SkillMap;
+        } else {
+          return null;
+        }
+      })
+    );
   }
 
   private filterValidSkills(skills: Skill[]): Skill[] {
