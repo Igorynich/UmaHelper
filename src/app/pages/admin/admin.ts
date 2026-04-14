@@ -20,7 +20,7 @@ import { SkillMap } from '../../interfaces/skill-map';
 import { SkillsService } from '../../services/skills.service';
 import { SupportCardService } from '../../services/support-card.service';
 import {forkJoin, of} from 'rxjs';
-import {catchError, switchMap, tap} from 'rxjs/operators';
+import {catchError, map, switchMap, tap} from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin',
@@ -440,7 +440,9 @@ export class AdminComponent {
     // Fetch both skills and support cards in parallel
     forkJoin({
       skills: this.skillsService.getSkills(),
-      supportCards: this.supportCardService.getRawSupportCards(true)
+      supportCards: this.supportCardService.getSortedSupportCards(true).pipe(
+        map(cards => cards.filter(card => !!card.release_en))
+      )
     }).subscribe({
       next: ({ skills, supportCards }) => {
         console.log('Fetched skills:', skills.length);

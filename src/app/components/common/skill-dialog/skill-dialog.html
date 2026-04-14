@@ -25,6 +25,30 @@
               </li>
             }
           }
+          @case ('supCardEvents') {
+            @if (supCardEvents().length) {
+              <li><strong>Sup Card Events: </strong>
+                @for (supCardId of supCardEvents(); track supCardId) {
+                  <app-entity-display
+                    [supportCard]="supCards()[supCardId.toString()]"
+                    [mode]="'img'">
+                  </app-entity-display>
+                }
+              </li>
+            }
+          }
+          @case ('supCardHints') {
+            @if (supCardHints().length) {
+              <li><strong>Sup Card Hints: </strong>
+                @for (supCardId of supCardHints(); track supCardId) {
+                  <app-entity-display
+                    [supportCard]="supCards()[supCardId.toString()]"
+                    [mode]="'img'">
+                  </app-entity-display>
+                }
+              </li>
+            }
+          }
           @default {
             <li><strong>{{ key | skillKeyTranslator | titlecase }}: </strong> <span
               [innerHTML]="typeof $any(data.skill)[key] === 'object' ? ($any(data.skill)[key] | json) : ($any(data.skill)[key] | skillFieldTranslator:key)"></span>

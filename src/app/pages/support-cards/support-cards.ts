@@ -49,20 +49,7 @@ export class SupportCards {
   private dataGridStateService = inject(DataGridStateService);
 
   protected allCards = toSignal<SupportCard[], SupportCard[]>(
-    this.supportCardService.getRawSupportCards().pipe(
-      map(cards => cards.sort((a: SupportCard, b: SupportCard) => {
-        if (a.rarity !== b.rarity) {
-          return b.rarity - a.rarity;
-        }
-        // Cards without release_en (upcoming) go first
-        if (!a.release_en && b.release_en) return -1;
-        if (a.release_en && !b.release_en) return 1;
-        // Both have release_en or both don't - sort by date descending (latest first)
-        const dateA = a.release_en ? new Date(a.release_en).getTime() : new Date(a.release).getTime();
-        const dateB = b.release_en ? new Date(b.release_en).getTime() : new Date(b.release).getTime();
-        return dateB - dateA;
-      }))
-    ),
+    this.supportCardService.getSortedSupportCards(),
     { initialValue: [] }
   );
 

@@ -1,10 +1,7 @@
 import {CommonModule} from '@angular/common';
-import {Component, computed, effect, inject, signal} from '@angular/core';
-import {MatButton} from '@angular/material/button';
+import {Component, computed, inject} from '@angular/core';
 import {
   MAT_DIALOG_DATA,
-  MatDialogActions,
-  MatDialogClose,
   MatDialogContent,
   MatDialogTitle
 } from '@angular/material/dialog';
@@ -15,12 +12,16 @@ import {SkillKeyTranslatorPipe} from '../../../pipes/skill-key-translator.pipe';
 import {EntityDisplay} from '../entity-display/entity-display';
 import {TraineeService} from '../../../services/trainee.service';
 import {Trainee} from '../../../interfaces/trainee';
-import {combineLatest, forkJoin, of} from 'rxjs';
+import {combineLatest, of} from 'rxjs';
 import {rxResource} from '@angular/core/rxjs-interop';
 import {map} from 'rxjs/operators';
+import {SkillMap} from '../../../interfaces/skill-map';
+import {SupportCardService} from '../../../services/support-card.service';
+import {SupportCard} from '../../../interfaces/support-card';
 
 export interface SkillDialogData {
   skill: Skill;
+  skillMap: SkillMap | null | undefined;
   props: string[];
   displayedProps?: string[];
   excludedProps?: string[];
@@ -44,9 +45,10 @@ export interface SkillDialogData {
 export class SkillDialogComponent {
   data: SkillDialogData = inject(MAT_DIALOG_DATA);
   // filteredProps: string[];
-  readonly displayedProps = ['desc_en', 'endesc', 'char', 'rarity', 'activation', 'cost'];
+  readonly displayedProps = ['desc_en', 'endesc', 'char', 'supCardEvents', 'supCardHints', 'rarity', 'activation', 'cost'];
 
   private traineeService = inject(TraineeService);
+  private supportCardService = inject(SupportCardService);
 
   private traineesResource = rxResource({
     params: () => ({
@@ -65,38 +67,57 @@ export class SkillDialogComponent {
     }
   });
 
+  private supCardsResource = rxResource({
+    params: () => {
+      const eventIds = this.data.skillMap?.supCards.events || [];
+      const hintIds = this.data.skillMap?.supCards.hints || [];
+      return {
+        eventIds,
+        hintIds
+      }
+    },
+    stream: ({ params }) => {
+      const allIds = [...params.eventIds, ...params.hintIds];
+      if (allIds.length === 0) return of([]);
+
+      const requests = allIds.map(id =>
+        this.supportCardService.getSupportCardById(id.toString())
+      );
+
+      return combineLatest(requests).pipe(
+        map(results => results.filter((sc): sc is SupportCard => !!sc)));
+    }
+  });
+
+  readonly supCardEvents = computed(() => {
+    return this.data.skillMap?.supCards.events || [];
+  });
+
+  readonly supCardHints = computed(() => {
+    return this.data.skillMap?.supCards.hints || [];
+  });
+
   // Состояние загрузки теперь берется напрямую из ресурса
-  readonly isLoading = this.traineesResource.isLoading;
+  readonly isLoading = computed(() => this.traineesResource.isLoading() && this.supCardsResource.isLoading());
 
   // Данные фильтруются автоматически
   readonly characterTrainees = computed(() => {
     const trainees = this.traineesResource.value() || [];
     return trainees.filter((t): t is Trainee => !!t);
   });
-  // Global loading state
-  /*private globalLoadingOperations = signal<Set<string>>(new Set());
-  readonly isLoading = computed(() => this.globalLoadingOperations().size > 0);
 
-  // Helper methods for global loading
-  private startLoading(operationId: string): void {
-    this.globalLoadingOperations.update(ops => new Set(ops).add(operationId));
-  }
-
-  private stopLoading(operationId: string): void {
-    this.globalLoadingOperations.update(ops => {
-      const newOps = new Set(ops);
-      newOps.delete(operationId);
-      return newOps;
-    });
-  }*/
-
-  // Store loaded trainees
-  /*private loadedTrainees = signal<Map<string, Trainee>>(new Map());
-  readonly characterTrainees = computed(() => {
-    const traineesMap = this.loadedTrainees();
-    const charIds = this.data.skill['char'] || [];
-    return charIds.map(id => traineesMap.get(id.toString())).filter(Boolean) as Trainee[];
-  });*/
+  readonly supCards = computed(() => {
+    const supCardsArr = this.supCardsResource.value() || [];
+    return supCardsArr.reduce((prev, cur) => {
+      if (!cur) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [cur.support_id]: cur
+      }
+    }, {} as Record<string, SupportCard>);
+  });
 
   processedConditionGroups = computed(() => {
     const conditionGroups = this.data.skill.condition_groups;
@@ -106,6 +127,7 @@ export class SkillDialogComponent {
 
 
     console.log('Skill', this.data.skill);
+    console.log('SkillMap', this.data.skillMap);
 
     return conditionGroups.map(group => {
       const result = [];
@@ -130,40 +152,5 @@ export class SkillDialogComponent {
       return result;
     });
   });
-
-  /*constructor() {
-    // Load all trainees upfront when dialog opens
-    this.loadCharacterTrainees();
-  }
-
-  private loadCharacterTrainees(): void {
-    const charIds = this.data.skill['char'] || [];
-    if (charIds.length === 0) return;
-
-    this.startLoading('characters');
-
-    // Load all trainees in parallel
-    const traineeRequests = charIds.map(charId =>
-      this.traineeService.getTraineeById(charId.toString())
-    );
-
-    // Use forkJoin to wait for all requests to complete
-    combineLatest(traineeRequests).subscribe({
-      next: (trainees) => {
-        const traineesMap = new Map<string, Trainee>();
-        trainees.forEach((trainee, index) => {
-          if (trainee) {
-            traineesMap.set(charIds[index].toString(), trainee);
-          }
-        });
-        this.loadedTrainees.set(traineesMap);
-        console.log('Loaded trainees:', traineesMap);
-        this.stopLoading('characters');
-      },
-      error: () => {
-        this.stopLoading('characters');
-      }
-    });
-  }*/
 }
 

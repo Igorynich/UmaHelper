@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, input, booleanAttribute, effect } from '@angular/core';
+import { Component, inject, computed, input, booleanAttribute } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,6 +8,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { SkillDialogComponent } from '../skill-dialog/skill-dialog';
 import { MatIconButton } from '@angular/material/button';
 import { SkillsService } from '../../../services/skills.service';
+import {rxResource} from '@angular/core/rxjs-interop';
+import {forkJoin, of} from 'rxjs';
+import {map} from 'rxjs/operators';
+import {SkillMap} from '../../../interfaces/skill-map';
 
 @Component({
   selector: 'app-skill-display',
@@ -21,54 +25,30 @@ export class SkillDisplay {
   skillId = input<number | undefined>(undefined);
   simpleView = input(false, { transform: booleanAttribute });
 
+  private skillResource = rxResource({
+    params: () => ({
+      skillId: this.skillId(),
+      skill: this.skill()
+    }),
+    stream: ({params}) => {
+      const skillId = params.skillId || params.skill?.id;
+      if (!skillId) return of(undefined);
+      const skill$ = params.skill ? of(params.skill) : this.skillsService.getSkillsByIds([skillId]).pipe(map(skills => skills[0]));
+      return forkJoin([skill$, this.skillsService.getSkillMapById(skillId)]).pipe(map(([skill, skillMap]: [Skill, SkillMap | null]) => ({skill, skillMap})));
+    }
+  });
+
   private skillsService = inject(SkillsService);
   private dialog = inject(MatDialog);
 
-  private skillLoaded = signal(false);
-  loading = signal(false);
-  private loadedSkill = signal<Skill | undefined>(undefined);
-
-  constructor() {
-    effect(() => {
-      const id = this.skillId();
-      const inputSkill = this.skill();
-
-      if (inputSkill) {
-        this.loadedSkill.set(undefined);
-        this.skillLoaded.set(true);
-        return;
-      }
-
-      if (id !== undefined && !this.skillLoaded()) {
-        this.loading.set(true);
-        this.loadSkill(id);
-      }
-    });
-  }
-
-  private loadSkill(id: number): void {
-    this.skillsService.getSkillsByIds([id]).subscribe({
-      next: (skills) => {
-        if (skills.length > 0) {
-          this.loadedSkill.set(skills[0]);
-        }
-        this.skillLoaded.set(true);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.skillLoaded.set(true);
-        this.loading.set(false);
-      }
-    });
-  }
+  readonly isLoading = this.skillResource.isLoading;
 
   readonly skillSignal = computed(() => {
-    const inputSkill = this.skill();
-    if (inputSkill) {
-      return inputSkill;
-    }
+    return this.skillResource.value()?.skill;
+  });
 
-    return this.loadedSkill();
+  readonly skillMapSignal = computed(() => {
+    return this.skillResource.value()?.skillMap;
   });
 
   readonly rarityClass = computed(() => {
@@ -94,10 +74,11 @@ export class SkillDisplay {
     return baseClass;
   });
 
-  openSkillDialog(skill: Skill): void {
+  openSkillDialog(skill: Skill, skillMap: SkillMap | null | undefined): void {
     this.dialog.open(SkillDialogComponent, {
       data: {
         skill,
+        skillMap
         // props: Object.keys(skill),
         // displayedProps: ['desc_en', 'endesc', 'rarity', 'activation', 'cost'],
         // excludedProps: ['jpdesc', 'desc_ko', 'name_ko', 'name_tw', 'desc_tw', 'jpname']

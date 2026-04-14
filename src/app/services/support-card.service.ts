@@ -31,6 +31,23 @@ export class SupportCardService {
   private lastFetchTime: number = 0;
   private readonly CACHE_DURATION = 60 * 60 * 1000; // 1 час в мс
 
+  getSortedSupportCards(forceFetch?: boolean): Observable<SupportCard[]> {
+    return this.getRawSupportCards(forceFetch).pipe(
+      map(cards => cards.sort((a: SupportCard, b: SupportCard) => {
+        if (a.rarity !== b.rarity) {
+          return b.rarity - a.rarity;
+        }
+        // Cards without release_en (upcoming) go first
+        if (!a.release_en && b.release_en) return -1;
+        if (a.release_en && !b.release_en) return 1;
+        // Both have release_en or both don't - sort by date descending (latest first)
+        const dateA = a.release_en ? new Date(a.release_en).getTime() : new Date(a.release).getTime();
+        const dateB = b.release_en ? new Date(b.release_en).getTime() : new Date(b.release).getTime();
+        return dateB - dateA;
+      }))
+    );
+  }
+
   getRawSupportCards(forceFetch?: boolean): Observable<SupportCard[]> {
     const currentTime = Date.now();
 
