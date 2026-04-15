@@ -7,6 +7,18 @@ export enum Rarity {
   Omega_Unique = 6          // named for fun
 }
 
+export enum SkillType {
+  Speed = 1,
+  Acceleration = 2,
+  Recovery = 3
+}
+
+export const SkillTypeMap = {
+  [SkillType.Speed]: {long: 'Speed', short: 'SPD'},
+  [SkillType.Acceleration]: {long: 'Acceleration', short: 'ACC'},
+  [SkillType.Recovery]: {long: 'Recovery', short: 'REC'}
+}
+
 export enum SkillEffect {
   SpeedStat = 1,
   StaminaStat = 2,
