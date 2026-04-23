@@ -152,7 +152,7 @@ export class SupportCardInfo {
       this.eventsService.getAndDecodeEvents(this.rawCardData().support_id.toString())
         .pipe(take(1))
         .subscribe(decodedEvents => {
-          this.trainingEvents.set(decodedEvents);
+          this.trainingEvents.set(decodedEvents);     // TODO: use rxResource?
         });
     }
   }
@@ -169,7 +169,7 @@ export class SupportCardInfo {
     if (this.processedCardData().hints) {
       if (this.processedCardData().hints.hint_skills?.length > 0) {
         this.skillsService.getSkillsByIds(this.processedCardData().hints.hint_skills).pipe(take(1)).subscribe(foundSkills => {
-          this.hintSkills.set(foundSkills);
+          this.hintSkills.set(foundSkills);         // TODO: use rxResource?
         });
       }
 

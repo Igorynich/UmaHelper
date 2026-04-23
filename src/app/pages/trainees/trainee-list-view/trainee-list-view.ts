@@ -26,6 +26,8 @@ import {
 import { TraineeAptitudeFilter, TraineeFilter, TraineeStatBonusFilter, FilterOperator } from '../../../interfaces/user-trainees-data';
 import { matchesNameFilter } from '../../../utils/name-filter.utils';
 import {TitleCasePipe} from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { TraineeInfo } from '../../../components/dialogs/trainee-info/trainee-info';
 
 type AptitudeStat = SurfaceAptitude | DistanceAptitude | StrategyAptitude;
 
@@ -73,6 +75,7 @@ export interface TraineeRow {
 export class TraineeListViewComponent {
   private destroyRef = inject(DestroyRef);
   private dataGridStateService = inject(DataGridStateService);
+  private dialog = inject(MatDialog);
 
   trainees = input<DisplayTrainee[]>([]);
   isFirstTab = input<boolean>(false);
@@ -333,5 +336,17 @@ export class TraineeListViewComponent {
   protected onRemove(row: TraineeRow): void {
     const t = this.trainees().find(x => x.traineeId === row.traineeId);
     if (t) this.remove.emit(t);
+  }
+
+  protected openImageModal(row: TraineeRow): void {
+    const trainee = this.trainees().find(x => x.traineeId === row.traineeId);
+    console.log(trainee);
+    if (!trainee) return;
+
+    this.dialog.open(TraineeInfo, {
+      data: trainee,
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+    });
   }
 }

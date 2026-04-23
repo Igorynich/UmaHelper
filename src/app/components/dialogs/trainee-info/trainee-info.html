@@ -1,0 +1,187 @@
+<div mat-dialog-title class="dialog-title">
+  <div class="trainee-info-wrapper">
+    <div class="trainee-title text-center">{{ title() }}</div>
+    <div class="trainee-name text-center">{{ name() }}</div>
+    <div class="trainee-version text-center">{{ version() ? '(' + version() + ')' : '' }}</div>
+  </div>
+  <button mat-icon-button (click)="close()" class="close-button">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="dialog-content-wrapper">
+  <div class="left-section">
+    <div class="image-section">
+      <ik-image [path]="trainee().imageUrl" [attr.alt]="title()" [transformation]="[{'width': '400'}]"></ik-image>
+    </div>
+
+    @if (trainee().itemData.release_en) {
+      <div class="release-section">
+        <p class="release-date">Released: {{ trainee().itemData.release_en | date:'mediumDate' }}</p>
+      </div>
+    }
+
+    <div class="stats-container">
+      <h3 class="section-header">Initial Stats & Bonuses</h3>
+      <table mat-table [dataSource]="statsData()" class="data-table stats-table">
+        <!-- Label Column -->
+        <ng-container matColumnDef="label">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let row">{{ row.label }}</td>
+        </ng-container>
+
+        <!-- Stats Columns -->
+        @for (stat of statColumns.slice(1); track stat; let i = $index) {
+          <ng-container [matColumnDef]="stat">
+            <th mat-header-cell *matHeaderCellDef>
+              <img [src]="'assets/types/' + (stat === 'wits' ? 'intelligence' : stat) + '.png'"
+                   [alt]="stat" width="24" [matTooltip]="stat">
+            </th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.isBonus ? (row.stats[i] > 0 ? row.stats[i] + '%' : '-') : row.stats[i] }}
+            </td>
+          </ng-container>
+        }
+
+        <tr mat-header-row *matHeaderRowDef="statColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: statColumns"
+            [class.bonus-row]="row.isBonus"></tr>
+      </table>
+    </div>
+
+    <div class="aptitudes-container">
+      <h3 class="section-header">Aptitudes</h3>
+      <table mat-table [dataSource]="surfaceData()" class="data-table aptitude-table">
+        <ng-container matColumnDef="label">
+          <th mat-header-cell *matHeaderCellDef>Surface</th>
+          <td mat-cell *matCellDef="let row"></td>
+        </ng-container>
+        @for (col of surfaceColumns.slice(1); track col) {
+          <ng-container [matColumnDef]="col">
+            <th mat-header-cell *matHeaderCellDef class="text-center">{{ col }}</th>
+            <td mat-cell *matCellDef="let row" class="text-center">
+              <span [class]="'grade-' + row[col]">{{ row[col] }}</span>
+            </td>
+          </ng-container>
+        }
+        <tr mat-header-row *matHeaderRowDef="surfaceColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: surfaceColumns"></tr>
+      </table>
+
+      <table mat-table [dataSource]="distanceData()" class="data-table aptitude-table">
+        <ng-container matColumnDef="label">
+          <th mat-header-cell *matHeaderCellDef>Distance</th>
+          <td mat-cell *matCellDef="let row"></td>
+        </ng-container>
+        @for (col of distanceColumns.slice(1); track col) {
+          <ng-container [matColumnDef]="col">
+            <th mat-header-cell *matHeaderCellDef class="text-center">{{ col }}</th>
+            <td mat-cell *matCellDef="let row" class="text-center">
+              <span [class]="'grade-' + row[col]">{{ row[col] }}</span>
+            </td>
+          </ng-container>
+        }
+        <tr mat-header-row *matHeaderRowDef="distanceColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: distanceColumns"></tr>
+      </table>
+
+      <table mat-table [dataSource]="strategyData()" class="data-table aptitude-table">
+        <ng-container matColumnDef="label">
+          <th mat-header-cell *matHeaderCellDef>Strategy</th>
+          <td mat-cell *matCellDef="let row"></td>
+        </ng-container>
+        @for (col of strategyColumns.slice(1); track col) {
+          <ng-container [matColumnDef]="col">
+            <th mat-header-cell *matHeaderCellDef class="text-center">{{ col }}</th>
+            <td mat-cell *matCellDef="let row" class="text-center">
+              <span [class]="'grade-' + row[col]">{{ row[col] }}</span>
+            </td>
+          </ng-container>
+        }
+        <tr mat-header-row *matHeaderRowDef="strategyColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: strategyColumns"></tr>
+      </table>
+    </div>
+  </div>
+
+
+  <div class="info-section">
+    <div class="info-block">
+      <h3>Unique Skills</h3>
+      <div class="skills-container">
+        @for(skill of uniqueSkills(); track skill.id) {
+          <app-skill-display [skill]="skill"></app-skill-display>
+        }
+      </div>
+    </div>
+    <div class="info-block">
+      <h3>Innate Skills</h3>
+      <div class="skills-container">
+        @for(skill of innateSkills(); track skill.id) {
+          <app-skill-display [skill]="skill"></app-skill-display>
+        }
+      </div>
+    </div>
+    <div class="info-block">
+      <h3>Awakening Skills</h3>
+      <div class="skills-container">
+        @for(skill of awakeningSkills(); track skill.id) {
+          <app-skill-display [skill]="skill"></app-skill-display>
+        }
+      </div>
+    </div>
+    <div class="info-block">
+      <h3>Skills From Events</h3>
+      <div class="skills-container">
+        @for(skill of eventSkills(); track skill.id) {
+          <app-skill-display [skill]="skill"></app-skill-display>
+        }
+      </div>
+    </div>
+    <div class="info-block">
+      <h3>Training Events</h3>
+      @if (displayedTrainingEvents(); as events) {
+        <mat-accordion multi>
+          @for (eventGroup of events; track eventGroup.name) {
+            @if (eventGroup.events.length > 0) {
+              <h4 class="event-type-header">{{ eventGroup.name }}</h4>
+              @for(event of eventGroup.events; track event.name) {
+                <mat-expansion-panel>
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ event.name }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+
+                  <div class="event-content">
+                    @for(choice of event.choices; track $index) {
+                      <div class="choice-group">
+                        <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
+                        <ul class="rewards-list">
+                          @for(reward of choice.rewards; track $index) {
+                            <li>
+                              @if (isString(reward)) {
+                                {{ reward }}
+                              } @else if (isSkillReward(reward)) {
+                                <span class="skill-reward-inline">
+                                <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
+                                <span>{{ reward.value }}</span>
+                              </span>
+                              }
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    }
+                  </div>
+                </mat-expansion-panel>
+              }
+            }
+          }
+        </mat-accordion>
+      } @else {
+        <p>No training event data available for this trainee.</p>
+      }
+    </div>
+  </div>
+</mat-dialog-content>

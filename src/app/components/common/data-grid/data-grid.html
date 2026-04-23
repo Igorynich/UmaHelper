@@ -153,7 +153,8 @@
                 <div class="trainee-cell-container">
                   @if ($any(row).imageUrl) {
                     <ik-image [path]=$any(row).imageUrl [transformation]="[{'height': '56', 'width': '48'}]"
-                              class="character-image">
+                              (click)="onImageClick(row)" class="character-image character-image-hover"
+                              matTooltip="View details">
                     </ik-image>
                   }
                   <div class="trainee-info-wrapper">

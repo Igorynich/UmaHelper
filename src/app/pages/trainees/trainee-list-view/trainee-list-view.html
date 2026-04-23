@@ -118,6 +118,7 @@
   [tabIndex]="tabIndex()"
   [isActive]="isActive()"
   [showColumnSelector]="false"
+  (imageClick)="openImageModal($event)"
   (addClicked)="onAdd($event)"
   (removeClicked)="onRemove($event)">
 </app-data-grid>

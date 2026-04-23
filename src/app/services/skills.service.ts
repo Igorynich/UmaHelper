@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import {collection, doc, Firestore, getDoc, getDocs, query, setDoc, where} from '@angular/fire/firestore';
+import {collection, docData, Firestore, query, setDoc, where} from '@angular/fire/firestore';
+import { getDoc, doc, getDocs } from 'firebase/firestore';
 import {combineLatest, forkJoin, from, Observable, of, shareReplay} from 'rxjs';
 import { Skill } from '../interfaces/skill';
 import { SkillMap } from '../interfaces/skill-map';
@@ -19,6 +20,7 @@ export class SkillsService {
   private individualSkillCache = new Map<string, { data$: Observable<Skill | null>, timestamp: number }>();
   private lastFetchTime = {raw: 0, filtered: 0};
   private readonly CACHE_DURATION = 60 * 60 * 1000; // 1 час в мс
+  data$ = docData(doc(this.firestore, 'items/id'));
 
 
   // 400 should be
