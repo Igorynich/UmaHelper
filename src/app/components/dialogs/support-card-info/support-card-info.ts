@@ -8,8 +8,8 @@ import { take } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { SkillDisplay } from '../../common/skill-display/skill-display';
 import {MatCard} from '@angular/material/card';
-import {EventsService, evntTypeConvertFn} from '../../../services/events.service';
-import { DecodedEventsContainer, DecodedSkillReward } from '../../../interfaces/event';
+import {EventsService} from '../../../services/events.service';
+import {TrainingEventsComponent} from '../../common/training-events/training-events';
 import { SupportCardEffectData } from '../../../interfaces/support-card';
 import { SupportCardService, rarityLevelMap } from '../../../services/support-card.service';
 import { EffectId } from '../../../interfaces/effect-id.enum';
@@ -28,7 +28,7 @@ import {ImagekitioAngularModule} from 'imagekitio-angular';
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule, ImagekitioAngularModule],
+  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule, ImagekitioAngularModule, TrainingEventsComponent],
   templateUrl: './support-card-info.html',
   styleUrl: './support-card-info.css'
 })
@@ -36,7 +36,6 @@ export class SupportCardInfo {
   protected readonly rawCardData: Signal<DisplaySupportCard> = signal(inject(MAT_DIALOG_DATA) as DisplaySupportCard);
   protected readonly dialogRef = inject(MatDialogRef<SupportCardInfo>);
   private readonly skillsService = inject(SkillsService);
-  private readonly eventsService = inject(EventsService);
   private readonly supportCardService = inject(SupportCardService);
   private readonly ratingsService = inject(RatingsService);
 
@@ -45,8 +44,6 @@ export class SupportCardInfo {
   protected hintSkills = signal<Skill[]>([]);
   protected statGains = signal<string[]>([]);
   protected eventSkills = signal<Skill[]>([]);
-  protected trainingEvents = signal<DecodedEventsContainer | null>(null);
-  protected displayedTrainingEvents = computed(() => evntTypeConvertFn(this.trainingEvents()));
 
   // Stat difference feature
   protected readonly showStatDifferences = signal(true);
@@ -127,7 +124,6 @@ export class SupportCardInfo {
 
     this.processHints();
     this.processEventSkills();
-    this.processTrainingEvents();
   }
 
   protected onLevelChange(newLevel: number): void {
@@ -137,24 +133,6 @@ export class SupportCardInfo {
 
   protected toggleStatDifferences(): void {
     this.showStatDifferences.set(!this.showStatDifferences());
-  }
-
-  protected isString(reward: any): reward is string {
-    return typeof reward === 'string';
-  }
-
-  protected isSkillReward(reward: any): reward is DecodedSkillReward {
-    return typeof reward === 'object' && reward.type === 'skill';
-  }
-
-  private processTrainingEvents(): void {
-    if (this.rawCardData().support_id) {
-      this.eventsService.getAndDecodeEvents(this.rawCardData().support_id.toString())
-        .pipe(take(1))
-        .subscribe(decodedEvents => {
-          this.trainingEvents.set(decodedEvents);     // TODO: use rxResource?
-        });
-    }
   }
 
   private processEventSkills(): void {

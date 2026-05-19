@@ -5,6 +5,8 @@ import {
   inject, signal,
   Signal
 } from '@angular/core';
+import {rxResource} from '@angular/core/rxjs-interop';
+import {of} from 'rxjs';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
@@ -13,20 +15,16 @@ import { DisplayTrainee } from '../../../interfaces/display-trainee';
 import { Rarity } from '../../../interfaces/display-support-card';
 import {MatTableModule} from '@angular/material/table';
 import {MatTooltip} from '@angular/material/tooltip';
-import {MatExpansionModule} from '@angular/material/expansion';
 import { DatePipe } from '@angular/common';
 import { SkillsService } from '../../../services/skills.service';
 import { SkillDisplay } from '../../common/skill-display/skill-display';
-import {rxResource} from '@angular/core/rxjs-interop';
-import {of} from 'rxjs';
-import { EventsService, evntTypeConvertFn } from '../../../services/events.service';
-import { DecodedSkillReward } from '../../../interfaces/event';
+import { TrainingEventsComponent } from '../../common/training-events/training-events';
 
 
 @Component({
   selector: 'app-trainee-info',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImagekitioAngularModule, MatDialogModule, MatIconButton, MatIconModule, MatTableModule, MatTooltip, SkillDisplay, MatExpansionModule, DatePipe],
+  imports: [ImagekitioAngularModule, MatDialogModule, MatIconButton, MatIconModule, MatTableModule, MatTooltip, SkillDisplay, TrainingEventsComponent, DatePipe],
   templateUrl: './trainee-info.html',
   styleUrl: './trainee-info.css'
 })
@@ -34,7 +32,6 @@ export class TraineeInfo {
   protected readonly trainee: Signal<DisplayTrainee> = signal(inject(MAT_DIALOG_DATA) as DisplayTrainee);
   protected readonly dialogRef = inject(MatDialogRef<TraineeInfo>);
   private readonly skillsService = inject(SkillsService);
-  private readonly eventsService = inject(EventsService);
 
   protected readonly title = computed(() => this.trainee().itemData.title_en_gl);
   protected readonly name = computed(() => this.trainee().itemData.name_en);
@@ -72,19 +69,10 @@ export class TraineeInfo {
     }
   });
 
-  protected readonly trainingEventsResource = rxResource({
-    params: () => ({ cardId: this.trainee().itemData.card_id }),
-    stream: ({ params }) => {
-      if (!params.cardId) return of(null);
-      return this.eventsService.getAndDecodeEvents(params.cardId.toString());
-    }
-  });
-
   protected readonly uniqueSkills = computed(() => this.uniqueSkillsResource.value() ?? []);
   protected readonly innateSkills = computed(() => this.innateSkillsResource.value() ?? []);
   protected readonly awakeningSkills = computed(() => this.awakeningSkillsResource.value() ?? []);
   protected readonly eventSkills = computed(() => this.eventSkillsResource.value() ?? []);
-  protected readonly displayedTrainingEvents = computed(() => evntTypeConvertFn(this.trainingEventsResource.value() ?? null));
 
   protected readonly statColumns = ['label', 'speed', 'stamina', 'power', 'guts', 'wits'];
   protected readonly statsData = computed(() => {
@@ -120,14 +108,6 @@ export class TraineeInfo {
       { label: 'Strategy', front: t.aptitude[6] ?? '-', pace: t.aptitude[7] ?? '-', late: t.aptitude[8] ?? '-', end: t.aptitude[9] ?? '-' }
     ];
   });
-
-  protected isString(reward: any): reward is string {
-    return typeof reward === 'string';
-  }
-
-  protected isSkillReward(reward: any): reward is DecodedSkillReward {
-    return typeof reward === 'object' && reward.type === 'skill';
-  }
 
   private getRarityClass(): string {
     switch (this.trainee().itemData.rarity) {

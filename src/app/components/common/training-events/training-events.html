@@ -1,0 +1,87 @@
+@if (displayedTrainingEvents(); as events) {
+  <mat-accordion multi>
+    @for (eventGroup of events; track eventGroup.name) {
+      @if (eventGroup.events.length > 0) {
+        <h4 class="event-type-header">{{ eventGroup.name }}</h4>
+        @for (event of eventGroup.events; track event.name) {
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{ event.name }}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="event-content">
+              @if (event.conditions) {
+                <p>CONDITIONS: {{event.conditions}}</p>
+              }
+              @for (choice of event.choices; track $index) {
+                <div class="choice-group">
+                  @if (event.choices.length > 1) {
+                    <p><strong>Choice {{ $index + 1 }}:</strong> {{ choice.text || '' }}</p>
+                  }
+                  <p><em>Reward:</em>
+                  <ul class="rewards-list">
+                    @for (reward of choice.rewards; track $index) {
+                      @switch (reward.type) {
+                        @case (EventRewardType.simpleString) {
+                          <li>{{ reward.value }}</li>
+                        }
+                        @case (EventRewardType.supportString) {
+                          @if (reward.value) {
+                            <u>
+                              @if (reward.prefix) {
+                                <mark>{{ reward.prefix }} </mark>
+                              }
+                              <span>{{ reward.value }}</span>
+                              @if (reward.suffix) {
+                                <mark> {{ reward.suffix }}</mark>
+                              }
+                            </u>
+                          } @else {
+                            <!--empty line-->
+                            <div></div>
+                          }
+                        }
+                        @case (EventRewardType.data) {
+                          @switch (reward.dataType) {
+                            @case (EventRewardDataType.skill) {
+                              <li><span class="skill-reward-inline">
+                            <app-skill-display [skill]="reward.data" [simpleView]="true"
+                                               style="display: inline-block;"></app-skill-display>
+                            <span>{{ reward.value }}</span>
+                          </span></li>
+                            }
+                            @case (EventRewardDataType.bond) {
+                              <li><span>{{ reward.data.itemData.name_en }}{{ reward.value }}</span></li>
+                            }
+                          }
+                        }
+                      }
+                      <!--@if (isString(reward)) {
+                        <li>{{ reward }}</li>
+                      } @else if (isSkillReward(reward)) {
+                        <li><span class="skill-reward-inline">
+                            <app-skill-display [skill]="reward.skill" [simpleView]="true" style="display: inline-block;"></app-skill-display>
+                            <span>{{ reward.value }}</span>
+                          </span></li>
+                      } @else if (isBondReward(reward)) {
+                        <li><span>{{ reward.bond.itemData.name_en }}{{ reward.value }}</span></li>
+                      } @else if (isSwitchConditionReward(reward)) {
+                        <u><mark>Condition</mark>: <span>{{ reward.value }}</span></u>
+                      } @else if (isNewLineReward(reward)) {
+                        <div></div>
+                      }-->
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      }
+    }
+  </mat-accordion>
+} @else {
+  <p>No training event data available.</p>
+}

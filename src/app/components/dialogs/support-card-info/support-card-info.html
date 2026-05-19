@@ -93,48 +93,7 @@
     </div>
     <div class="info-block">
       <h3>Training Events</h3>
-      @if (displayedTrainingEvents(); as events) {
-        <mat-accordion multi> <!-- 'multi' allows multiple panels to be open at once -->
-          @for (eventGroup of events; track eventGroup.name) {
-            @if (eventGroup.events.length > 0) {
-              <h4 class="event-type-header">{{ eventGroup.name }}</h4>
-              @for(event of eventGroup.events; track event.name) {
-                <mat-expansion-panel>
-                  <mat-expansion-panel-header>
-                    <mat-panel-title>
-                      {{ event.name }}
-                    </mat-panel-title>
-                  </mat-expansion-panel-header>
-
-                  <div class="event-content">
-                    @for(choice of event.choices; track $index) {
-                      <div class="choice-group">
-                        <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
-                        <ul class="rewards-list">
-                          @for(reward of choice.rewards; track $index) {
-                            <li>
-                              @if (isString(reward)) {
-                                {{ reward }}
-                              } @else if (isSkillReward(reward)) {
-                                <span class="skill-reward-inline">
-                                <app-skill-display [skill]="reward.skill" [simpleView]="true"></app-skill-display>
-                                <span>{{ reward.value }}</span>
-                              </span>
-                              }
-                            </li>
-                          }
-                        </ul>
-                      </div>
-                    }
-                  </div>
-                </mat-expansion-panel>
-              }
-            }
-          }
-        </mat-accordion>
-      } @else {
-        <p>No training event data available for this card.</p>
-      }
+      <app-training-events [entityId]="rawCardData().support_id"></app-training-events>
     </div>
   </div>
 </mat-dialog-content>
