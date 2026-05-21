@@ -36,7 +36,8 @@
           <div class="stat-row">
             <span class="stat-name">{{ effectId | effectIdTranslator }}</span>
             <span class="stat-value">
-              <span [class]="(effectData | effectValue:effectId).cssClass">{{ (effectData | effectValue:effectId).value }}</span>
+              <span
+                [class]="(effectData | effectValue:effectId).cssClass">{{ (effectData | effectValue:effectId).value }}</span>
               @if (statDifferences()[effectId.toString()]; as diff) {
                 <span [class.positive-diff]="diff > 0" [class.negative-diff]="diff < 0">
                   ({{ diff > 0 ? '+' : '' }}{{ diff }})
@@ -63,20 +64,20 @@
       <h3>Support hints</h3>
       <p class="description">One will be randomly granted when getting a hint during training</p>
       <div class="skills-container">
-        @for(skill of hintSkills(); track skill.id) {
+        @for (skill of hintSkills(); track skill.id) {
           <app-skill-display [skill]="skill"></app-skill-display>
         }
       </div>
-      @if (statGains().length > 0) {
+      @for (group of statGains(); track $index) {
         <mat-card class="skill-card stat-gain-card">
           <div class="skill-icon-wrapper">
             <mat-icon>insights</mat-icon>
           </div>
           <div class="skill-info">
             <div class="skill-name">Stat gain</div>
-            <ul>
-              @for(gain of statGains(); track gain) {
-                <li class="stat-gain-item">{{ gain }}</li>
+            <ul class="stat-gains-list">
+              @for (gain of group; track $index) {
+                <li class="stat-gain-item"><span>{{ gain }}</span></li>
               }
             </ul>
           </div>
@@ -86,7 +87,7 @@
     <div class="info-block">
       <h3>Skills from events</h3>
       <div class="skills-container">
-        @for(skill of eventSkills(); track skill.id) {
+        @for (skill of eventSkills(); track skill.id) {
           <app-skill-display [skill]="skill"></app-skill-display>
         }
       </div>

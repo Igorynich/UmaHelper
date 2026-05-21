@@ -53,7 +53,7 @@
                   <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
                   <ul class="rewards-list">
                     @for(reward of choice.rewards; track $index) {
-                      <li>{{ reward }}</li>
+                      <li>{{ reward.value }}</li>
                     }
                   </ul>
                 </div>
@@ -62,43 +62,6 @@
           }
         }
       }
-      <!--@if (events.random.length > 0) {
-        <h4 class="event-type-header">Random Events</h4>
-        @for(event of events.random; track event.name) {
-          <div class="event-group">
-            <h5>{{ event.name }}</h5>
-            @for(choice of event.choices; track $index) {
-              <div class="choice-group">
-                <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
-                <ul class="rewards-list">
-                  @for(reward of choice.rewards; track $index) {
-                    <li>{{ reward }}</li>
-                  }
-                </ul>
-              </div>
-            }
-          </div>
-        }
-      }
-
-      @if (events.arrows.length > 0) {
-        <h4 class="event-type-header">Arrow Events</h4>
-        @for(event of events.arrows; track event.name) {
-          <div class="event-group">
-            <h5>{{ event.name }}</h5>
-            @for(choice of event.choices; track $index) {
-              <div class="choice-group">
-                <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
-                <ul class="rewards-list">
-                  @for(reward of choice.rewards; track $index) {
-                    <li>{{ reward }}</li>
-                  }
-                </ul>
-              </div>
-            }
-          </div>
-        }
-      }-->
     </div>
   }
 

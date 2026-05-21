@@ -19,7 +19,7 @@ export interface SupportCardHints {
    * Array of other hints.
    * Example: [{ hint_type: 1, hint_value: 1 }]
    */
-  hint_others: SupportCardHintOther[];
+  hint_others: SupportCardHintOther[] | SupportCardHintOther[][];
   /**
    * Array of skill hint IDs.
    * Example: [200162, 200232]

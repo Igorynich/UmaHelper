@@ -7,6 +7,7 @@ import { DisplaySupportCard, Rarity } from '../interfaces/display-support-card';
 import {effectMap, uniqEffectMap} from '../maps/effect.map';
 import {EffectId, UniqEffectId} from '../interfaces/effect-id.enum';
 import { IMAGEKIT_CONFIG } from '../imagekit.config';
+import {restoreNestedArrays} from '../utils/helpers';
 
 const LEVEL_TO_INDEX_MAP: { [level: number]: number } = {
   1: 1, 5: 2, 10: 3, 15: 4, 20: 5, 25: 6, 30: 7, 35: 8, 40: 9, 45: 10, 50: 11,
@@ -30,6 +31,8 @@ export class SupportCardService {
   private individualSupCardCache = new Map<string, { data$: Observable<SupportCard | null>, timestamp: number }>();
   private lastFetchTime: number = 0;
   private readonly CACHE_DURATION = 60 * 60 * 1000; // 1 час в мс
+
+  readonly POTENTIALLY_NESTED_ARRAY_KEYS = ['hint_others'];
 
   getSortedSupportCards(forceFetch?: boolean): Observable<SupportCard[]> {
     return this.getRawSupportCards(forceFetch).pipe(
@@ -201,11 +204,11 @@ export class SupportCardService {
 
   private prepareSupportCardForDisplay(supportCard: any): SupportCard {
     const { effects, ...rest } = supportCard;
-    if (effects && Array.isArray(effects)) {
+    if (effects && Array.isArray(effects)) {      // TODO: use standard approach to both effects and hint_others nested arrays
       const effectsAsArrays = effects.map((effect: any) => effect.values || []);
-      return { ...rest, effects: effectsAsArrays } as SupportCard;
+      return restoreNestedArrays({ ...rest, effects: effectsAsArrays }, this.POTENTIALLY_NESTED_ARRAY_KEYS) as SupportCard;
     }
-    return supportCard as SupportCard;
+    return restoreNestedArrays(supportCard, this.POTENTIALLY_NESTED_ARRAY_KEYS) as SupportCard;
   }
 
   private findUnlockInfo(effect: number[]): { value: number; level: number } | null {

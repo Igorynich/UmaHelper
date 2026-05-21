@@ -13,6 +13,7 @@ import { SupportCard } from '../interfaces/support-card';
 import { z, ZodError } from 'zod';
 import { SupportCardService } from './support-card.service';
 import {Trainee, TraineeData} from '../interfaces/trainee';
+import {cleanNestedArrays} from '../utils/helpers';
 
 export interface UploadProgress {
   completed: number;
@@ -212,7 +213,7 @@ export class AdminService {
   private prepareSupportCardForUpload(supportCard: SupportCard): any {
     const { effects, ...rest } = supportCard;
     const effectsAsObjects = effects.map(effectArray => ({ values: effectArray }));
-    return { ...rest, effects: effectsAsObjects };
+    return cleanNestedArrays({ ...rest, effects: effectsAsObjects }, this.supportCardService.POTENTIALLY_NESTED_ARRAY_KEYS);
   }
 
   private prepareTraineeForUpload(trainee: Trainee): any {

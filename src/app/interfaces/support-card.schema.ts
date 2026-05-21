@@ -8,7 +8,7 @@ const SupportCardHintOtherSchema = z.object({
 });
 
 const SupportCardHintsSchema = z.object({
-  hint_others: z.array(SupportCardHintOtherSchema),
+  hint_others: z.array(SupportCardHintOtherSchema).or(z.array(z.array(SupportCardHintOtherSchema))),
   hint_skills: z.array(z.number()),
 });
 
