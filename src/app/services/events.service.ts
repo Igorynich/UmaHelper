@@ -207,6 +207,7 @@ export class EventsService {
       if (event.conditions) {
         console.warn('EVENT WITH CONDITIONS', event, event.n);   // TODO: decode conditions
       }
+      let diCounter = 0;      // counts --OR--
       return {
         name: event.n,
         conditions: event.conditions,
@@ -246,7 +247,7 @@ export class EventsService {
                 console.warn('Unresolved Bond Reward', reward, event.n);
                 return {
                   type: EventRewardType.simpleString,
-                  value: `${rewardMap[reward.t]} ${reward.v}(ID: ${reward.d})`
+                  value: `${rewardMap[reward.t]} ${reward.v}`   // (ID: ${reward.d})
                 };
               case 'nl':
                 return {
@@ -303,6 +304,17 @@ export class EventsService {
                 return {
                   type: EventRewardType.simpleString,
                   value: `${amount} Random Training Facilities Disabled for One Turn`
+                };
+              }
+              case 'di': {
+                const chances = reward.d;
+                const chancesText = `${chances ? `(${chances}%)` : ''}`;
+                const text = rewardMap[reward.t];
+                // const mainText = diCounter === 0 ? 'Randomly Either' : '--OR--';
+                diCounter++;    // TODO figure out when to use Randomly Either
+                return {
+                  type: EventRewardType.supportString,
+                  value: `${text}${chancesText}`
                 };
               }
               default:

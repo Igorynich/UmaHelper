@@ -62,6 +62,10 @@ export interface UmaEvent {
   n: string;
   c: EventChoice[];
   conditions?: string[];        // 0: "[\"participate\",\"202701|2\"]"
+  alt_placement?: {
+    data: UmaEvent;
+    placement: (number | null)[];
+  }
 }
 
 export interface DecodedEvent {
