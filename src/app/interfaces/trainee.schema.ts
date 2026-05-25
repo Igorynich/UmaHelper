@@ -120,6 +120,9 @@ export const TraineeSchema = z.object({
   itemData: TraineeItemDataSchema,
   objectiveData: z.array(TraineeObjectiveSchema),
   charData: TraineeCharDataSchema,
+  eventData: z.object({
+    en: z.string()
+  })
 });
 
 export type TraineeSchemaType = z.infer<typeof TraineeSchema>;

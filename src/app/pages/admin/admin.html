@@ -177,7 +177,7 @@
       </mat-card-header>
       <mat-card-content>
         <div class="button-row">
-          <input type="file" #traineeFileInput style="display: none" (change)="onFileSelected($event, 'trainee')" accept=".json" multiple>
+          <input type="file" #traineeFileInput style="display: none" (change)="onFileSelected($event, 'trainee')" accept=".json">
           <button mat-raised-button color="primary" (click)="traineeFileInput.click()">
             <mat-icon>folder_open</mat-icon> Load Trainee File
           </button>
@@ -209,24 +209,14 @@
             Upload Loaded Trainee
           </button>
         </div>
+        @if (isTraineeLoading()) {
+          <!--TODO make beautiful-->
+          <div class="progress-row">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        }
       </mat-card-content>
     </mat-card>
-
-    <!-- Shared Progress Bar Section -->
-    @if (isTraineeLoading() && traineeUploadProgress()) {
-      <div class="progress-card">
-        <p>
-          Processing trainees: {{ traineeUploadProgress()?.completed }} / {{ traineeUploadProgress()?.total }} ({{
-            traineeUploadProgress()?.successful
-          }}
-          successful, {{ traineeUploadProgress()?.failed }} failed)
-        </p>
-        <mat-progress-bar
-          mode="determinate"
-          [value]="(traineeUploadProgress()!.completed / traineeUploadProgress()!.total) * 100"
-        ></mat-progress-bar>
-      </div>
-    }
 
     <h1 class="main-header">Generate Skill Maps</h1>
 

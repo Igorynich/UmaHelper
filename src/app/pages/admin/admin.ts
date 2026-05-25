@@ -1,31 +1,34 @@
-import { Component, inject, computed, signal, WritableSignal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatIconModule } from '@angular/material/icon';
-import { AdminService, SkillComparison, SupportCardComparison, UploadProgress } from '../../services/admin.service';
-import { ConfirmationDialog } from '../../components/common/confirmation-dialog/confirmation-dialog';
-import { Skill } from '../../interfaces/skill';
-import { SupportCard } from '../../interfaces/support-card';
-import { SkillSchema } from '../../interfaces/skill.schema';
-import { SupportCardSchema } from '../../interfaces/support-card.schema';
-import { ImagekitioAngularModule } from 'imagekitio-angular';
-import { EventUploadDialog } from '../../components/dialogs/event-upload-dialog/event-upload-dialog';
+import {Component, inject, computed, signal, WritableSignal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {MatCardModule} from '@angular/material/card';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatIconModule} from '@angular/material/icon';
+import {AdminService, SkillComparison, SupportCardComparison, UploadProgress} from '../../services/admin.service';
+import {ConfirmationDialog} from '../../components/common/confirmation-dialog/confirmation-dialog';
+import {Skill} from '../../interfaces/skill';
+import {SupportCard} from '../../interfaces/support-card';
+import {SkillSchema} from '../../interfaces/skill.schema';
+import {SupportCardSchema} from '../../interfaces/support-card.schema';
+import {ImagekitioAngularModule} from 'imagekitio-angular';
+import {EventUploadDialog} from '../../components/dialogs/event-upload-dialog/event-upload-dialog';
 import {TraineeSchema} from '../../interfaces/trainee.schema';
 import {Trainee} from '../../interfaces/trainee';
-import { SkillMap } from '../../interfaces/skill-map';
-import { SkillsService } from '../../services/skills.service';
-import { SupportCardService } from '../../services/support-card.service';
+import {SkillMap} from '../../interfaces/skill-map';
+import {SkillsService} from '../../services/skills.service';
+import {SupportCardService} from '../../services/support-card.service';
 import {forkJoin, of} from 'rxjs';
 import {catchError, map, switchMap, tap} from 'rxjs/operators';
+import {EventsService, evntTypeConvertFn} from '../../services/events.service';
+import {cleanNestedArrays} from '../../utils/helpers';
+import {MatProgressSpinner} from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, ImagekitioAngularModule],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, ImagekitioAngularModule, MatProgressSpinner],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
@@ -35,6 +38,9 @@ export class AdminComponent {
   private snackBar = inject(MatSnackBar);
   private skillsService = inject(SkillsService);
   private supportCardService = inject(SupportCardService);
+  private eventsService = inject(EventsService);
+
+  private readonly SNACKBAR_DURATION = 5000;
 
   loadedSkills = signal<Skill[] | null>(null);
   skillFileName = signal<string | null>(null);
@@ -43,13 +49,14 @@ export class AdminComponent {
   skillComparisonResult: WritableSignal<SkillComparison | null> = signal(null);
 
   loadedSupportCards = signal<SupportCard[] | null>(null);
-  loadedTrainee = signal<Trainee | null>(null);
+  loadedTrainee = signal<Trainee & { eventData: { en: string } } | null>(null);
   supportCardFileName = signal<string | null>(null);
   traineeFileName = signal<string | null>(null);
   isSupportCardLoading = signal(false);
   isTraineeLoading = signal(false);
   supportCardUploadProgress = signal<UploadProgress | null>(null);
-  traineeUploadProgress = signal<UploadProgress | null>(null);
+  traineeUploadProgress = signal<{success: boolean, failed: boolean} | null>(null);
+  traineeEventsUploadProgress = signal<{success: boolean, failed: boolean} | null>(null);
   supportCardComparisonResult: WritableSignal<SupportCardComparison | null> = signal(null);
   traineeComparisonResult: WritableSignal<SupportCardComparison | null> = signal(null);
 
@@ -85,35 +92,47 @@ export class AdminComponent {
       try {
         const rawData = JSON.parse(reader.result as string);
         switch (type) {
-          case "skills":{
+          case "skills": {
             const validatedData = this.adminService.validateData(rawData, SkillSchema);
             this.loadedSkills.set(validatedData);
+            console.log(`${type} validated Data`, validatedData);
             this.skillFileName.set(file.name);
             this.skillComparisonResult.set(null); // Clear previous comparison results
-            this.snackBar.open(`Successfully loaded and validated ${file.name} (${validatedData.length} skills).`, 'Close', { duration: 3000 });
+            this.snackBar.open(`Successfully loaded and validated ${file.name} (${validatedData.length} skills).`, 'Close', {
+              duration: this.SNACKBAR_DURATION,
+              panelClass: 'snackbar-success'
+            });
             break;
           }
 
           case "support-cards": {
             const validatedData = this.adminService.validateData(rawData, SupportCardSchema);
             this.loadedSupportCards.set(validatedData);
+            console.log(`${type} validated Data`, validatedData);
             this.supportCardFileName.set(file.name);
             this.supportCardComparisonResult.set(null); // Clear previous comparison results
-            this.snackBar.open(`Successfully loaded and validated ${file.name} (${validatedData.length} support cards).`, 'Close', { duration: 3000 });
+            this.snackBar.open(`Successfully loaded and validated ${file.name} (${validatedData.length} support cards).`, 'Close', {
+              duration: this.SNACKBAR_DURATION,
+              panelClass: 'snackbar-success'
+            });
             break;
           }
 
           case "trainee": {
             const validatedData = this.adminService.validateTraineeData(rawData, TraineeSchema);
             this.loadedTrainee.set(validatedData);
+            console.log(`${type} validated Data`, validatedData);
             this.traineeFileName.set(file.name);
             this.traineeComparisonResult.set(null); // Clear previous comparison results
-            this.snackBar.open(`Successfully loaded and validated ${file.name}.`, 'Close', { duration: 3000 });
+            this.snackBar.open(`Successfully loaded and validated ${file.name}.`, 'Close', {
+              duration: this.SNACKBAR_DURATION,
+              panelClass: 'snackbar-success'
+            });
             break;
           }
         }
       } catch (error: any) {
-        this.snackBar.open(`Error processing ${file.name}: ${error.message}`, 'Close', { panelClass: 'snackbar-error' });
+        this.snackBar.open(`Error processing ${file.name}: ${error.message}`, 'Close', {panelClass: 'snackbar-error'});
         switch (type) {
           case "skills":
             this.clearSkillData();
@@ -129,7 +148,7 @@ export class AdminComponent {
     };
 
     reader.onerror = () => {
-      this.snackBar.open(`Error reading file ${file.name}.`, 'Close', { panelClass: 'snackbar-error' });
+      this.snackBar.open(`Error reading file ${file.name}.`, 'Close', {panelClass: 'snackbar-error'});
       switch (type) {
         case "skills":
           this.clearSkillData();
@@ -159,6 +178,7 @@ export class AdminComponent {
     this.supportCardComparisonResult.set(null);
     this.supportCardUploadProgress.set(null);
   }
+
   clearTraineeData() {
     this.loadedTrainee.set(null);
     this.traineeFileName.set(null);
@@ -169,7 +189,7 @@ export class AdminComponent {
   onUploadSkills() {
     const skills = this.loadedSkills();
     if (!skills) {
-      this.snackBar.open('No skill data loaded. Please load a file first.', 'Close', { panelClass: 'snackbar-error' });
+      this.snackBar.open('No skill data loaded. Please load a file first.', 'Close', {panelClass: 'snackbar-error'});
       return;
     }
     this.dialog
@@ -184,7 +204,7 @@ export class AdminComponent {
       .subscribe((result) => {
         if (result) {
           this.isSkillLoading.set(true);
-          this.skillUploadProgress.set({ completed: 0, total: 0, successful: 0, failed: 0 });
+          this.skillUploadProgress.set({completed: 0, total: 0, successful: 0, failed: 0});
           this.adminService.uploadSkills(skills).subscribe({
             next: (progress) => {
               this.skillUploadProgress.set(progress);
@@ -192,7 +212,7 @@ export class AdminComponent {
                 this.snackBar.open(
                   `Upload complete: ${progress.successful} successful, ${progress.failed} failed.`,
                   'Close',
-                  { panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success'] }
+                  {panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success']}
                 );
                 this.isSkillLoading.set(false);
               }
@@ -211,7 +231,7 @@ export class AdminComponent {
   onCompareSkills() {
     const skills = this.loadedSkills();
     if (!skills) {
-      this.snackBar.open('No skill data loaded. Please load a file first.', 'Close', { panelClass: 'snackbar-error' });
+      this.snackBar.open('No skill data loaded. Please load a file first.', 'Close', {panelClass: 'snackbar-error'});
       return;
     }
     this.isSkillLoading.set(true);
@@ -223,7 +243,7 @@ export class AdminComponent {
         console.log('Added skills:', result.added);
         console.log('Changed skills:', result.changed);
         this.snackBar.open('Comparison complete. Check the console for details.', 'Close', {
-          duration: 3000,
+          duration: this.SNACKBAR_DURATION,
         });
       },
       error: (err) => {
@@ -250,7 +270,7 @@ export class AdminComponent {
       .subscribe((confirmed) => {
         if (confirmed) {
           this.isSkillLoading.set(true);
-          this.skillUploadProgress.set({ completed: 0, total: 0, successful: 0, failed: 0 });
+          this.skillUploadProgress.set({completed: 0, total: 0, successful: 0, failed: 0});
           this.adminService.uploadChanges(result).subscribe({
             next: (progress) => {
               this.skillUploadProgress.set(progress);
@@ -258,7 +278,7 @@ export class AdminComponent {
                 this.snackBar.open(
                   `Upload complete: ${progress.successful} successful, ${progress.failed} failed.`,
                   'Close',
-                  { panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success'] }
+                  {panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success']}
                 );
                 this.isSkillLoading.set(false);
                 this.skillComparisonResult.set(null); // Reset after successful upload
@@ -278,7 +298,7 @@ export class AdminComponent {
   onUploadSupportCards() {
     const supportCards = this.loadedSupportCards();
     if (!supportCards) {
-      this.snackBar.open('No support card data loaded. Please load a file first.', 'Close', { panelClass: 'snackbar-error' });
+      this.snackBar.open('No support card data loaded. Please load a file first.', 'Close', {panelClass: 'snackbar-error'});
       return;
     }
     this.dialog
@@ -293,7 +313,7 @@ export class AdminComponent {
       .subscribe((result) => {
         if (result) {
           this.isSupportCardLoading.set(true);
-          this.supportCardUploadProgress.set({ completed: 0, total: 0, successful: 0, failed: 0 });
+          this.supportCardUploadProgress.set({completed: 0, total: 0, successful: 0, failed: 0});
           this.adminService.uploadSupportCards(supportCards).subscribe({
             next: (progress) => {
               this.supportCardUploadProgress.set(progress);
@@ -301,7 +321,7 @@ export class AdminComponent {
                 this.snackBar.open(
                   `Upload complete: ${progress.successful} successful, ${progress.failed} failed.`,
                   'Close',
-                  { panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success'] }
+                  {panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success']}
                 );
                 this.isSupportCardLoading.set(false);
               }
@@ -320,7 +340,7 @@ export class AdminComponent {
   onUploadTrainees() {
     const trainee = this.loadedTrainee();
     if (!trainee) {
-      this.snackBar.open('No trainee data loaded. Please load a file first.', 'Close', { panelClass: 'snackbar-error' });
+      this.snackBar.open('No trainee data loaded. Please load a file first.', 'Close', {panelClass: 'snackbar-warning'});
       return;
     }
     this.dialog
@@ -332,37 +352,84 @@ export class AdminComponent {
         },
       })
       .afterClosed()
-      .subscribe((result) => {
+      .pipe(switchMap((result) => {
         if (result) {
           this.isTraineeLoading.set(true);
-          this.traineeUploadProgress.set({ completed: 0, total: 0, successful: 0, failed: 0 });
-          this.adminService.uploadTrainee(trainee).subscribe({
-            next: (progress) => {
-              this.traineeUploadProgress.set(progress);
-              if (progress.completed === progress.total) {
-                this.snackBar.open(
-                  `Upload complete: ${progress.successful} successful, ${progress.failed} failed.`,
-                  'Close',
-                  { panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success'] }
-                );
-                this.isTraineeLoading.set(false);
-              }
-            },
-            error: (err) => {
-              this.snackBar.open(`Upload failed: ${err.message}`, 'Close', {
-                panelClass: ['snackbar-error'],
-              });
-              this.isTraineeLoading.set(false);
-            },
-          });
+          const cleanedEvents = cleanNestedArrays(this.getTraineeEvents(trainee));
+          const traineeId = trainee.itemData.card_id;
+          return forkJoin([
+            this.adminService.uploadTrainee(trainee).pipe(tap({
+              next: (progress) => {
+                this.traineeUploadProgress.set({
+                  success: true,
+                  failed: false
+                });
+                console.log('Trainee upload progress:', this.traineeUploadProgress());
+              },
+              error: (err) => {
+                this.snackBar.open(`Trainee Upload failed: ${err.message}`, 'Close', {
+                  panelClass: ['snackbar-error'],
+                });
+                this.traineeUploadProgress.set({
+                  success: false,
+                  failed: true
+                });
+              },
+            })),
+            this.adminService.uploadEvents(traineeId.toString(), cleanedEvents).pipe(tap({next: () => {
+                this.traineeEventsUploadProgress.set({
+                  success: true,
+                  failed: false
+                });
+                console.log('Trainee upload progress:', this.traineeEventsUploadProgress());
+              }, error: (err) => {
+                this.snackBar.open(`Trainee !EVENTS! Upload failed: ${err.message}`, 'Close', {
+                  panelClass: ['snackbar-error'],
+                });
+                this.traineeEventsUploadProgress.set({
+                  success: false,
+                  failed: true
+                });
+              }}))
+          ]);
         }
-      });
+        return of(null);
+      })).subscribe({complete: () => {
+        if (this.traineeUploadProgress()?.success && this.traineeEventsUploadProgress()?.success) {
+          this.snackBar.open(
+            `Successfully uploaded both Trainee(${trainee!.itemData.name_en}) and her Events`,
+            'Close',
+            {panelClass: 'snackbar-success', duration: this.SNACKBAR_DURATION}
+          );
+        }
+        this.isTraineeLoading.set(false);
+      }});
+  }
+
+  getTraineeEvents(trainee: Trainee & { eventData: { en: string } }) {
+    const jsonStr = trainee.eventData.en;
+    if (!jsonStr) return;
+
+    try {
+      let parsed = JSON.parse(jsonStr);
+
+      // Handle double-stringified JSON
+      if (typeof parsed === 'string') {
+        parsed = JSON.parse(parsed);
+      }
+
+      return this.eventsService.filterParsedEventData(parsed);
+    } catch (error: any) {
+      this.snackBar.open(`Trainee Events Parse Error: ${error.message}`, 'Close', {panelClass: 'snackbar-error'});
+      console.log(error);
+    }
+    return undefined;
   }
 
   onCompareSupportCards() {
     const supportCards = this.loadedSupportCards();
     if (!supportCards) {
-      this.snackBar.open('No support card data loaded. Please load a file first.', 'Close', { panelClass: 'snackbar-error' });
+      this.snackBar.open('No support card data loaded. Please load a file first.', 'Close', {panelClass: 'snackbar-error'});
       return;
     }
     this.isSupportCardLoading.set(true);
@@ -374,7 +441,7 @@ export class AdminComponent {
         console.log('Added support cards:', result.added);
         console.log('Changed support cards:', result.changed);
         this.snackBar.open('Comparison complete. Check the console for details.', 'Close', {
-          duration: 3000,
+          duration: this.SNACKBAR_DURATION,
         });
       },
       error: (err) => {
@@ -401,7 +468,7 @@ export class AdminComponent {
       .subscribe((confirmed) => {
         if (confirmed) {
           this.isSupportCardLoading.set(true);
-          this.supportCardUploadProgress.set({ completed: 0, total: 0, successful: 0, failed: 0 });
+          this.supportCardUploadProgress.set({completed: 0, total: 0, successful: 0, failed: 0});
           this.adminService.uploadSupportCardChanges(result).subscribe({
             next: (progress) => {
               this.supportCardUploadProgress.set(progress);
@@ -409,7 +476,7 @@ export class AdminComponent {
                 this.snackBar.open(
                   `Upload complete: ${progress.successful} successful, ${progress.failed} failed.`,
                   'Close',
-                  { panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success'] }
+                  {panelClass: progress.failed > 0 ? ['snackbar-error'] : ['snackbar-success']}
                 );
                 this.isSupportCardLoading.set(false);
                 this.supportCardComparisonResult.set(null); // Reset after successful upload
@@ -444,7 +511,7 @@ export class AdminComponent {
         map(cards => cards.filter(card => !!card.release_en))
       )
     }).subscribe({
-      next: ({ skills, supportCards }) => {
+      next: ({skills, supportCards}) => {
         console.log('Fetched skills:', skills.length);
         console.log('Fetched support cards:', supportCards.length);
 
@@ -453,11 +520,11 @@ export class AdminComponent {
         console.log('Generated skill maps:', skillMaps);
         this.generatedSkillMaps.set(skillMaps);
         this.isGeneratingSkillMaps.set(false);
-        this.snackBar.open(`Generated ${skillMaps.length} skill maps successfully. Check console for details.`, 'Close', { duration: 3000 });
+        this.snackBar.open(`Generated ${skillMaps.length} skill maps successfully. Check console for details.`, 'Close', {duration: this.SNACKBAR_DURATION});
       },
       error: (err) => {
         console.error('Error fetching data:', err);
-        this.snackBar.open(`Error fetching data: ${err.message}`, 'Close', { panelClass: ['snackbar-error'] });
+        this.snackBar.open(`Error fetching data: ${err.message}`, 'Close', {panelClass: ['snackbar-error']});
         this.isGeneratingSkillMaps.set(false);
       }
     });
@@ -496,7 +563,7 @@ export class AdminComponent {
   onSaveSkillMaps() {
     const skillMaps = this.generatedSkillMaps();
     if (!skillMaps || skillMaps.length === 0) {
-      this.snackBar.open('No skill maps to save. Please generate skill maps first.', 'Close', { panelClass: ['snackbar-error'] });
+      this.snackBar.open('No skill maps to save. Please generate skill maps first.', 'Close', {panelClass: ['snackbar-error']});
       return;
     }
 
@@ -522,7 +589,7 @@ export class AdminComponent {
               this.snackBar.open(
                 `Save complete: ${successful} successful, ${failed} failed.`,
                 'Close',
-                { panelClass: failed > 0 ? ['snackbar-error'] : ['snackbar-success'] }
+                {panelClass: failed > 0 ? ['snackbar-error'] : ['snackbar-success']}
               );
               this.isSavingSkillMaps.set(false);
 

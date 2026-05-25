@@ -272,7 +272,7 @@ export class AdminService {
     }
   }
 
-  public validateTraineeData(data: TraineeData, schema: z.Schema<Trainee>): Trainee {
+  public validateTraineeData(data: TraineeData, schema: z.Schema<Trainee & { eventData: { en: string } }>): Trainee & { eventData: { en: string } } {
     try {
       return schema.parse(data.pageProps);
     } catch (error) {

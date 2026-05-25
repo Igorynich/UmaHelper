@@ -4,38 +4,70 @@ export interface TraineeSkillEvo {
 }
 
 export interface TraineeItemData {
-  url_name: string; // Example: "101502-tm-opera-o"
-  tid: string; // Example: "Z"
-  card_id: number; // Example: 101502
-  char_id: number; // Example: 1015
-  name_en: string; // Example: "TM Opera O"
-  name_jp: string; // Example: "テイエムオペラオー"
-  name_ko: string; // Example: "티엠 오페라 오"
-  name_tw: string; // Example: "好歌劇"
-  version?: string; // Example: "new_year"
-  title: string; // Example: "Blue Dazzle"
-  title_jp: string; // Example: "[初晴・青き絢爛]"
-  title_ko: string; // Example: "[새해 창천・푸르른 현란]"
-  title_tw: string; // Example: "[初晴．湛藍絢爛]"
-  title_en_gl: string; // Example: "[New Year, Same Radiance!]"
-  rarity: number; // Example: 3
-  costume: number; // Example: 101510
-  release: string; // Example: "2021-12-31"
-  release_ko?: string; // Example: "2023-04-21"
-  release_zh_tw?: string; // Example: "2023-05-05"
-  release_en?: string; // Example: "2026-01-29"
-  obtained: string; // Example: "gacha"
-  skills_unique: number[]; // Example: [110151]
-  skills_innate: number[]; // Example: [201312, 202012, 200352]
-  skills_evo: TraineeSkillEvo[]; // Example: [{old: 200351, new: 101502111}, ...]
-  skills_awakening: number[]; // Example: [200252, 200351, 200202, 202011]
-  skills_event: number[]; // Example: [200142, 200582, 201152]
-  stat_bonus: number[]; // Example: [14, 8, 0, 0, 8]
-  talent_group: number; // Example: 101502
-  base_stats: number[]; // Example: [87, 102, 74, 88, 99]
-  aptitude: string[]; // Example: ["A", "E", "G", "E", "A", "A", "C", "A", "A", "G"]
-  four_star_stats: number[]; // Example: [96, 113, 83, 98, 110]
-  five_star_stats: number[]; // Example: [106, 124, 91, 107, 122]
+  // Example: "101502-tm-opera-o"
+  url_name: string;
+  // Example: "Z"
+  tid: string;
+  // main ID!! Example: 101502
+  card_id: number;
+  // Char ID(means all Maruzensky variations start with 1004) Example: 1004
+  char_id: number;
+  // Example: "TM Opera O"
+  name_en: string;
+  // Example: "テイエムオペラオー"
+  name_jp: string;
+  // Example: "티엠 오페라 오"
+  name_ko: string;
+  // Example: "好歌劇"
+  name_tw: string;
+  // Example: "new_year"
+  version?: string;
+  // Example: "Blue Dazzle"
+  title: string;
+  // Example: "[初晴・青き絢爛]"
+  title_jp: string;
+  // Example: "[새해 창천・푸르른 현란]"
+  title_ko: string;
+  // Example: "[初晴．湛藍絢爛]"
+  title_tw: string;
+  // Example: "[New Year, Same Radiance!]"
+  title_en_gl: string;
+  // Example: 3
+  rarity: number;
+  // Example: 101510
+  costume: number;
+  // Example: "2021-12-31"
+  release: string;
+  // Example: "2023-04-21"
+  release_ko?: string;
+  // Example: "2023-05-05"
+  release_zh_tw?: string;
+  // Example: "2026-01-29"
+  release_en?: string;
+  // Example: "gacha"
+  obtained: string;
+  // Example: [110151]
+  skills_unique: number[];
+  // Example: [201312, 202012, 200352]
+  skills_innate: number[];
+  // Example: [{old: 200351, new: 101502111}, ...]
+  skills_evo: TraineeSkillEvo[];
+  // Example: [200252, 200351, 200202, 202011]
+  skills_awakening: number[];
+  // Example: [200142, 200582, 201152]
+  skills_event: number[];
+  // Example: [14, 8, 0, 0, 8]
+  stat_bonus: number[];
+  // Example: 101502
+  talent_group: number;
+  // Example: [87, 102, 74, 88, 99]
+  base_stats: number[];
+  // Example: ["A", "E", "G", "E", "A", "A", "C", "A", "A", "G"]
+  aptitude: string[];
+  // Example: [96, 113, 83, 98, 110]
+  four_star_stats: number[];
+  // Example: [106, 124, 91, 107, 122]
+  five_star_stats: number[];
 }
 
 export interface TraineeRace {
@@ -147,10 +179,10 @@ export interface Trainee {
   itemData: TraineeItemData;    // keep
   // exclude - can be decoded with event service - confirmed, but check for sus Unknown events
   /*eventData: { // Event data in different languages
-    ja: string; // Japanese event data stringified JSON
+    /!*ja: string; // Japanese event data stringified JSON
     ko: string; // Korean event data stringified JSON
-    zh_tw: string; // Traditional Chinese event data stringified JSON
-    en: string; // English event data stringified JSON
+    zh_tw: string; // Traditional Chinese event data stringified JSON*!/
+    en: string; // English event data stringified JSON      // using only in admin
   };*/
   objectiveData: TraineeObjective[];    // keep
   charData: TraineeCharData;      // keep, but a lot of irl stuff - check later
