@@ -33,3 +33,21 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .text-center {
   text-align: center;
 }
+
+.snackbar-success {
+  --mat-snack-bar-container-color: #2e7d32;      /* Green background */
+  /*--mat-snack-bar-supporting-text-color: #ffffff; !* White text *!*/
+  /*--mat-snack-bar-button-color: #ffffff;         !* White action button *!*/
+}
+
+.snackbar-error {
+  --mat-snack-bar-container-color: #d32f2f;      /* Red background */
+  /*--mdc-snackbar-supporting-text-color: #ffffff; !* White text *!*/
+  /*--mat-snack-bar-button-color: #ffffff;         !* White action button *!*/
+}
+
+.snackbar-warning {
+  --mat-snack-bar-container-color: #ed6c02;      /* Red background */
+  /*--mdc-snackbar-supporting-text-color: #ffffff; !* White text *!*/
+  /*--mat-snack-bar-button-color: #ffffff;         !* White action button *!*/
+}
