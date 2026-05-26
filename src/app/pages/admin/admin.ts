@@ -19,7 +19,7 @@ import {Trainee} from '../../interfaces/trainee';
 import {SkillMap} from '../../interfaces/skill-map';
 import {SkillsService} from '../../services/skills.service';
 import {SupportCardService} from '../../services/support-card.service';
-import {forkJoin, of} from 'rxjs';
+import {forkJoin, of, take} from 'rxjs';
 import {catchError, map, switchMap, tap} from 'rxjs/operators';
 import {EventsService, evntTypeConvertFn} from '../../services/events.service';
 import {cleanNestedArrays} from '../../utils/helpers';
@@ -201,11 +201,11 @@ export class AdminComponent {
         },
       })
       .afterClosed()
-      .subscribe((result) => {
+      .pipe(take(1), switchMap((result) => {
         if (result) {
           this.isSkillLoading.set(true);
           this.skillUploadProgress.set({completed: 0, total: 0, successful: 0, failed: 0});
-          this.adminService.uploadSkills(skills).subscribe({
+          return this.adminService.uploadSkills(skills).pipe(tap({
             next: (progress) => {
               this.skillUploadProgress.set(progress);
               if (progress.completed === progress.total) {
@@ -223,9 +223,10 @@ export class AdminComponent {
               });
               this.isSkillLoading.set(false);
             },
-          });
+          }));
         }
-      });
+        return of(null);
+      })).subscribe();
   }
 
   onCompareSkills() {
@@ -267,11 +268,11 @@ export class AdminComponent {
         },
       })
       .afterClosed()
-      .subscribe((confirmed) => {
+      .pipe(take(1), switchMap((confirmed) => {
         if (confirmed) {
           this.isSkillLoading.set(true);
           this.skillUploadProgress.set({completed: 0, total: 0, successful: 0, failed: 0});
-          this.adminService.uploadChanges(result).subscribe({
+          return this.adminService.uploadChanges(result).pipe(tap({
             next: (progress) => {
               this.skillUploadProgress.set(progress);
               if (progress.completed === progress.total) {
@@ -290,9 +291,10 @@ export class AdminComponent {
               });
               this.isSkillLoading.set(false);
             },
-          });
+          }));
         }
-      });
+        return of(null);
+      })).subscribe();
   }
 
   onUploadSupportCards() {
@@ -310,11 +312,11 @@ export class AdminComponent {
         },
       })
       .afterClosed()
-      .subscribe((result) => {
+      .pipe(take(1), switchMap((result) => {
         if (result) {
           this.isSupportCardLoading.set(true);
           this.supportCardUploadProgress.set({completed: 0, total: 0, successful: 0, failed: 0});
-          this.adminService.uploadSupportCards(supportCards).subscribe({
+          return this.adminService.uploadSupportCards(supportCards).pipe(tap({
             next: (progress) => {
               this.supportCardUploadProgress.set(progress);
               if (progress.completed === progress.total) {
@@ -332,9 +334,10 @@ export class AdminComponent {
               });
               this.isSupportCardLoading.set(false);
             },
-          });
+          }));
         }
-      });
+        return of(null);
+      })).subscribe();
   }
 
   onUploadTrainees() {
@@ -352,11 +355,36 @@ export class AdminComponent {
         },
       })
       .afterClosed()
-      .pipe(switchMap((result) => {
+      .pipe(take(1), switchMap((result) => {
         if (result) {
           this.isTraineeLoading.set(true);
           const cleanedEvents = cleanNestedArrays(this.getTraineeEvents(trainee));
           const traineeId = trainee.itemData.card_id;
+          const eventsUpload$ = cleanedEvents ? this.adminService.uploadEvents(traineeId.toString(), cleanedEvents).pipe(tap({next: () => {
+              this.traineeEventsUploadProgress.set({
+                success: true,
+                failed: false
+              });
+              console.log('Trainee upload progress:', this.traineeEventsUploadProgress());
+            }, error: (err) => {
+              this.snackBar.open(`Trainee !EVENTS! Upload failed: ${err.message}`, 'Close', {
+                panelClass: ['snackbar-error'],
+              });
+              this.traineeEventsUploadProgress.set({
+                success: false,
+                failed: true
+              });
+            }})) : of(null).pipe(tap({next: () => {
+              this.traineeEventsUploadProgress.set({
+                success: false,
+                failed: true
+              });
+              console.warn('Trainee events were not found or parsed correctly');
+              this.snackBar.open(`Trainee events were not found`, 'Close', {
+                panelClass: ['snackbar-warning'],
+              });
+            }}));
+
           return forkJoin([
             this.adminService.uploadTrainee(trainee).pipe(tap({
               next: (progress) => {
@@ -376,21 +404,7 @@ export class AdminComponent {
                 });
               },
             })),
-            this.adminService.uploadEvents(traineeId.toString(), cleanedEvents).pipe(tap({next: () => {
-                this.traineeEventsUploadProgress.set({
-                  success: true,
-                  failed: false
-                });
-                console.log('Trainee upload progress:', this.traineeEventsUploadProgress());
-              }, error: (err) => {
-                this.snackBar.open(`Trainee !EVENTS! Upload failed: ${err.message}`, 'Close', {
-                  panelClass: ['snackbar-error'],
-                });
-                this.traineeEventsUploadProgress.set({
-                  success: false,
-                  failed: true
-                });
-              }}))
+            eventsUpload$
           ]);
         }
         return of(null);
@@ -429,7 +443,7 @@ export class AdminComponent {
   onCompareSupportCards() {
     const supportCards = this.loadedSupportCards();
     if (!supportCards) {
-      this.snackBar.open('No support card data loaded. Please load a file first.', 'Close', {panelClass: 'snackbar-error'});
+      this.snackBar.open('No support card data loaded. Please load a file first.', 'Close', {panelClass: 'snackbar-error', duration: this.SNACKBAR_DURATION});
       return;
     }
     this.isSupportCardLoading.set(true);
@@ -465,11 +479,11 @@ export class AdminComponent {
         },
       })
       .afterClosed()
-      .subscribe((confirmed) => {
+      .pipe(take(1), switchMap((confirmed) => {
         if (confirmed) {
           this.isSupportCardLoading.set(true);
           this.supportCardUploadProgress.set({completed: 0, total: 0, successful: 0, failed: 0});
-          this.adminService.uploadSupportCardChanges(result).subscribe({
+          return this.adminService.uploadSupportCardChanges(result).pipe(tap({
             next: (progress) => {
               this.supportCardUploadProgress.set(progress);
               if (progress.completed === progress.total) {
@@ -488,9 +502,10 @@ export class AdminComponent {
               });
               this.isSupportCardLoading.set(false);
             },
-          });
+          }));
         }
-      });
+        return of(null);
+      })).subscribe();
   }
 
   openEventUploadDialog() {
