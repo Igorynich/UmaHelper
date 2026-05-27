@@ -1,11 +1,39 @@
 <div class="skills-container">
   <div class="header-actions">
     <h2>Skills ({{ filteredSkills().length }})</h2>
-    <mat-form-field appearance="outline" class="filter-field">
-      <mat-label>Filter by name</mat-label>
-      <input matInput [formControl]="filterControl">
-      @if (filterControl.value) {
-        <button matSuffix mat-icon-button aria-label="Clear" (click)="clearFilter()">
+    <div class="text-filters-row">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Filter by name</mat-label>
+        <input matInput [formControl]="filterControl">
+        @if (filterControl.value) {
+          <button matSuffix mat-icon-button aria-label="Clear" (click)="clearFilter()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Filter by description</mat-label>
+        <input matInput [formControl]="descFilterControl">
+        @if (descFilterControl.value) {
+          <button matSuffix mat-icon-button aria-label="Clear" (click)="clearDescFilter()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline" class="filter-field type-filter">
+      <mat-label>Filter by type</mat-label>
+      <mat-select [formControl]="typeFilterControl" multiple>
+        @for (filterGroup of typeFilters; track filterGroup.name) {
+          <mat-optgroup [label]="filterGroup.name">
+            @for (option of filterGroup.values; track option.value) {
+              <mat-option [value]="option.value">{{ option.name }}</mat-option>
+            }
+          </mat-optgroup>
+        }
+      </mat-select>
+      @if (typeFilterControl.value && typeFilterControl.value.length > 0) {
+        <button matSuffix mat-icon-button aria-label="Clear" (click)="clearTypeFilter()">
           <mat-icon>close</mat-icon>
         </button>
       }
