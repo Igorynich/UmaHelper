@@ -8,6 +8,7 @@
   align-items: center;
   padding: 8px 16px;
   position: relative;
+  transition: height 0.3s ease;
 }
 
 .chibi-container {
@@ -17,6 +18,7 @@
   top: 50%;
   left: 20%;
   transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
 }
 
 .nav-container-desktop {
@@ -63,7 +65,17 @@
 
 @media (max-width: 1023px) {
   .uma-header {
-    grid-template-columns: 1fr auto;
+    height: 4rem; /* Значительное уменьшение высоты */
+    grid-template-columns: auto 1fr auto;
+    background-position: center;
+    padding: 0 12px;
+  }
+
+  .chibi-container {
+    position: static; /* Возвращаем в поток для мобилки */
+    transform: none;
+    zoom: 0.5; /* Уменьшаем чибика в два раза */
+    margin-right: 8px;
   }
 
   .header-title {
@@ -76,5 +88,26 @@
 
   .nav-container-mobile {
     display: flex; /* Show mobile nav */
+    align-items: center;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+  }
+
+  .auth-button mat-icon {
+    font-size: 1.5rem;
+    height: 1.5rem;
+    width: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .uma-header {
+    height: 3.5rem;
+  }
+
+  .chibi-container {
+    display: none; /* Совсем убираем картинку на очень маленьких экранах */
   }
 }

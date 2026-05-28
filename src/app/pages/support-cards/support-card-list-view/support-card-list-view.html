@@ -1,8 +1,8 @@
 <form [formGroup]="filterForm" class="filter-container">
   <div class="filter-row">
     <div class="filter-group">
-      <label class="filter-group-label">Name</label>
-      <mat-form-field appearance="outline" class="filter-field name-field">
+      <!--<label class="filter-group-label">Name</label>-->
+      <mat-form-field appearance="outline" class="filter-field name-field" subscriptSizing="dynamic">
         <input matInput formControlName="name" placeholder="Enter card name">
         @if (filterForm.get('name')?.value) {
           <button matSuffix mat-icon-button aria-label="Clear" (click)="clearNameFilter()">
@@ -13,7 +13,7 @@
     </div>
 
     <div class="rarity-filter-group">
-      <label class="filter-group-label">Rarity</label>
+      <!--<label class="filter-group-label">Rarity</label>-->
       <div class="rarity-toggles">
         @for (rarityValue of rarityOptions; track rarityValue) {
           <button
@@ -31,7 +31,7 @@
     </div>
 
     <div class="filter-group">
-      <label class="filter-group-label">Type</label>
+      <!--<label class="filter-group-label">Type</label>-->
       <div class="type-toggles">
         @for (cardType of Object.values(SupportCardType); track cardType) {
           <button
@@ -39,16 +39,16 @@
             class="type-toggle-btn"
             [class.selected]="isFilterItemSelected('type', cardType)"
             (click)="toggleFilterItem('type', cardType)">
-            <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="24">
+            <img [src]="'assets/types/' + cardType.toLowerCase() + '.png'" [alt]="cardType" width="20">
           </button>
         }
       </div>
     </div>
 
     <div class="filter-group effect-group">
-      <label class="filter-group-label">Effect</label>
+      <!--<label class="filter-group-label">Effect</label>-->
       <div class="effect-controls">
-        <mat-form-field appearance="outline" class="filter-field effect-field">
+        <mat-form-field appearance="outline" class="filter-field effect-field" subscriptSizing="dynamic">
           <mat-select formControlName="effectId">
             <mat-option value="">All</mat-option>
             @for (effect of allEffects(); track effect.id) {
@@ -58,17 +58,27 @@
         </mat-form-field>
 
         <div class="value-inputs">
-          <mat-form-field appearance="outline" class="operator-field">
+          <mat-form-field appearance="outline" class="operator-field" subscriptSizing="dynamic">
             <mat-select formControlName="operator">
               @for (op of operatorOptions; track op.value) {
                 <mat-option [value]="op.value">{{ op.label }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
-          <mat-form-field appearance="outline" class="value-field">
-            <input matInput type="number" formControlName="value" placeholder="Enter value">
+          <mat-form-field appearance="outline" class="value-field" subscriptSizing="dynamic">
+            <input matInput type="number" formControlName="value" placeholder="Value">
           </mat-form-field>
         </div>
+      </div>
+    </div>
+
+    <div class="filter-group reset-group">
+      <!--<label class="filter-group-label">Actions</label>-->
+      <div class="action-container">
+        <button mat-stroked-button type="button" class="reset-btn" (click)="resetFilters()">
+          <mat-icon>restart_alt</mat-icon>
+          Reset
+        </button>
       </div>
     </div>
   </div>
@@ -78,7 +88,6 @@
   </div>
 
   <div class="action-buttons">
-    <button mat-raised-button type="button" (click)="resetFilters()">Reset Filters</button>
     <button mat-raised-button type="button" class="ratings-button" (click)="openRatingsModal()">Ratings</button>
   </div>
 </form>

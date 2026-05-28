@@ -8,106 +8,81 @@
 .filter-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .filter-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  align-items: stretch;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .filter-group,
 .rarity-filter-group {
   display: inline-flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.75rem 1rem;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 0.5rem;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background: #fafafa;
   box-sizing: border-box;
-  width: fit-content;
-  min-height: 108px;
-}
-
-.effect-group {
-  min-width: 520px;
+  width: auto; /* Группа занимает только столько, сколько нужно контенту */
+  min-height: 48px;
 }
 
 .filter-group-label {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: #666;
-  margin-bottom: 0.1rem;
+  margin-right: 0.5rem; /* Лейбл теперь слева от контента в ряд */
 }
 
-/* Keep fields compact and aligned */
-.name-field {
-  width: 300px;
+/* Поля ввода (Десктопные размеры) */
+.name-field { width: 200px; }
+.effect-field { width: 180px; }
+.operator-field { width: 75px; }
+.value-field { width: 90px; }
+
+.effect-group {
+  min-width: 0;
+  flex-grow: 0; /* Запрещаем растягиваться */
 }
 
-.filter-field {
-  width: 300px;
-}
-
-.effect-controls {
+.effect-controls, .value-inputs {
   display: flex;
   flex-direction: row;
-  gap: 0.75rem;
-  align-items: flex-end;
-  flex-wrap: nowrap;
-}
-
-.effect-field {
-  width: 220px;
-  flex: 0 0 220px;
-}
-
-.operator-field {
-  width: 100px;
-  flex: 0 0 100px;
-}
-
-.value-field {
-  width: 140px;
-  flex: 0 0 140px;
-}
-
-.value-inputs {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-end;
-  flex-wrap: nowrap;
-}
-
-.selected-types-container {
-  display: flex;
+  gap: 0.25rem;
   align-items: center;
-  gap: 4px;
 }
 
-.selected-type-image {
-  display: inline-block;
+/* Группа сброса */
+.reset-group {
+  border: none;
+  background: transparent;
+  padding: 0;
+  justify-content: center;
 }
 
-.rarity-filter-group {
-  min-height: 108px;
+.reset-btn {
+  height: 40px;
+  color: #d32f2f !important;
+  border-color: #ffcdd2 !important;
 }
 
-.rarity-toggles,
-.type-toggles {
+.reset-btn mat-icon { margin-right: 4px; }
+
+/* Кнопки переключения (Rarity/Type) */
+.rarity-toggles, .type-toggles {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: center;
   flex-wrap: wrap;
-  min-height: 56px;
 }
 
-.rarity-toggle-btn,
-.type-toggle-btn {
-  padding: 0.4rem 1rem;
+.rarity-toggle-btn, .type-toggle-btn {
+  padding: 0.25rem 0.75rem;
   border: 2px solid transparent;
   border-radius: 999px;
   font-weight: 500;
@@ -117,92 +92,68 @@
   color: #666;
 }
 
-.rarity-toggle-btn:hover,
-.type-toggle-btn:hover {
-  filter: brightness(0.95);
-}
-
-.rarity-toggle-btn.selected {
-  color: #333;
-}
-
 .type-toggle-btn {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 0.25rem 0.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 56px;
-  min-height: 40px;
-  padding: 0.4rem 0.9rem;
-  color: #333;
 }
 
-.type-toggle-btn.selected {
-  background: #d4d4d4;
-  border-color: #bfbfbf;
-}
+.type-toggle-btn img { width: 20px; height: 20px; display: block; }
 
-.type-toggle-btn:focus,
-.type-toggle-btn:focus-visible,
-.rarity-toggle-btn:focus,
-.rarity-toggle-btn:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
+/* Цвета редкостей */
+.rarity-toggle-btn.selected.rarity-ssr { background: linear-gradient(124deg, #e67e73, #e6c27e, #e6e673, #73e673, #73c7e6, #c773e6); color: #333; }
+.rarity-toggle-btn.selected.rarity-sr { background: #e6d573; color: #333; }
+.rarity-toggle-btn.selected.rarity-r { background: #d4d4d4; color: #333; }
+.rarity-toggle-btn:not(.selected), .type-toggle-btn:not(.selected) { opacity: 0.5; }
 
-.type-toggle-btn img {
-  display: block;
-}
-
-.rarity-toggle-btn.selected.rarity-ssr {
-  background: linear-gradient(124deg, #e67e73, #e6c27e, #e6e673, #73e673, #73c7e6, #c773e6);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.rarity-toggle-btn.selected.rarity-sr {
-  background: #e6d573;
-  border-color: #d4c45a;
-  color: #333;
-}
-
-.rarity-toggle-btn.selected.rarity-r {
-  background: #d4d4d4;
-  border-color: #bfbfbf;
-  color: #333;
-}
-
-.rarity-toggle-btn:not(.selected),
-.type-toggle-btn:not(.selected) {
-  opacity: 0.5;
-  background: #e0e0e0;
-}
-
+/* Доп. элементы управления */
 .checkbox-row {
   display: flex;
   align-items: center;
   padding-left: 0.25rem;
+  justify-content: space-between;
 }
 
 .action-buttons {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .ratings-button {
-  margin-left: auto;
   background: linear-gradient(135deg, #7b61ff, #4f8cff);
   color: #fff;
   box-shadow: 0 6px 16px rgba(79, 140, 255, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-.ratings-button:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 8px 20px rgba(79, 140, 255, 0.34);
+/* Адаптивность */
+@media (max-width: 900px) {
+  .name-group { order: 1; flex: 1 1 100%; }
+  .type-group { order: 2; }
+  .rarity-filter-group { order: 3; }
+  .effect-group { order: 4; }
+  .reset-group { order: 5; }
+
+  .filter-group, .rarity-filter-group {
+    flex-grow: 1;
+    justify-content: center;
+  }
+
+  .name-field, .filter-field {
+    width: 100% !important;
+  }
 }
 
-.ratings-button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.25), 0 8px 20px rgba(79, 140, 255, 0.34);
+@media (max-width: 600px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .name-field, .effect-field, .operator-field, .value-field {
+    width: 100% !important;
+  }
 }

@@ -51,3 +51,32 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   /*--mdc-snackbar-supporting-text-color: #ffffff; !* White text *!*/
   /*--mat-snack-bar-button-color: #ffffff;         !* White action button *!*/
 }
+
+/* Глобальное уменьшение высоты Material Outline полей */
+.mat-mdc-form-field-wrapper {
+  margin-bottom: -1.25em !important;
+}
+
+.mat-mdc-text-field-wrapper.mdc-text-field--outlined {
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.mat-mdc-form-field-flex {
+  height: 40px !important;
+}
+
+.mat-mdc-form-field-infix {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  min-height: 40px !important;
+}
+
+.mat-mdc-select-trigger {
+  margin-top: -2px !important;
+}
+
+.mat-mdc-form-field-label-wrapper {
+  top: -8px !important;
+}
