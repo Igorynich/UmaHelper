@@ -174,7 +174,7 @@
               @case ('traineeUniq') {
                 <div class="uniq-skills">
                   @for (skillId of $any(row).skills_unique; track skillId) {
-                    <app-skill-display [skillId]="skillId" [simpleView]="true"></app-skill-display>
+                    <app-skill-display [skillId]="skillId" [mode]="SkillDisplayMode.Text"></app-skill-display>
                   }
                 </div>
               }

@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, computed, inject, input, Signal} from '@angular/core';
 import {MatExpansionModule} from '@angular/material/expansion';
-import {SkillDisplay} from '../skill-display/skill-display';
+import {SkillDisplay, SkillDisplayMode} from '../skill-display/skill-display';
 import {rxResource} from '@angular/core/rxjs-interop';
 import {of} from 'rxjs';
 import {EventsService, evntTypeConvertFn} from '../../../services/events.service';
@@ -20,6 +20,8 @@ export class TrainingEventsComponent {
   private readonly eventsService = inject(EventsService);
 
   readonly entityId = input.required<number | string>();
+
+  protected SkillDisplayMode = SkillDisplayMode;
 
   protected readonly trainingEventsResource = rxResource({
     params: () => ({ cardId: this.entityId() }),

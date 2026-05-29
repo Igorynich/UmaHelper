@@ -43,6 +43,15 @@
   align-items: center;
 }
 
+.skill-icon-wrapper__icon-mode {
+  width: 40px;    /* Fixed width for the icon area */
+  height: 40px;   /* Fixed height for the icon area */
+  display: flex;  /* Use flex to center image if needed */
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
 .skill-info {
 
 }

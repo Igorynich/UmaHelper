@@ -47,7 +47,7 @@
                           @switch (reward.dataType) {
                             @case (EventRewardDataType.skill) {
                               <li><span class="skill-reward-inline">
-                            <app-skill-display [skill]="reward.data" [simpleView]="true"
+                            <app-skill-display [skill]="reward.data" [mode]="SkillDisplayMode.Text"
                                                style="display: inline-block;"></app-skill-display>
                             <span>{{ reward.value }}</span>
                           </span></li>

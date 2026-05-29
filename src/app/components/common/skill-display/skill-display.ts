@@ -12,18 +12,27 @@ import {rxResource} from '@angular/core/rxjs-interop';
 import {forkJoin, of} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {SkillMap} from '../../../interfaces/skill-map';
+import {MatTooltip} from '@angular/material/tooltip';
+
+export enum SkillDisplayMode {
+  Full = 'full',
+  Text = 'text',
+  Icon = 'icon'
+}
 
 @Component({
   selector: 'app-skill-display',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, ImagekitioAngularModule, MatIconButton],
+  imports: [CommonModule, MatCardModule, MatIconModule, ImagekitioAngularModule, MatIconButton, MatTooltip],
   templateUrl: './skill-display.html',
   styleUrls: ['./skill-display.css']
 })
 export class SkillDisplay {
   skill = input<Skill | undefined>(undefined);
   skillId = input<number | undefined>(undefined);
-  simpleView = input(false, { transform: booleanAttribute });
+  mode = input(SkillDisplayMode.Full);
+
+  protected SkillDisplayMode = SkillDisplayMode;
 
   private skillResource = rxResource({
     params: () => ({
@@ -56,8 +65,9 @@ export class SkillDisplay {
     if (!skill) return '';
 
     const rarity = skill.rarity;
-    const baseClass = this.simpleView() ? 'simple-skill-view' : 'skill-card';
-    const raritySuffix = this.simpleView() ? '-simple' : '';
+    const notFullMode = this.mode() !== SkillDisplayMode.Full;
+    const baseClass = notFullMode ? 'simple-skill-view' : 'skill-card';
+    const raritySuffix = notFullMode ? '-simple' : '';
 
     if (rarity === Rarity.Normal) {
       return `${baseClass} rarity${raritySuffix}-normal`;
@@ -73,6 +83,7 @@ export class SkillDisplay {
 
     return baseClass;
   });
+
 
   openSkillDialog(skill: Skill, skillMap: SkillMap | null | undefined): void {
     this.dialog.open(SkillDialogComponent, {

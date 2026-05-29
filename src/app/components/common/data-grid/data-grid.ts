@@ -31,7 +31,7 @@ import {
   CheckboxSelection
 } from './data-grid.types';
 import {EffectValuePipe} from '../../../pipes/effect-value.pipe';
-import { SkillDisplay } from '../skill-display/skill-display';
+import { SkillDisplay, SkillDisplayMode } from '../skill-display/skill-display';
 import { RarityStarsPipe } from '../../../pipes/rarity-stars.pipe';
 import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {SnakeToTitlePipe} from '../../../pipes/snake-to-title.pipe';
@@ -82,6 +82,8 @@ export class DataGrid<T> implements AfterViewInit {
   setAllToMax = output();
   addClicked = output<T>();
   removeClicked = output<T>();
+
+  protected SkillDisplayMode = SkillDisplayMode;
 
   protected readonly allColumnKeys = computed(() => this.columns().map((c) => c.key));
   protected readonly visibleColumns = signal<string[]>([]);

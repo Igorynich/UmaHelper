@@ -1,23 +1,32 @@
 @if (skillSignal(); as skill) {
   @let skillMap = skillMapSignal();
-  @if (!simpleView()) {
-    <mat-card [class]="rarityClass()">
-      <div class="skill-icon-wrapper">
+  @switch (mode()) {
+    @case (SkillDisplayMode.Full) {
+      <mat-card [class]="rarityClass()">
+        <div class="skill-icon-wrapper">
+          <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
+          </ik-image>
+        </div>
+        <div class="skill-info">
+          <div class="skill-name">{{ skill.name_en }}</div>
+          <div class="skill-desc">{{ skill.desc_en }}</div>
+        </div>
+        <button mat-icon-button class="skill-details-button" (click)="openSkillDialog(skill, skillMap)">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+      </mat-card>
+    }
+    @case (SkillDisplayMode.Text) {
+      <span [class]="rarityClass()" (click)="openSkillDialog(skill, skillMap)">
+      {{ skill.name_en }}
+    </span>
+    }
+    @case (SkillDisplayMode.Icon) {
+      <div class="skill-icon-wrapper__icon-mode" (click)="openSkillDialog(skill, skillMap)" [matTooltip]="skill.name_en">
         <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
         </ik-image>
       </div>
-      <div class="skill-info">
-        <div class="skill-name">{{ skill.name_en }}</div>
-        <div class="skill-desc">{{ skill.desc_en }}</div>
-      </div>
-      <button mat-icon-button class="skill-details-button" (click)="openSkillDialog(skill, skillMap)">
-        <mat-icon>more_vert</mat-icon>
-      </button>
-    </mat-card>
-  } @else {
-    <span [class]="rarityClass()" (click)="openSkillDialog(skill, skillMap)">
-      {{ skill.name_en }}
-    </span>
+    }
   }
 } @else if (isLoading()) {
   <div class="overlay">
