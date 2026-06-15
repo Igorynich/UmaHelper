@@ -28,6 +28,9 @@ import { matchesNameFilter } from '../../../utils/name-filter.utils';
 import {TitleCasePipe} from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { TraineeInfo } from '../../../components/dialogs/trainee-info/trainee-info';
+import {ModalControlService} from '../../../services/modal-control';
+import {SupportCardInfo} from '../../../components/dialogs/support-card-info/support-card-info';
+import {SkillDialogComponent} from '../../../components/common/skill-dialog/skill-dialog';
 
 type AptitudeStat = SurfaceAptitude | DistanceAptitude | StrategyAptitude;
 
@@ -75,7 +78,7 @@ export interface TraineeRow {
 export class TraineeListViewComponent {
   private destroyRef = inject(DestroyRef);
   private dataGridStateService = inject(DataGridStateService);
-  private dialog = inject(MatDialog);
+  private modalControlService = inject(ModalControlService);
 
   trainees = input<DisplayTrainee[]>([]);
   isFirstTab = input<boolean>(false);
@@ -173,6 +176,11 @@ export class TraineeListViewComponent {
         }, { emitEvent: false });
       }
     });
+
+    // register dialogs
+    this.modalControlService.register('supportCardInfo', SupportCardInfo);
+    this.modalControlService.register('skillInfo', SkillDialogComponent);
+    this.modalControlService.register('traineeInfo', TraineeInfo);
   }
 
   private readonly filters = toSignal(
@@ -343,7 +351,7 @@ export class TraineeListViewComponent {
     console.log(trainee);
     if (!trainee) return;
 
-    this.dialog.open(TraineeInfo, {
+    this.modalControlService.open('traineeInfo', {
       data: trainee,
       maxWidth: '90vw',
       maxHeight: '90vh',

@@ -16,6 +16,10 @@ import {MatInputModule} from '@angular/material/input';
 import {toSignal} from '@angular/core/rxjs-interop';
 import { SkillDisplay } from '../../components/common/skill-display/skill-display';
 import { matchesNameFilter } from '../../utils/name-filter.utils';
+import {ModalControlService} from '../../services/modal-control';
+import {SupportCardInfo} from '../../components/dialogs/support-card-info/support-card-info';
+import {SkillDialogComponent} from '../../components/common/skill-dialog/skill-dialog';
+import {TraineeInfo} from '../../components/dialogs/trainee-info/trainee-info';
 
 @Component({
   selector: 'app-skills',
@@ -39,6 +43,7 @@ import { matchesNameFilter } from '../../utils/name-filter.utils';
 export class SkillsComponent {
   private skillsService = inject(SkillsService);
   private spinnerService = inject(SpinnerService);
+  private modalControlService = inject(ModalControlService);
 
   readonly typeFilters = [
     {
@@ -187,6 +192,7 @@ export class SkillsComponent {
 
   constructor() {
     this.spinnerService.show();
+    // todo use resource?
     this.skillsService.getSkills().pipe(
       // map(skills => skills.sort((a, b) => a.enname.localeCompare(b.enname))),
       map(skills => skills.sort((a, b) => a.iconid - b.iconid)),
@@ -206,6 +212,11 @@ export class SkillsComponent {
         });
       }),
     ).subscribe();
+
+    // register dialogs
+    this.modalControlService.register('supportCardInfo', SupportCardInfo);
+    this.modalControlService.register('skillInfo', SkillDialogComponent);
+    this.modalControlService.register('traineeInfo', TraineeInfo);
   }
 
   clearFilter() {

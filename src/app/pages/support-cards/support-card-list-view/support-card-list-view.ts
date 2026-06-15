@@ -18,16 +18,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 import { SupportCardType } from '../../../interfaces/support-card-type.enum';
 import { MatDialog } from '@angular/material/dialog';
-import { SupportCardInfo } from '../../../components/dialogs/support-card-info/support-card-info';
 import {SupportCardRatings} from '../../../components/dialogs/support-card-ratings/support-card-ratings';
 import {MatMenu} from '@angular/material/menu';
 import { DataGridStateService } from '../../../services/data-grid-state.service';
 import { SupportCardEffectData }
 from '../../../interfaces/support-card';
 import {rarityLevelMap, SupportCardService } from '../../../services/support-card.service';
-import {RatingsService} from '../../../services/ratings.service';
 import { matchesNameFilter } from '../../../utils/name-filter.utils';
 import {tap} from 'rxjs/operators';
+import {ModalControlService} from '../../../services/modal-control';
+import {SupportCardInfo} from '../../../components/dialogs/support-card-info/support-card-info';
+import {SkillDialogComponent} from '../../../components/common/skill-dialog/skill-dialog';
+import {TraineeInfo} from '../../../components/dialogs/trainee-info/trainee-info';
 
 type Operator = '>=' | '<=' | '>' | '<' | '=';
 
@@ -52,6 +54,7 @@ type Operator = '>=' | '<=' | '>' | '<' | '=';
 export class SupportCardListViewComponent {
   private destroyRef = inject(DestroyRef);
   private dialog = inject(MatDialog);
+  private modalControlService = inject(ModalControlService);
   private dataGridStateService = inject(DataGridStateService);
   private supportCardService = inject(SupportCardService);
 
@@ -98,6 +101,10 @@ export class SupportCardListViewComponent {
         this.filterForm.patchValue(tabState.filter, { emitEvent: false });
       }
     });
+    // register dialogs
+    this.modalControlService.register('supportCardInfo', SupportCardInfo);
+    this.modalControlService.register('skillInfo', SkillDialogComponent);
+    this.modalControlService.register('traineeInfo', TraineeInfo);
   }
 
   protected readonly Rarity = Rarity;
@@ -350,8 +357,8 @@ export class SupportCardListViewComponent {
   protected openImageModal(cardData: SupportCardEffectData): void {
     const fullCardData = this.supportCardsWithLevels().find(card => card.support_id === cardData.support_id);
     if (fullCardData) {
-      this.dialog.open(SupportCardInfo, {
-        data: fullCardData,
+      this.modalControlService.open('supportCardInfo', {
+        data: {card: fullCardData},
         maxWidth: '90vw',
         maxHeight: '90vh',
       });
@@ -359,7 +366,7 @@ export class SupportCardListViewComponent {
   }
 
   protected openRatingsModal(): void {
-    const dialogRef = this.dialog.open(SupportCardRatings, {
+    this.dialog.open(SupportCardRatings, {
       data: { cards: this.filteredCards, fullCards: this.supportCardsWithLevels },
       maxWidth: '90vw',
       maxHeight: '90vh',

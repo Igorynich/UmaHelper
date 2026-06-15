@@ -16,7 +16,7 @@
           @case ('char') {
             @if (characterTrainees().length) {
               <li><strong>{{ key | skillKeyTranslator | titlecase }}: </strong>
-                @for (trainee of characterTrainees(); track trainee.itemData.char_id) {
+                @for (trainee of characterTrainees(); track trainee.itemData.card_id) {
                   <app-entity-display
                     [trainee]="trainee"
                     [mode]="'img'">
@@ -31,7 +31,9 @@
                 @for (supCardId of supCardEvents(); track supCardId) {
                   <app-entity-display
                     [supportCard]="supCards()[supCardId.toString()]"
-                    [mode]="'img'">
+                    [mode]="'img'"
+                    (click)="openSupCardDetailModal(supCards()[supCardId.toString()])"
+                    >
                   </app-entity-display>
                 }
               </li>
@@ -43,7 +45,9 @@
                 @for (supCardId of supCardHints(); track supCardId) {
                   <app-entity-display
                     [supportCard]="supCards()[supCardId.toString()]"
-                    [mode]="'img'">
+                    [mode]="'img'"
+                    (click)="openSupCardDetailModal(supCards()[supCardId.toString()])"
+                    >
                   </app-entity-display>
                 }
               </li>

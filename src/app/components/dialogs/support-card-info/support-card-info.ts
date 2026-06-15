@@ -6,7 +6,7 @@ import { SkillsService } from '../../../services/skills.service';
 import { Skill } from '../../../interfaces/skill';
 import { take } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { SkillDisplay } from '../../common/skill-display/skill-display';
+import {SkillDisplay, SkillDisplayMode} from '../../common/skill-display/skill-display';
 import {MatCard} from '@angular/material/card';
 import {EventsService} from '../../../services/events.service';
 import {TrainingEventsComponent} from '../../common/training-events/training-events';
@@ -25,6 +25,11 @@ import {RatingsService} from '../../../services/ratings.service';
 import { getEffectValueFn } from '../../../utils/effect-data-utils';
 import {ImagekitioAngularModule} from 'imagekitio-angular';
 
+export interface SupportCardInfoDialogData {
+  mode?: 'full' | 'mini';
+  card: DisplaySupportCard;
+}
+
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
@@ -33,12 +38,16 @@ import {ImagekitioAngularModule} from 'imagekitio-angular';
   styleUrl: './support-card-info.css'
 })
 export class SupportCardInfo {
-  protected readonly rawCardData: Signal<DisplaySupportCard> = signal(inject(MAT_DIALOG_DATA) as DisplaySupportCard);
+  // protected readonly dialogData = inject(MAT_DIALOG_DATA) as SupportCardInfoDialogData;
+  protected readonly dialogData = signal(inject(MAT_DIALOG_DATA) as SupportCardInfoDialogData);
+  protected readonly rawCardData = computed(() => this.dialogData().card);   // signal(this.dialogData().card);
+  protected readonly mode = computed(() => this.dialogData().mode || 'full');
   protected readonly dialogRef = inject(MatDialogRef<SupportCardInfo>);
   private readonly skillsService = inject(SkillsService);
   private readonly supportCardService = inject(SupportCardService);
   private readonly ratingsService = inject(RatingsService);
 
+  // protected readonly mode = signal(this.dialogData().mode || 'full');
   protected readonly rarityLevelMap = rarityLevelMap;
   protected readonly level: WritableSignal<number> = signal(this.rawCardData().level || rarityLevelMap[this.rawCardData().rarity].default);
   protected hintSkills = signal<Skill[]>([]);
@@ -194,6 +203,12 @@ export class SupportCardInfo {
 
   protected close(): void {
     this.dialogRef.close();
+  }
+
+  protected readonly SkillDisplayMode = SkillDisplayMode;
+
+  protected switchMode(mode: 'full' | 'mini') {
+    this.dialogData.set({...this.dialogData(), mode});
   }
 }
 

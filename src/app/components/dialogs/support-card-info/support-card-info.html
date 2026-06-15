@@ -1,100 +1,193 @@
-<div mat-dialog-title class="dialog-title">
-  <img [src]="typeImageUrl()" [alt]="processedCardData().type" class="type-icon">
-  <h2>{{ rawCardData().char_name }}</h2>
-  <button mat-icon-button (click)="close()" class="close-button">
-    <mat-icon>close</mat-icon>
-  </button>
-</div>
-<mat-dialog-content class="dialog-content-wrapper">
-  <div class="image-section">
-    <ik-image [path]=processedCardData().characterImageUrl [attr.alt]="rawCardData().char_name"></ik-image>
+@if (mode() === 'full') {
+  <div mat-dialog-title class="dialog-title">
+    <img [src]="typeImageUrl()" [alt]="processedCardData().type" class="type-icon">
+    <h2>{{ rawCardData().char_name }}</h2>
+    <button mat-icon-button (click)="switchMode('mini')" class="shrink-button" matTooltip="To Mini Mode">
+      <mat-icon>unfold_less</mat-icon>
+    </button>
+    <button mat-icon-button (click)="close()" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  <mat-dialog-content class="dialog-content-wrapper">
+    <div class="image-section">
+      <ik-image [path]=processedCardData().characterImageUrl [attr.alt]="rawCardData().char_name"></ik-image>
 
-    <app-level
-      [minLevel]="1"
-      [maxLevel]="rarityLevelMap[rawCardData().rarity].max"
-      [currentLevel]="level()"
-      (levelChange)="onLevelChange($event)"
-    ></app-level>
+      <app-level
+        [minLevel]="1"
+        [maxLevel]="rarityLevelMap[rawCardData().rarity].max"
+        [currentLevel]="level()"
+        (levelChange)="onLevelChange($event)"
+      ></app-level>
 
-    @if (processedCardData().uniqueDisplayData; as uniqueData) {
-      <div class="unique-effects-section" [class.locked-unique-effect]="uniqueData.isCardUniqueLocked">
-        <div class="unique-level-display">Unique Effect ({{ uniqueData.levelDisplay }})</div>
-        <div class="unique-effects-list">
-          @for (effect of uniqueData.effectsDisplay; track $index) {
-            <div class="unique-effect-item">
-              <span class="unique-effect-name">{{ effect.longName }}</span>
-              <span class="unique-effect-value">{{ effect.value }}</span>
+      @if (processedCardData().uniqueDisplayData; as uniqueData) {
+        <div class="unique-effects-section" [class.locked-unique-effect]="uniqueData.isCardUniqueLocked">
+          <div class="unique-level-display">Unique Effect ({{ uniqueData.levelDisplay }})</div>
+          <div class="unique-effects-list">
+            @for (effect of uniqueData.effectsDisplay; track $index) {
+              <div class="unique-effect-item">
+                <span class="unique-effect-name">{{ effect.longName }}</span>
+                <span class="unique-effect-value">{{ effect.value }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="card-stats-grid">
+        @for (effectId of presentEffectIds(); track effectId) {
+          @if (processedCardData()[effectId.toString()]; as effectData) {
+            <div class="stat-row">
+              <span class="stat-name">{{ effectId | effectIdTranslator }}</span>
+              <span class="stat-value">
+                <span
+                  [class]="(effectData | effectValue:effectId).cssClass">{{ (effectData | effectValue:effectId).value }}</span>
+                @if (statDifferences()[effectId.toString()]; as diff) {
+                  <span [class.positive-diff]="diff > 0" [class.negative-diff]="diff < 0">
+                    ({{ diff > 0 ? '+' : '' }}{{ diff }})
+                  </span>
+                }
+              </span>
             </div>
+          }
+        }
+      </div>
+
+      <!-- Stat differences toggle -->
+      <div class="stat-differences-toggle">
+        <mat-checkbox
+          [checked]="showStatDifferences()"
+          (change)="toggleStatDifferences()"
+          labelPosition="after">
+          Show stat differences
+        </mat-checkbox>
+      </div>
+    </div>
+    <div class="info-section">
+      <div class="info-block">
+        <h3>Support hints</h3>
+        <p class="description">One will be randomly granted when getting a hint during training</p>
+        <div class="skills-container">
+          @for (skill of hintSkills(); track skill.id) {
+            <app-skill-display [skill]="skill"></app-skill-display>
+          }
+        </div>
+        @for (group of statGains(); track $index) {
+          <mat-card class="skill-card stat-gain-card">
+            <div class="skill-icon-wrapper">
+              <mat-icon>insights</mat-icon>
+            </div>
+            <div class="skill-info">
+              <div class="skill-name">Stat gain</div>
+              <ul class="stat-gains-list">
+                @for (gain of group; track $index) {
+                  <li class="stat-gain-item"><span>{{ gain }}</span></li>
+                }
+              </ul>
+            </div>
+          </mat-card>
+        }
+      </div>
+      <div class="info-block">
+        <h3>Skills from events</h3>
+        <div class="skills-container">
+          @for (skill of eventSkills(); track skill.id) {
+            <app-skill-display [skill]="skill"></app-skill-display>
           }
         </div>
       </div>
-    }
+      <div class="info-block">
+        <h3>Training Events</h3>
+        <app-training-events [entityId]="rawCardData().support_id"></app-training-events>
+      </div>
+    </div>
+  </mat-dialog-content>
+} @else {
+  <div mat-dialog-title class="dialog-title dialog-title-mini">
+    <img [src]="typeImageUrl()" [alt]="processedCardData().type" class="type-icon type-icon-mini">
+    <h2>{{ rawCardData().char_name }}</h2>
+    <button mat-icon-button (click)="switchMode('full')" class="expand-button" matTooltip="To Full Mode">
+      <mat-icon>unfold_more</mat-icon>
+    </button>
+    <button mat-icon-button (click)="close()" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  <mat-dialog-content class="dialog-content-wrapper dialog-content-wrapper-mini">
+    <div class="mini-layout">
+      <div class="mini-left">
+        <ik-image [path]=processedCardData().characterImageUrl [attr.alt]="rawCardData().char_name" [transformation]="[{height: 250, width: 180}]"></ik-image>
 
-    <div class="card-stats-grid">
-      @for (effectId of presentEffectIds(); track effectId) {
-        @if (processedCardData()[effectId.toString()]; as effectData) {
-          <div class="stat-row">
-            <span class="stat-name">{{ effectId | effectIdTranslator }}</span>
-            <span class="stat-value">
-              <span
-                [class]="(effectData | effectValue:effectId).cssClass">{{ (effectData | effectValue:effectId).value }}</span>
-              @if (statDifferences()[effectId.toString()]; as diff) {
-                <span [class.positive-diff]="diff > 0" [class.negative-diff]="diff < 0">
-                  ({{ diff > 0 ? '+' : '' }}{{ diff }})
+        @if (processedCardData().uniqueDisplayData; as uniqueData) {
+          <div class="unique-effects-section mini-unique-section" [class.locked-unique-effect]="uniqueData.isCardUniqueLocked">
+            <div class="unique-level-display">Unique Effect ({{ uniqueData.levelDisplay }})</div>
+            <div class="unique-effects-list">
+              @for (effect of uniqueData.effectsDisplay; track $index) {
+                <div class="unique-effect-item">
+                  <span class="unique-effect-name">{{ effect.longName }}</span>
+                  <span class="unique-effect-value">{{ effect.value }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <div class="mini-middle">
+        <app-level
+          [minLevel]="1"
+          [maxLevel]="rarityLevelMap[rawCardData().rarity].max"
+          [currentLevel]="level()"
+          (levelChange)="onLevelChange($event)"
+        ></app-level>
+
+
+
+        <div class="card-stats-grid">
+          @for (effectId of presentEffectIds(); track effectId) {
+            @if (processedCardData()[effectId.toString()]; as effectData) {
+              <div class="stat-row">
+                <span class="stat-name">{{ effectId | effectIdTranslator }}</span>
+                <span class="stat-value">
+                  <span
+                    [class]="(effectData | effectValue:effectId).cssClass">{{ (effectData | effectValue:effectId).value }}</span>
+                  @if (statDifferences()[effectId.toString()]; as diff) {
+                    <span [class.positive-diff]="diff > 0" [class.negative-diff]="diff < 0">
+                      ({{ diff > 0 ? '+' : '' }}{{ diff }})
+                    </span>
+                  }
                 </span>
-              }
-            </span>
-          </div>
-        }
-      }
-    </div>
+              </div>
+            }
+          }
+        </div>
 
-    <!-- Stat differences toggle -->
-    <div class="stat-differences-toggle">
-      <mat-checkbox
-        [checked]="showStatDifferences()"
-        (change)="toggleStatDifferences()"
-        labelPosition="after">
-        Show stat differences
-      </mat-checkbox>
-    </div>
-  </div>
-  <div class="info-section">
-    <div class="info-block">
-      <h3>Support hints</h3>
-      <p class="description">One will be randomly granted when getting a hint during training</p>
-      <div class="skills-container">
-        @for (skill of hintSkills(); track skill.id) {
-          <app-skill-display [skill]="skill"></app-skill-display>
-        }
+        <div class="stat-differences-toggle">
+          <mat-checkbox
+            [checked]="showStatDifferences()"
+            (change)="toggleStatDifferences()"
+            labelPosition="after">
+            Show stat differences
+          </mat-checkbox>
+        </div>
       </div>
-      @for (group of statGains(); track $index) {
-        <mat-card class="skill-card stat-gain-card">
-          <div class="skill-icon-wrapper">
-            <mat-icon>insights</mat-icon>
+      <div class="mini-right">
+        <div class="mini-skills-section">
+          <h4>Hints</h4>
+          <div class="mini-skills-container">
+            @for (skill of hintSkills(); track skill.id) {
+              <app-skill-display [skill]="skill" [mode]="SkillDisplayMode.Icon"></app-skill-display>
+            }
           </div>
-          <div class="skill-info">
-            <div class="skill-name">Stat gain</div>
-            <ul class="stat-gains-list">
-              @for (gain of group; track $index) {
-                <li class="stat-gain-item"><span>{{ gain }}</span></li>
-              }
-            </ul>
+        </div>
+        <div class="mini-skills-section">
+          <h4>Events</h4>
+          <div class="mini-skills-container">
+            @for (skill of eventSkills(); track skill.id) {
+              <app-skill-display [skill]="skill" [mode]="SkillDisplayMode.Icon"></app-skill-display>
+            }
           </div>
-        </mat-card>
-      }
-    </div>
-    <div class="info-block">
-      <h3>Skills from events</h3>
-      <div class="skills-container">
-        @for (skill of eventSkills(); track skill.id) {
-          <app-skill-display [skill]="skill"></app-skill-display>
-        }
+        </div>
       </div>
     </div>
-    <div class="info-block">
-      <h3>Training Events</h3>
-      <app-training-events [entityId]="rawCardData().support_id"></app-training-events>
-    </div>
-  </div>
-</mat-dialog-content>
+  </mat-dialog-content>
+}

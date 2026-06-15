@@ -18,6 +18,7 @@ import {map} from 'rxjs/operators';
 import {SkillMap} from '../../../interfaces/skill-map';
 import {SupportCardService} from '../../../services/support-card.service';
 import {SupportCard} from '../../../interfaces/support-card';
+import {ModalControlService} from '../../../services/modal-control';
 
 export interface SkillDialogData {
   skill: Skill;
@@ -43,6 +44,8 @@ export interface SkillDialogData {
   styleUrl: './skill-dialog.css',
 })
 export class SkillDialogComponent {
+  private modalControlService = inject(ModalControlService);
+
   data: SkillDialogData = inject(MAT_DIALOG_DATA);
   // filteredProps: string[];
   readonly displayedProps = ['desc_en', 'endesc', 'char', 'supCardEvents', 'supCardHints', 'rarity', 'activation', 'cost'];
@@ -152,5 +155,14 @@ export class SkillDialogComponent {
       return result;
     });
   });
+
+  protected openSupCardDetailModal(cardData: SupportCard): void {
+    console.log('supCard', cardData);
+    if (cardData) {
+      this.modalControlService.open('supportCardInfo', {
+        data: { mode: 'mini', card: cardData }
+      });
+    }
+  }
 }
 

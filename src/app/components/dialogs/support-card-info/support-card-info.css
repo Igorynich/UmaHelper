@@ -1,3 +1,12 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+::ng-deep .cdk-overlay-pane {
+  max-width: 95vw !important; /* Не даем диалогу быть больше экрана */
+}
+
 .dialog-title {
   display: flex;
   justify-content: center; /* Center horizontally */
@@ -203,14 +212,34 @@
   align-items: center;
 }
 
-.close-button:hover {
+.expand-button, .shrink-button {
+  /* Aggressive Reset */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  /* Custom Styling */
+  position: absolute;
+  top: 16px;
+  right: 56px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #333;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-button:hover, .expand-button:hover, .shrink-button:hover {
   background-color: rgba(0, 0, 0, 0.1) !important;
   color: #000 !important;
   transform: scale(1.1);
   cursor: pointer;
 }
 
-.close-button .mat-icon {
+.close-button, .expand-button, .shrink-button .mat-icon {
   margin: 0;
   padding: 0;
 }
@@ -322,4 +351,227 @@
   margin-left: 4px;
   font-size: 0.9em;
   flex-shrink: 0;
+}
+
+/* Mini mode styles */
+.dialog-title-mini {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(to right, #ffffff, #f8f9fa);
+  border-bottom: 2px solid #eee;
+}
+
+.dialog-title-mini h2 {
+  font-size: 1.1rem;
+  margin: 0;
+  color: #2c3e50;
+  letter-spacing: 0.5px;
+}
+
+.type-icon-mini {
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.dialog-content-wrapper-mini {
+  padding: 1rem;
+  max-height: 80vh;
+  background-color: #fafafa;
+  overflow-x: auto;
+  min-width: 650px;
+}
+
+.mini-layout {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 0.5rem;
+}
+
+.mini-left {
+  flex: 0 0 180px;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: sticky;
+  top: 0;
+}
+
+.mini-left ik-image {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: block;
+}
+
+.mini-unique-section {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.75rem;
+  padding: 0.6rem;
+  margin-top: 0;
+  background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 188, 212, 0.1);
+  text-align: left;
+}
+
+.mini-unique-section .unique-level-display {
+  font-size: 0.7rem;
+  color: #00838f;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.mini-unique-section .unique-effect-item {
+  font-size: 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+  padding: 4px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.mini-unique-section .unique-effect-name {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+.mini-unique-section .unique-effect-value {
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+::ng-deep .mini-left ik-image img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 220px !important; /* Увеличили лимит высоты */
+  border-radius: 6px;
+  display: block;
+}
+
+.mini-middle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 250px;
+}
+
+.mini-middle app-level,
+.mini-middle .card-stats-grid,
+.mini-middle .stat-differences-toggle {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mini-middle .card-stats-grid {
+  font-size: 0.8rem;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mini-middle .card-stats-grid .stat-name {
+  flex: 1;
+  min-width: 80px;
+  max-width: none;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.mini-middle .card-stats-grid .stat-value {
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+
+.mini-middle .unique-effects-section {
+  font-size: 0.8rem;
+  padding: 0.75rem;
+  margin-top: 0;
+  background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 188, 212, 0.15);
+}
+
+.mini-middle .unique-level-display {
+  font-size: 0.75rem;
+  color: #00838f;
+  margin-bottom: 0.25rem;
+}
+
+.mini-middle .unique-effect-item {
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+  padding: 2px 0;
+}
+
+.mini-middle .stat-differences-toggle {
+  margin: -0.25rem 0 0 0;
+  padding: 0 0.5rem;
+  border: none;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.mini-middle .stat-differences-toggle mat-checkbox {
+  transform: scale(0.85); /* Уменьшаем сам чекбокс */
+  transform-origin: left center;
+}
+
+::ng-deep .mini-middle .stat-differences-toggle .mdc-label {
+  font-size: 0.75rem !important; /* Уменьшаем текст подписи */
+  color: #64748b;
+  letter-spacing: 0.2px;
+}
+
+.mini-right {
+  flex: 0 0 180px;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mini-skills-section {
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: white;
+  border: 1px solid #edf2f7;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.mini-skills-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  font-weight: 700;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 4px;
+}
+
+.mini-skills-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); /* Увеличили размер ячеек для иконок */
+  gap: 8px;
+}
+
+/* Эффект при наведении на иконки навыков в мини-режиме */
+.mini-skills-container ::ng-deep app-skill-display:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
 }
