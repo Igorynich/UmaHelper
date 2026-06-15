@@ -20,6 +20,10 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   max-width: 800px;
 }
 
+.hover {
+  cursor: pointer;
+}
+
 .locked-effect {
   color: grey;
   font-style: italic;

@@ -15,7 +15,7 @@
         @switch (key) {
           @case ('char') {
             @if (characterTrainees().length) {
-              <li><strong>{{ key | skillKeyTranslator | titlecase }}: </strong>
+              <li class="hover entity-list-item"><strong>{{ key | skillKeyTranslator | titlecase }}: </strong>
                 @for (trainee of characterTrainees(); track trainee.itemData.card_id) {
                   <app-entity-display
                     [trainee]="trainee"
@@ -28,7 +28,7 @@
           }
           @case ('supCardEvents') {
             @if (supCardEvents().length) {
-              <li><strong>Sup Card Events: </strong>
+              <li class="hover entity-list-item"><strong>Sup Card Events: </strong>
                 @for (supCardId of supCardEvents(); track supCardId) {
                   <app-entity-display
                     [supportCard]="supCards()[supCardId.toString()]"
@@ -42,7 +42,7 @@
           }
           @case ('supCardHints') {
             @if (supCardHints().length) {
-              <li><strong>Sup Card Hints: </strong>
+              <li class="hover entity-list-item"><strong>Sup Card Hints: </strong>
                 @for (supCardId of supCardHints(); track supCardId) {
                   <app-entity-display
                     [supportCard]="supCards()[supCardId.toString()]"
