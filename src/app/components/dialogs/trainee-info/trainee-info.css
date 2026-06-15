@@ -1,3 +1,4 @@
+/* --- Стили Full Mode (Оригинал) --- */
 .dialog-title {
   display: flex;
   justify-content: center;
@@ -86,38 +87,43 @@
   overflow-y: auto;
 }
 
-.close-button {
+.info-block {
+  padding: 0.8rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.info-block h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.skills-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.expand-button, .shrink-button, .close-button {
   background: transparent !important;
   border: none !important;
-  box-shadow: none !important;
-
   position: absolute;
   top: 16px;
-  right: 16px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
   color: #333;
-  transition: all 0.2s ease-in-out;
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: all 0.2s ease;
 }
 
-.close-button:hover {
-  background-color: rgba(0, 0, 0, 0.1) !important;
-  color: #000 !important;
-  transform: scale(1.1);
-  cursor: pointer;
-}
+.close-button { right: 16px; }
+.expand-button, .shrink-button { right: 56px; }
 
-::ng-deep .mdc-dialog__surface {
-  background-color: white;
-  position: relative;
-  z-index: 1;
-}
-
-/* Unified table container styling */
 .stats-container,
 .aptitudes-container {
   width: 90%;
@@ -130,132 +136,178 @@
   overflow: hidden;
 }
 
-/* Unified table base styling */
 :host ::ng-deep .data-table.mat-mdc-table {
   width: 100%;
   background: transparent !important;
   border-collapse: collapse !important;
 }
 
-:host ::ng-deep .data-table .mat-mdc-row {
-  height: 2rem !important;
+.grade-A { color: #2e7d32; font-weight: 700; }
+.grade-B { color: #558b2f; font-weight: 700; }
+.grade-C { color: #f57f17; font-weight: 700; }
+.grade-D { color: #e65100; font-weight: 700; }
+.grade-E { color: #b71c1c; font-weight: 700; }
+.text-center { text-align: center; }
+
+::ng-deep .mdc-dialog__surface { background-color: white; position: relative; z-index: 1; }
+::ng-deep .mdc-dialog__surface::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; }
+::ng-deep .rarity-ssr-dialog .mdc-dialog__surface::before { background: linear-gradient(124deg, rgba(255, 39, 16, 0.3), rgba(255, 153, 0, 0.3), rgba(255, 233, 0, 0.3), rgba(0, 255, 0, 0.3), rgba(0, 199, 255, 0.3), rgba(121, 0, 255, 0.3)); }
+::ng-deep .rarity-sr-dialog .mdc-dialog__surface::before { background-color: rgba(255, 215, 0, 0.4); }
+::ng-deep .rarity-r-dialog .mdc-dialog__surface::before { background-color: rgba(192, 192, 192, 0.4); }
+
+/* --- Стили Mini Mode (Squished & Clean Version) --- */
+
+::ng-deep .cdk-overlay-pane {
+  max-width: 95vw !important;
 }
 
-/* Stats-specific styling */
-:host ::ng-deep .mat-mdc-table .bonus-row .mat-mdc-cell {
-  border-top: 3px solid rgb(21 20 20 / 0.5) !important;
+::ng-deep .dialog-content-wrapper-mini {
+  padding: 1.25rem !important;
+  background-color: #f8fafc;
+  min-width: 850px !important;
+  box-sizing: border-box;
 }
 
-:host ::ng-deep .stats-table th img,
-:host ::ng-deep .stats-table .mat-mdc-header-cell img {
-  display: block;
+.dialog-title-mini {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #edf2f7;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.dialog-title-mini .trainee-info-wrapper {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.mini-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+.mini-left {
+  flex: 0 0 185px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+::ng-deep .mini-left ik-image img {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.unique-skills-bottom {
+  background: linear-gradient(135deg, #fffbeb 0%, #fff 100%) !important;
+  border: 1px solid #fde68a !important;
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+.unique-skills-bottom h4 {
+  color: #b45309 !important;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.mini-middle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.mini-middle .stats-container,
+.mini-middle .aptitudes-mini {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.4rem 0.6rem !important;
+  width: 420px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+}
+
+::ng-deep .mini-middle .mat-mdc-table {
+  width: 100% !important;
+  background: transparent !important;
+  display: table !important;
+  table-layout: fixed !important;
+  border: none !important; /* Убираем внешнюю рамку таблицы */
+}
+
+::ng-deep .mini-middle .mat-mdc-header-row { height: 24px !important; border-bottom: none !important; }
+::ng-deep .mini-middle .mat-mdc-row { height: 24px !important; border-bottom: none !important; }
+
+::ng-deep .mini-middle .mat-mdc-cell,
+::ng-deep .mini-middle .mat-mdc-header-cell {
+  padding: 2px 0 !important;
+  border: none !important; /* Убираем все границы ячеек */
+  border-bottom: 1px solid #f1f5f9 !important; /* Оставляем только мягкий разделитель строк */
+  font-size: 0.75rem;
+  text-align: center;
+  box-shadow: none !important;
+}
+
+::ng-deep .mini-middle .mat-column-label {
+  text-align: left !important;
+  font-weight: 600;
+  width: 80px !important;
+  color: #64748b;
+  padding-left: 4px !important;
+}
+
+.mini-middle span[class^='grade-'],
+::ng-deep .mini-middle span[class^='grade-'] {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: #f1f5f9;
+  font-weight: 800;
+  font-size: 0.8rem;
   margin: 0 auto;
 }
 
-:host ::ng-deep .stats-table .mat-mdc-header-cell img {
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+.mini-right {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-/* Aptitude-specific styling */
-.aptitude-table {
-  width: 100%;
-  border-bottom: 2px solid rgb(16 14 14 / 0.5);
+.mini-skills-section {
+  background: white;
+  padding: 0.6rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.aptitude-table:last-child {
-  border-bottom: none;
-}
-
-:host ::ng-deep .aptitude-table.mat-mdc-table {
-  table-layout: fixed !important;
-}
-
-:host ::ng-deep .aptitude-table .mat-mdc-cell,
-:host ::ng-deep .aptitude-table .mat-mdc-header-cell {
-  padding: 2px 8px !important;
-  line-height: 1.2 !important;
-  height: auto !important;
-}
-
-/* Label column width and bold */
-:host ::ng-deep .aptitude-table .mat-mdc-cell:first-child,
-:host ::ng-deep .aptitude-table .mat-mdc-header-cell:first-child {
-  width: 50px !important;
-  min-width: 50px !important;
-  font-weight: 700 !important;
-}
-
-/* Grade columns width */
-:host ::ng-deep .aptitude-table .mat-mdc-cell:not(:first-child),
-:host ::ng-deep .aptitude-table .mat-mdc-header-cell:not(:first-child) {
-  width: 50px !important;
-  min-width: 50px !important;
-}
-
-.text-center {
-  text-align: center;
-}
-
-/* Grade colors */
-.aptitude-grade {
+.mini-skills-section h4 {
+  margin: 0 0 0.4rem 0;
+  font-size: 0.7rem;
   font-weight: 700;
-  font-size: 0.875rem;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.grade-A {
-  color: #2e7d32;
-  font-weight: 700;
-}
-
-.grade-B {
-  color: #558b2f;
-  font-weight: 700;
-}
-
-.grade-C {
-  color: #f57f17;
-  font-weight: 700;
-}
-
-.grade-D {
-  color: #e65100;
-  font-weight: 700;
-}
-
-.grade-E {
-  color: #b71c1c;
-  font-weight: 700;
-}
-
-.grade-F {
-  color: #880e4f;
-  font-weight: 700;
-}
-
-.grade-G {
-  color: #9e9e9e;
-  font-weight: 700;
-}
-
-::ng-deep .mdc-dialog__surface::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  border: none !important;
-}
-
-::ng-deep .rarity-ssr-dialog .mdc-dialog__surface::before {
-  background: linear-gradient(124deg, rgba(255, 39, 16, 0.3), rgba(255, 153, 0, 0.3), rgba(255, 233, 0, 0.3), rgba(0, 255, 0, 0.3), rgba(0, 199, 255, 0.3), rgba(121, 0, 255, 0.3));
-}
-
-::ng-deep .rarity-sr-dialog .mdc-dialog__surface::before {
-  background-color: rgba(255, 215, 0, 0.4);
-}
-
-::ng-deep .rarity-r-dialog .mdc-dialog__surface::before {
-  background-color: rgba(192, 192, 192, 0.4);
+.mini-skills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }

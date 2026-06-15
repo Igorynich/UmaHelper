@@ -156,8 +156,15 @@ export class SkillDialogComponent {
     });
   });
 
+  protected openTraineeDetailModal(trainee: Trainee): void {
+    if (trainee) {
+      this.modalControlService.open('traineeInfo', {
+        data: { mode: 'mini', trainee }
+      });
+    }
+  }
+
   protected openSupCardDetailModal(cardData: SupportCard): void {
-    console.log('supCard', cardData);
     if (cardData) {
       this.modalControlService.open('supportCardInfo', {
         data: { mode: 'mini', card: cardData }

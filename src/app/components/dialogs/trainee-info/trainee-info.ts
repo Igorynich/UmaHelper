@@ -11,15 +11,20 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatIconModule } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 import { ImagekitioAngularModule } from 'imagekitio-angular';
-import { DisplayTrainee } from '../../../interfaces/display-trainee';
-import { Rarity } from '../../../interfaces/display-support-card';
+import {Rarity} from '../../../interfaces/display-support-card';
 import {MatTableModule} from '@angular/material/table';
 import {MatTooltip} from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
 import { SkillsService } from '../../../services/skills.service';
-import { SkillDisplay } from '../../common/skill-display/skill-display';
+import { SkillDisplay, SkillDisplayMode } from '../../common/skill-display/skill-display';
 import { TrainingEventsComponent } from '../../common/training-events/training-events';
+import {Trainee} from '../../../interfaces/trainee';
+import {TraineeService} from '../../../services/trainee.service';
 
+export interface TraineeInfoDialogData {
+  mode?: 'full' | 'mini';
+  trainee: Trainee;
+}
 
 @Component({
   selector: 'app-trainee-info',
@@ -29,13 +34,21 @@ import { TrainingEventsComponent } from '../../common/training-events/training-e
   styleUrl: './trainee-info.css'
 })
 export class TraineeInfo {
-  protected readonly trainee: Signal<DisplayTrainee> = signal(inject(MAT_DIALOG_DATA) as DisplayTrainee);
+
+  private readonly traineeService = inject(TraineeService);
+
+  protected readonly dialogData = signal(inject(MAT_DIALOG_DATA) as TraineeInfoDialogData);
+  protected readonly trainee = computed(() => this.dialogData().trainee);
+  protected readonly mode = signal<'full' | 'mini'>(this.dialogData().mode || 'full');
+  protected readonly SkillDisplayMode = SkillDisplayMode;
+
   protected readonly dialogRef = inject(MatDialogRef<TraineeInfo>);
   private readonly skillsService = inject(SkillsService);
 
   protected readonly title = computed(() => this.trainee().itemData.title_en_gl);
   protected readonly name = computed(() => this.trainee().itemData.name_en);
   protected readonly version = computed(() => this.trainee().itemData.version);
+  protected readonly imageUrl = computed(() => this.traineeService.getTraineeImageUrl(this.trainee()));
 
   protected readonly uniqueSkillsResource = rxResource({
     params: () => ({ skillIds: this.trainee().itemData.skills_unique }),
@@ -131,5 +144,9 @@ export class TraineeInfo {
 
   protected close(): void {
     this.dialogRef.close();
+  }
+
+  protected switchMode(newMode: 'full' | 'mini'): void {
+    this.mode.set(newMode);
   }
 }

@@ -352,7 +352,9 @@ export class TraineeListViewComponent {
     if (!trainee) return;
 
     this.modalControlService.open('traineeInfo', {
-      data: trainee,
+      data: {
+        trainee
+      },
       maxWidth: '90vw',
       maxHeight: '90vh',
     });

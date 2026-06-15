@@ -19,7 +19,8 @@
                 @for (trainee of characterTrainees(); track trainee.itemData.card_id) {
                   <app-entity-display
                     [trainee]="trainee"
-                    [mode]="'img'">
+                    [mode]="'img'"
+                    (click)="openTraineeDetailModal(trainee)">
                   </app-entity-display>
                 }
               </li>
