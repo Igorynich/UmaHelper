@@ -6,7 +6,7 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: true
 })
 export class SnakeToTitlePipe implements PipeTransform {
-  transform(value: string): string {
+  transform(value: string | undefined): string {
     if (!value) return '';
     return value
       .split('_')

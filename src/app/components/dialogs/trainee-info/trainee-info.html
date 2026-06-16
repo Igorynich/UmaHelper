@@ -3,12 +3,12 @@
     <div class="trainee-info-wrapper">
       <div class="trainee-title text-center">{{ title() }}</div>
       <div class="trainee-name text-center">{{ name() }}</div>
-      <div class="trainee-version text-center">{{ version() ? '(' + version() + ')' : '' }}</div>
+      <div class="trainee-version text-center">{{ version() ? '(' + (version() | snakeToTitle) + ')'  : '' }}</div>
     </div>
-    <button mat-icon-button (click)="switchMode('mini')" class="shrink-button" matTooltip="To Mini Mode">
+    <button mat-icon-button (click)="switchMode('mini')" class="shrink-button" matTooltip="To Mini Mode" tabindex="-1">
       <mat-icon>unfold_less</mat-icon>
     </button>
-    <button mat-icon-button (click)="close()" class="close-button">
+    <button mat-icon-button (click)="close()" class="close-button" tabindex="-1">
       <mat-icon>close</mat-icon>
     </button>
   </div>
@@ -153,10 +153,10 @@
       <div class="trainee-name">{{ name() }}</div>
       <div class="trainee-version">{{ version() ? '(' + version() + ')' : '' }}</div>
     </div>
-    <button mat-icon-button (click)="switchMode('full')" class="expand-button" matTooltip="To Full Mode">
+    <button mat-icon-button (click)="switchMode('full')" class="expand-button" matTooltip="To Full Mode" tabindex="-1">
       <mat-icon>unfold_more</mat-icon>
     </button>
-    <button mat-icon-button (click)="close()" class="close-button">
+    <button mat-icon-button (click)="close()" class="close-button" tabindex="-1">
       <mat-icon>close</mat-icon>
     </button>
   </div>

@@ -20,6 +20,7 @@ import { SkillDisplay, SkillDisplayMode } from '../../common/skill-display/skill
 import { TrainingEventsComponent } from '../../common/training-events/training-events';
 import {Trainee} from '../../../interfaces/trainee';
 import {TraineeService} from '../../../services/trainee.service';
+import {SnakeToTitlePipe} from '../../../pipes/snake-to-title.pipe';
 
 export interface TraineeInfoDialogData {
   mode?: 'full' | 'mini';
@@ -29,7 +30,7 @@ export interface TraineeInfoDialogData {
 @Component({
   selector: 'app-trainee-info',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImagekitioAngularModule, MatDialogModule, MatIconButton, MatIconModule, MatTableModule, MatTooltip, SkillDisplay, TrainingEventsComponent, DatePipe],
+  imports: [ImagekitioAngularModule, MatDialogModule, MatIconButton, MatIconModule, MatTableModule, MatTooltip, SkillDisplay, TrainingEventsComponent, DatePipe, SnakeToTitlePipe],
   templateUrl: './trainee-info.html',
   styleUrl: './trainee-info.css'
 })

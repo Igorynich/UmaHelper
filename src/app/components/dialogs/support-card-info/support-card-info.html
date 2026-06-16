@@ -2,10 +2,10 @@
   <div mat-dialog-title class="dialog-title">
     <img [src]="typeImageUrl()" [alt]="processedCardData().type" class="type-icon">
     <h2>{{ rawCardData().char_name }}</h2>
-    <button mat-icon-button (click)="switchMode('mini')" class="shrink-button" matTooltip="To Mini Mode">
+    <button mat-icon-button (click)="switchMode('mini')" class="shrink-button" matTooltip="To Mini Mode" tabindex="-1">
       <mat-icon>unfold_less</mat-icon>
     </button>
-    <button mat-icon-button (click)="close()" class="close-button">
+    <button mat-icon-button (click)="close()" class="close-button" tabindex="-1">
       <mat-icon>close</mat-icon>
     </button>
   </div>
@@ -106,10 +106,10 @@
   <div mat-dialog-title class="dialog-title dialog-title-mini">
     <img [src]="typeImageUrl()" [alt]="processedCardData().type" class="type-icon type-icon-mini">
     <h2>{{ rawCardData().char_name }}</h2>
-    <button mat-icon-button (click)="switchMode('full')" class="expand-button" matTooltip="To Full Mode">
+    <button mat-icon-button (click)="switchMode('full')" class="expand-button" matTooltip="To Full Mode" tabindex="-1">
       <mat-icon>unfold_more</mat-icon>
     </button>
-    <button mat-icon-button (click)="close()" class="close-button">
+    <button mat-icon-button (click)="close()" class="close-button" tabindex="-1">
       <mat-icon>close</mat-icon>
     </button>
   </div>

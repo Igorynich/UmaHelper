@@ -2,6 +2,9 @@
   <ik-image [path]="'/skills/' + data.skill.iconid + '.png'"
             [transformation]="[{'height': '40', 'width': '40'}]"></ik-image>
   <h2>{{ data.skill.name_en }}</h2>
+  <button mat-icon-button (click)="close()" class="close-button" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
 </div>
 <mat-dialog-content>
   @if (isLoading()) {

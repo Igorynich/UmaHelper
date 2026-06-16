@@ -13,6 +13,23 @@
   margin: 0.5em 0;
 }
 
+.close-button {
+  background: transparent !important;
+  border: none !important;
+  position: absolute;
+  top: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.close-button { right: 16px; }
+
 .loading-container {
   display: flex;
   align-items: center;

@@ -2,7 +2,7 @@ import {CommonModule} from '@angular/common';
 import {Component, computed, inject} from '@angular/core';
 import {
   MAT_DIALOG_DATA,
-  MatDialogContent,
+  MatDialogContent, MatDialogRef,
   MatDialogTitle
 } from '@angular/material/dialog';
 import {ImagekitioAngularModule} from 'imagekitio-angular';
@@ -19,6 +19,8 @@ import {SkillMap} from '../../../interfaces/skill-map';
 import {SupportCardService} from '../../../services/support-card.service';
 import {SupportCard} from '../../../interfaces/support-card';
 import {ModalControlService} from '../../../services/modal-control';
+import {MatIcon} from '@angular/material/icon';
+import {MatIconButton} from '@angular/material/button';
 
 export interface SkillDialogData {
   skill: Skill;
@@ -38,7 +40,9 @@ export interface SkillDialogData {
     MatDialogTitle,
     SkillFieldTranslatorPipe,
     SkillKeyTranslatorPipe,
-    EntityDisplay
+    EntityDisplay,
+    MatIcon,
+    MatIconButton
   ],
   templateUrl: './skill-dialog.html',
   styleUrl: './skill-dialog.css',
@@ -47,6 +51,7 @@ export class SkillDialogComponent {
   private modalControlService = inject(ModalControlService);
 
   data: SkillDialogData = inject(MAT_DIALOG_DATA);
+  protected readonly dialogRef = inject(MatDialogRef<SkillDialogComponent>);
   // filteredProps: string[];
   readonly displayedProps = ['desc_en', 'endesc', 'char', 'supCardEvents', 'supCardHints', 'rarity', 'activation', 'cost'];
 
@@ -170,6 +175,10 @@ export class SkillDialogComponent {
         data: { mode: 'mini', card: cardData }
       });
     }
+  }
+
+  protected close(): void {
+    this.dialogRef.close();
   }
 }
 
