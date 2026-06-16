@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, input, effect, output, DestroyRef } from '@angular/core';
+import {Component, inject, computed, input, ResourceRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { ImagekitioAngularModule } from 'imagekitio-angular';
@@ -7,6 +7,8 @@ import { Trainee } from '../../../interfaces/trainee';
 import { SupportCard } from '../../../interfaces/support-card';
 import { TraineeService } from '../../../services/trainee.service';
 import { SupportCardService } from '../../../services/support-card.service';
+import {rxResource} from '@angular/core/rxjs-interop';
+import {Observable, of} from 'rxjs';
 
 export type DisplayMode = 'text' | 'img';
 export type EntityType = 'trainee' | 'support-card';
@@ -26,109 +28,33 @@ export class EntityDisplay {
   supportCardId = input<string | undefined>(undefined);
   mode = input<DisplayMode>('text');
 
-  // Output signals
-  loading = output<boolean>();
+  protected entityResource: ResourceRef<Trainee | SupportCard | null | undefined> = rxResource({
+    params: () => ({
+      id: (this.traineeId() || this.supportCardId())
+    }),
+    stream: ({ params }) => {
+      if (!params.id) return of(null);
+      let request: Observable<Trainee | SupportCard | null> = of(null);
+      if (this.traineeId()) {
+        request = this.traineeService.getTraineeById(params.id);
+      }
+      if (this.supportCardId()) {
+        request = this.supportCardService.getSupportCardById(params.id);
+      }
+      return request;
+    }
+  });
 
   // Services
   private traineeService = inject(TraineeService);
   private supportCardService = inject(SupportCardService);
-  private destroyRef = inject(DestroyRef);
-
-  // State signals
-  private traineeLoaded = signal(false);
-  private supportCardLoaded = signal(false);
-  internalLoading = signal(false);
-  private loadedTrainee = signal<Trainee | undefined>(undefined);
-  private loadedSupportCard = signal<SupportCard | undefined>(undefined);
-
-  private safeEmitLoading(isLoading: boolean): void {
-    if (!this.destroyRef.destroyed) {
-      this.loading.emit(isLoading);
-    }
-  }
-
-  constructor() {
-    effect(() => {
-      const traineeId = this.traineeId();
-      const supportCardId = this.supportCardId();
-      const inputTrainee = this.trainee();
-      const inputSupportCard = this.supportCard();
-
-      // Handle trainee data
-      if (inputTrainee) {
-        this.loadedTrainee.set(undefined);
-        this.traineeLoaded.set(true);
-      } else if (traineeId !== undefined && !this.traineeLoaded()) {
-        this.internalLoading.set(true);
-        this.safeEmitLoading(true);
-        this.loadTrainee(traineeId);
-      }
-
-      // Handle support card data
-      if (inputSupportCard) {
-        this.loadedSupportCard.set(undefined);
-        this.supportCardLoaded.set(true);
-      } else if (supportCardId !== undefined && !this.supportCardLoaded()) {
-        this.internalLoading.set(true);
-        this.safeEmitLoading(true);
-        this.loadSupportCard(supportCardId);
-      }
-    });
-  }
-
-  private loadTrainee(id: string): void {
-    this.traineeService.getTraineeById(id).subscribe({
-      next: (trainee) => {
-        if (trainee) {
-          this.loadedTrainee.set(trainee);
-        }
-        this.traineeLoaded.set(true);
-        this.updateLoadingState();
-      },
-      error: () => {
-        this.traineeLoaded.set(true);
-        this.updateLoadingState();
-      },
-      complete: () => {
-        this.internalLoading.set(false);
-        this.safeEmitLoading(false);
-      }
-    });
-  }
-
-  private loadSupportCard(id: string): void {
-    this.supportCardService.getSupportCardById(id).subscribe({
-      next: (supportCard) => {
-        if (supportCard) {
-          this.loadedSupportCard.set(supportCard);
-        }
-        this.supportCardLoaded.set(true);
-        this.updateLoadingState();
-      },
-      error: () => {
-        this.supportCardLoaded.set(true);
-        this.updateLoadingState();
-      },
-      complete: () => {
-        this.internalLoading.set(false);
-        this.safeEmitLoading(false);
-      }
-    });
-  }
-
-  private updateLoadingState(): void {
-    if (this.traineeLoaded() && this.supportCardLoaded()) {
-      this.internalLoading.set(false);
-      this.safeEmitLoading(false);
-    }
-  }
 
   readonly traineeSignal = computed(() => {
     const inputTrainee = this.trainee();
     if (inputTrainee) {
       return inputTrainee;
     }
-    return this.loadedTrainee();
+    return this.traineeId() ? this.entityResource.value() as Trainee : undefined;
   });
 
   readonly supportCardSignal = computed(() => {
@@ -136,7 +62,7 @@ export class EntityDisplay {
     if (inputSupportCard) {
       return inputSupportCard;
     }
-    return this.loadedSupportCard();
+    return this.supportCardId() ? this.entityResource.value() as SupportCard : undefined;
   });
 
   readonly entityType = computed(() => {
