@@ -25,8 +25,8 @@ export class ModalControlService {
     if (!component) {
       throw new Error(`No component registered for type: ${type}`);
     }
-    const dialogRef = this.dialog.open(component, config);
-    this.activeDialogs.push(dialogRef);
+    /*const dialogRef = */this.dialog.open(component, config);
+    // this.activeDialogs.push(dialogRef);
   }
 
   closeLast() {

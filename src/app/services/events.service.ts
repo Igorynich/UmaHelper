@@ -182,12 +182,14 @@ export class EventsService {
     };
 
     const statusEffectsMap: { [key: number]: string } = {
+      1: 'Night Owl',
       2: 'Slacker',
       4: 'Slow Metabolism',
       7: 'Fast Learner',
       8: 'Charming ○',
       9: 'Hot Topic',
-      10: 'Practice Perfect ○'
+      10: 'Practice Perfect ○',
+      100: 'Pure Passion: Team Sirius'
     };
 
     const switchConditionMap: { [key: string]: (rewardData: any[]) => string } = {
