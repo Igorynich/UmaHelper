@@ -28,6 +28,10 @@
       }
     </div>
   }
+} @else if (entityType() === 'race' && raceSignal(); as race) {
+  @if (mode() === 'text') {
+    <span class="entity-name">{{ displayName() }}</span>
+  }
 } @else if (entityResource.isLoading()) {
   <div class="loading-container">
     <div class="spinner"></div>

@@ -8,75 +8,19 @@
             <mat-expansion-panel-header>
               <mat-panel-title>
                 {{ event.name }}
+                @if (event.conditions) {
+                  <span class="name-chips"><mat-chip>Conditional</mat-chip></span>
+                }
+                @if (event.choices.length > 1) {
+                  <span class="name-chips"><mat-chip>Choice</mat-chip></span>
+                }
               </mat-panel-title>
             </mat-expansion-panel-header>
 
-            <div class="event-content">
-              @if (event.conditions) {
-                <p>CONDITIONS: {{event.conditions}}</p>
-              }
-              @for (choice of event.choices; track $index) {
-                <div class="choice-group">
-                  @if (event.choices.length > 1) {
-                    <p><strong>Choice {{ $index + 1 }}</strong></p>
-                  }
-                  <p><em>Reward:</em>
-                  <ul class="rewards-list">
-                    @for (reward of choice.rewards; track $index) {
-                      @switch (reward.type) {
-                        @case (EventRewardType.simpleString) {
-                          <li>{{ reward.value }}</li>
-                        }
-                        @case (EventRewardType.supportString) {
-                          @if (reward.value) {
-                            <u>
-                              @if (reward.prefix) {
-                                <mark>{{ reward.prefix }} </mark>
-                              }
-                              <span>{{ reward.value }}</span>
-                              @if (reward.suffix) {
-                                <mark> {{ reward.suffix }}</mark>
-                              }
-                            </u>
-                          } @else {
-                            <!--empty line-->
-                            <div></div>
-                          }
-                        }
-                        @case (EventRewardType.data) {
-                          @switch (reward.dataType) {
-                            @case (EventRewardDataType.skill) {
-                              <li><span class="skill-reward-inline">
-                            <app-skill-display [skill]="reward.data" [mode]="SkillDisplayMode.Text"
-                                               style="display: inline-block;"></app-skill-display>
-                            <span>{{ reward.value }}</span>
-                          </span></li>
-                            }
-                            @case (EventRewardDataType.bond) {
-                              <li><span>{{ reward.data.itemData.name_en }}{{ reward.value }}</span></li>
-                            }
-                          }
-                        }
-                      }
-                      <!--@if (isString(reward)) {
-                        <li>{{ reward }}</li>
-                      } @else if (isSkillReward(reward)) {
-                        <li><span class="skill-reward-inline">
-                            <app-skill-display [skill]="reward.skill" [simpleView]="true" style="display: inline-block;"></app-skill-display>
-                            <span>{{ reward.value }}</span>
-                          </span></li>
-                      } @else if (isBondReward(reward)) {
-                        <li><span>{{ reward.bond.itemData.name_en }}{{ reward.value }}</span></li>
-                      } @else if (isSwitchConditionReward(reward)) {
-                        <u><mark>Condition</mark>: <span>{{ reward.value }}</span></u>
-                      } @else if (isNewLineReward(reward)) {
-                        <div></div>
-                      }-->
-                    }
-                  </ul>
-                </div>
-              }
-            </div>
+            <ng-container
+              [ngTemplateOutlet]="eventTemplateBody"
+              [ngTemplateOutletContext]="{ $implicit: event }">
+            </ng-container>
           </mat-expansion-panel>
         }
       }
@@ -85,3 +29,122 @@
 } @else {
   <p>No training event data available.</p>
 }
+
+<ng-template #eventTemplateBody let-event>
+  <div class="event-content">
+    @if (event.conditions) {
+      <p class="conditions-header">CONDITIONS:</p>
+        <ul>
+          @for (condition of event.conditions; track $index) {
+            @if (condition.conditionType) {
+              @switch (condition.conditionType) {
+                @case (EventConditionType.win) {
+                  <li>Win <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
+                }
+                @case (EventConditionType.lose) {
+                  <li>Loose <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
+                }
+                @case (EventConditionType.lose_to_rival) {
+                  <li>Loose <app-entity-display [raceId]="condition.raceId"></app-entity-display> to <app-entity-display [traineeId]="condition.rivalId"></app-entity-display></li>
+                }
+                @case (EventConditionType.beat_rival) {
+                  <li>Beat <app-entity-display [traineeId]="condition.rivalId"></app-entity-display> at <app-entity-display [raceId]="condition.raceId"></app-entity-display></li>
+                }
+                @case (EventConditionType.win_as_strat) {
+                  <li>Win <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display> as {{STRATEGY[condition.strategyId]}}</li>
+                }
+                @case (EventConditionType.win_as_not_strat) {
+                  <li>Win <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display> NOT as {{STRATEGY[condition.strategyId]}}</li>
+                }
+                @case (EventConditionType.pick_and_win) {
+                  <li>Pick <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display> as your objective and Win</li>
+                }
+                @case (EventConditionType.dont_pick_and_win) {
+                  <li>Run <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display> as optional race and Win</li>
+                }
+                @case (EventConditionType.win_or) {
+                  <li>Win <app-entity-display [raceId]="condition.race1Id" [yearId]="condition.year1Id"></app-entity-display> OR <app-entity-display [raceId]="condition.race2Id" [yearId]="condition.year2Id"></app-entity-display></li>
+                }
+                @case (EventConditionType.rn_race_w) {
+                  <li>Win {{condition.amountOfRaces}} races against these opponents: @for (opId of condition.opponentIds; track opId) {<app-entity-display [traineeId]="opId"></app-entity-display>@if (!$last) {,
+                  }}</li>
+                }
+              }
+
+            } @else {
+              <li>{{ condition }}</li>
+            }
+          }
+        </ul>
+    }
+    @for (choice of event.choices; track $index) {
+      <div class="choice-group">
+        @if (event.choices.length > 1) {
+          <p><strong>Choice {{ $index + 1 }}</strong></p>
+        }
+        <p><em>Reward:</em>
+        <ul class="rewards-list">
+          @for (reward of choice.rewards; track $index) {
+            @switch (reward.type) {
+              @case (EventRewardType.simpleString) {
+                <li>{{ reward.value }}</li>
+              }
+              @case (EventRewardType.supportString) {
+                @if (reward.value) {
+                  <u>
+                    @if (reward.prefix) {
+                      <mark>{{ reward.prefix }} </mark>
+                    }
+                    <span>{{ reward.value }}</span>
+                    @if (reward.suffix) {
+                      <mark> {{ reward.suffix }}</mark>
+                    }
+                  </u>
+                } @else {
+                  <!--empty line-->
+                  <div></div>
+                }
+              }
+              @case (EventRewardType.data) {
+                @switch (reward.dataType) {
+                  @case (EventRewardDataType.skill) {
+                    <li>
+                      @if (reward.prefix) {
+                        {{ reward.prefix }}
+                      }
+                      <span class="skill-reward-inline">
+                            <app-skill-display [skill]="reward.data" [mode]="SkillDisplayMode.Text"
+                                               style="display: inline-block;"></app-skill-display>
+                      @if (reward.value) {
+                        <span>{{ reward.value }}</span>
+                      }
+                        @if (reward.suffix) {
+                          {{ reward.suffix }}
+                        }
+                          </span></li>
+                  }
+                  @case (EventRewardDataType.bond) {
+                    <li><span>{{ reward.data.itemData.name_en }}{{ reward.value }}</span></li>
+                  }
+                }
+              }
+            }
+          }
+        </ul>
+      </div>
+    }
+    @if (event.alt_placement?.length) {
+      <div class="alt-placement-group">
+        @for (alt of event.alt_placement; track $index) {
+          @if (alt.placementString) {
+            <p class="alt-placement-header">ALTERNATIVELY: {{alt.placementString}}</p>
+          }
+          <ng-container
+            [ngTemplateOutlet]="eventTemplateBody"
+            [ngTemplateOutletContext]="{ $implicit: alt.data }">
+          </ng-container>
+        }
+      </div>
+    }
+  </div>
+</ng-template>

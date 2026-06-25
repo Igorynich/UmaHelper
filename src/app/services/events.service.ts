@@ -4,7 +4,7 @@ import {combineLatest, defaultIfEmpty, filter, forkJoin, from, map, Observable, 
 import {
   DecodedEvent,
   DecodedEventsContainer,
-  EventChoice,
+  EventChoice, EventConditionType,
   EventReward, EventRewardDataType,
   EventRewardType,
   UmaEvent
@@ -14,6 +14,8 @@ import {SkillsService} from './skills.service';
 import {TraineeService} from './trainee.service';
 import {catchError} from 'rxjs/operators';
 import {Trainee} from '../interfaces/trainee';
+import {RACES} from '../interfaces/races';
+import {YEAR} from '../interfaces/year';
 
 export const eventTypes: Record<string, { name: string }> = {
   random: {
@@ -91,7 +93,7 @@ export class EventsService {
 
         // let skillReqs$, traineeReqs$;
 
-        const skillIds = allEventRewards.filter(reward => reward.t === 'sk' && reward.d)
+        const skillIds = allEventRewards.filter(reward => (reward.t === 'sk' || reward.t === 'sg') && reward.d)
           .map(reward => reward.d!);
         const uniqueSkillIds = [...new Set(skillIds)];
         let skillReqs$ = this.skillsService.getSkillsByIds(uniqueSkillIds);
@@ -164,6 +166,7 @@ export class EventsService {
       ds: 'Can Start Dating',
       ha: 'Heal all negative status effects',
       he: 'Heal a negative status effect',
+      hp: 'Heal Negative Skill',    // ?
       se: 'Get Status Effect',     // 'Get Charming ○ status',
       sg: 'Skill Gain',
       sr: 'Skill Random',    // TODO: make custom template
@@ -178,7 +181,8 @@ export class EventsService {
       s_nore: 'Randomly Either',
       highest_facility: 'Highest Facility',
       fa: 'Fans',
-      fd: 'Random Training Facilities Disabled'
+      fd: 'Random Training Facilities Disabled',
+      rr: 'Race Rewards'      // ?
     };
 
     const statusEffectsMap: { [key: number]: string } = {
@@ -190,6 +194,18 @@ export class EventsService {
       9: 'Hot Topic',
       10: 'Practice Perfect ○',
       100: 'Pure Passion: Team Sirius'
+    };
+
+    const conditionsMap: { [key: string]: string } = {
+      [EventConditionType.autumn_triple_crown_senior]: 'Win the senior Autumn Triple Crown (Tenno Sho (Autumn) (Senior), Japan Cup (Senior), Arima Kinen (Senior))',
+      [EventConditionType.win]: 'Win',
+      [EventConditionType.lose]: 'Lose',
+      [EventConditionType.do_not_race]: 'Do Not Race',
+      [EventConditionType.obj]: '(Objective Related, Event will Vary Based On Your Result)',
+      [EventConditionType.triple_tiara]: 'Win the Triple Tiara (Oka Sho, Japanese Oaks, Shuka Sho)',
+      [EventConditionType.lose_to_rival]: 'Lose to Rival',
+      [EventConditionType.participate]: 'Participate',
+      [EventConditionType.date]: 'Triggers'
     };
 
     const switchConditionMap: { [key: string]: (rewardData: any[]) => string } = {
@@ -204,22 +220,108 @@ export class EventsService {
     };
 
     const eventData = events.en || events;
-
+    const conditionsSet = new Set();
     const mapEvent = (event: UmaEvent): DecodedEvent => {
       if (event.conditions) {
         console.warn('EVENT WITH CONDITIONS', event, event.n);   // TODO: decode conditions
+        event.conditions.forEach(c => {
+          conditionsSet.add({condition: c, eventName: event.n, fullEvent: event});
+        });
       }
       let diCounter = 0;      // counts --OR--
       return {
         name: event.n,
-        conditions: event.conditions,
+        alt_placement: event.alt_placement?.map(altPlacement => {
+          const [placement1, placement2] = altPlacement.placement;
+          const altPlacementString = !placement2 ? `${placement1} place and below` : `${placement1} - ${placement2} place`;
+          return {data: mapEvent(altPlacement.data), placementString: altPlacementString}}),
+        conditions: event.conditions?.map(c => {
+          let decoded: string | string[] = c;
+          try {
+            decoded = JSON.parse(c) as string[];
+          } catch (error) {
+            // If it's a regular string, return it as is
+            decoded = c;
+          }
+          const conditionEncryptedName = (Array.isArray(decoded) ? decoded[0] : decoded) as EventConditionType;
+          const conditionName = conditionsMap[conditionEncryptedName];
+          let resultString = conditionName || c;
+          console.log('decoded', decoded);
+          switch (conditionEncryptedName) {
+            case EventConditionType.win:
+            case EventConditionType.lose:
+              const [raceId, yearId] = decoded[1].toString().indexOf('|') > -1 ? decoded[1].split('|') : [decoded[1], ''];
+              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)}
+            case EventConditionType.do_not_race:
+            case EventConditionType.date: {
+              const [conditionType, year, month, half] = decoded;
+              const yearName = YEAR[Number(year)];
+              const monthName = new Date(2000, Number(month) - 1, 1).toLocaleString('en', { month: 'long' });
+              const halfName = Number(half) === 1 ? 'Early' : 'Late';
+              resultString = `${conditionName} in ${halfName} ${monthName}(${yearName} Year)`;
+              break;
+            }
+            case EventConditionType.lose_to_rival:
+            case EventConditionType.beat_rival: {
+              const [conditionType, raceId, rivalTraineeShortId] = decoded;
+              const race = RACES.find(r => r.id === Number(raceId));
+              // const raceName = race?.name_en || `Race ${raceId}`;
+              console.log('Data', data);
+              return {
+                conditionType: conditionEncryptedName,
+                raceId: Number(raceId),
+                rivalId: Number(`${rivalTraineeShortId}01`)
+              }
+            }
+            case EventConditionType.win_g1_year: {
+              const [conditionType, yearId, racesAmount] = decoded;
+              const yearName = YEAR[Number(yearId)];
+              return `Win ${racesAmount}+ G1 Races in ${yearName} Year`;
+            }
+            case EventConditionType.participate: {
+              const [conditionType, event] = decoded;
+              const eventsMap: Record<string, string> = {
+                debut: 'Make Debut',
+              };
+              return `Participate in ${eventsMap[event]}`;
+            }
+            case EventConditionType.win_as_strat:
+            case EventConditionType.win_as_not_strat: {
+              const [conditionType, raceIdAndYearId, strategyId] = decoded;
+              const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
+              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId), strategyId: Number(strategyId)}
+            }
+            case EventConditionType.pick_and_win:
+            case EventConditionType.dont_pick_and_win: {
+              const [conditionType, raceIdAndYearId] = decoded;
+              const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
+              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)}
+            }
+            case EventConditionType.third_any_non_objective: {
+              return 'Finish 3rd in Any Non-Objective Race';
+            }
+            case EventConditionType.win_or: {
+              const [conditionType, race1IdAndYear1Id, race2IdAndYear2Id] = decoded;
+              const [race1Id, year1Id] = race1IdAndYear1Id.toString().indexOf('|') > -1 ? race1IdAndYear1Id.split('|') : [race1IdAndYear1Id, ''];
+              const [race2Id, year2Id] = race2IdAndYear2Id.toString().indexOf('|') > -1 ? race2IdAndYear2Id.split('|') : [race2IdAndYear2Id, ''];
+              return {conditionType: conditionEncryptedName, race1Id: Number(race1Id), year1Id: Number(year1Id), race2Id: Number(race2Id), year2Id: Number(year2Id)}
+            }
+            case EventConditionType.rn_race_w: {
+              const [conditionType, opponentsString, amountOfRaces] = decoded;
+              const opponentIds: number[] = JSON.parse(opponentsString);
+              return {conditionType: conditionEncryptedName, opponentIds: opponentIds.map(id => `${id.toString()}01`), amountOfRaces: Number(amountOfRaces)}
+            }
+          }
+          return resultString;   // placeholder
+        }),
         choices: event.c.map((choice: EventChoice) => ({
           text: choice.o,
           rewards: choice.r.map((reward: EventReward) => {
             switch (reward.t) {
               case 'sk':
+                // console.log(`Unknown Skill Reward`, reward, event.n);
                 if (reward.d) {
-                  const skill = data?.skills?.get(reward.d);
+                  const skill = data?.skills?.get(reward.d);      // TODO: probly return id only
                   if (skill) {
                     return {
                       type: EventRewardType.data,
@@ -234,6 +336,24 @@ export class EventsService {
                   type: EventRewardType.simpleString,
                   value: 'Unknown Skill Hint Reward'
                 };
+              case 'sg': {
+                if (reward.d) {
+                  const skill = data?.skills?.get(reward.d);
+                  if (skill) {
+                    return {
+                      type: EventRewardType.data,
+                      dataType: EventRewardDataType.skill,
+                      data: skill,
+                      prefix: 'Gain'
+                    };
+                  }
+                }
+                console.warn(`Unknown Skill Gain Reward`, reward, event.n);
+                return {
+                  type: EventRewardType.simpleString,
+                  value: 'Unknown Skill Gain Reward'
+                };
+              }
               case 'bo':
                 if (reward.d) {
                   const bondTrainee = data?.trainees?.get(reward.d);
@@ -319,10 +439,42 @@ export class EventsService {
                   value: `${text}${chancesText}`
                 };
               }
+              case 'rr': {
+                // console.warn(`Unknown Race Reward`, reward, event.n);
+                if (!reward.d) {
+                  return {
+                    type: EventRewardType.simpleString,
+                    value: `Standard Race Rewards`
+                  };
+                }
+                const [energy, randomStat, skillPoints] = reward.d?.toString().split('_')!;
+                return {
+                  type: EventRewardType.simpleString,
+                  value: `Energy ${energy}, 1 Random Stat ${Number(randomStat) > 0 ? '+' : ''}${randomStat}, Skill Points ${Number(skillPoints) > 0 ? '+' : ''}${skillPoints}`    // mb make a type for array of rewards?
+                };
+              }
+              case 'hp': {
+                if (reward.d) {
+                  const skill = data?.skills?.get(reward.d);      // TODO: probly return id only
+                  if (skill) {
+                    return {
+                      type: EventRewardType.data,
+                      dataType: EventRewardDataType.skill,
+                      data: skill,
+                      prefix: `Heal`
+                    };
+                  }
+                }
+                console.warn('Unknown HP Reward', reward, event.n);
+                return {
+                  type: EventRewardType.simpleString,
+                  value: 'Unknown Heal Reward'
+                };
+              }
               default:
                 const type = rewardMap[reward.t];
                 if (!type) {
-                  console.warn(`Unknown reward type encountered: ${reward.t} in ${event.n}`);
+                  console.warn(`Unknown reward type encountered: ${reward.t} in ${event.n}`, event);
                 }
                 let result = `${type || `Unknown (${reward.t})`}`;
                 if (reward.v) result += ` ${reward.v}`;
@@ -336,6 +488,7 @@ export class EventsService {
         }))
       };
     };
+    console.warn('conditionsSet', conditionsSet);
 
     return Object.keys(eventData).reduce((acc, key) => {
       if (Array.isArray(eventData[key])) {
