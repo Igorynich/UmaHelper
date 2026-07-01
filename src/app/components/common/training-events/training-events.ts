@@ -13,6 +13,8 @@ import {NgTemplateOutlet} from '@angular/common';
 import {MatChip} from '@angular/material/chips';
 import {EntityDisplay} from '../entity-display/entity-display';
 import {STRATEGY} from '../../../interfaces/strategy';
+import {YEAR} from '../../../interfaces/year';
+import {DISTANCE} from '../../../interfaces/distance';
 
 @Component({
   selector: 'app-training-events',
@@ -46,4 +48,6 @@ export class TrainingEventsComponent {
   protected readonly Object = Object;
   protected readonly EventConditionType = EventConditionType;
   protected readonly STRATEGY = STRATEGY;
+  protected readonly YEAR = YEAR;
+  protected readonly DISTANCE = DISTANCE;
 }

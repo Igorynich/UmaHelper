@@ -44,6 +44,20 @@
                 @case (EventConditionType.lose) {
                   <li>Loose <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
                 }
+                @case (EventConditionType.participate) {
+                  @if (condition.raceId) {
+                    <li>Participate in <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
+                  } @else {
+                    <li>{{ condition }}</li>
+                  }
+                }
+                @case (EventConditionType.do_not_participate) {
+                  @if (condition.raceId) {
+                    <li>Do NOT participate in <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
+                  } @else {
+                    <li>{{ condition }}</li>
+                  }
+                }
                 @case (EventConditionType.lose_to_rival) {
                   <li>Loose <app-entity-display [raceId]="condition.raceId"></app-entity-display> to <app-entity-display [traineeId]="condition.rivalId"></app-entity-display></li>
                 }
@@ -68,6 +82,12 @@
                 @case (EventConditionType.rn_race_w) {
                   <li>Win {{condition.amountOfRaces}} races against these opponents: @for (opId of condition.opponentIds; track opId) {<app-entity-display [traineeId]="opId"></app-entity-display>@if (!$last) {,
                   }}</li>
+                }
+                @case (EventConditionType.win_g1_cnt_class_distance) {
+                  <li>Win {{condition.amountOfRaces}} @for (distId of condition.distanceIds; track distId) {{{DISTANCE[distId]}}@if (!$last) {/}} races in {{YEAR[condition.yearId]}} year</li>
+                }
+                @case (EventConditionType.race_pn) {
+                  <li>Place {{condition.position}}(or better) in <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
                 }
               }
 
@@ -125,6 +145,25 @@
                   }
                   @case (EventRewardDataType.bond) {
                     <li><span>{{ reward.data.itemData.name_en }}{{ reward.value }}</span></li>
+                  }
+                }
+              }
+              @case (EventRewardType.supportStringWithData) {
+                @switch (reward.dataType) {
+                  @case (EventRewardDataType.skill) {
+                      @if (reward.prefix) {
+                        {{ reward.prefix }}
+                      }
+                      <span class="skill-reward-inline">
+                            <app-skill-display [skill]="reward.data" [mode]="SkillDisplayMode.Text"
+                                               style="display: inline-block;"></app-skill-display>
+                        @if (reward.value) {
+                          <span>{{ reward.value }}</span>
+                        }
+                        @if (reward.suffix) {
+                          {{ reward.suffix }}
+                        }
+                          </span>
                   }
                 }
               }

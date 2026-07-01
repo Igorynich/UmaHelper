@@ -4,7 +4,8 @@ import {Trainee} from './trainee';
 export enum EventRewardType {
   simpleString,
   data,
-  supportString
+  supportString,
+  supportStringWithData
 }
 
 export enum EventRewardDataType {
@@ -19,7 +20,7 @@ export interface EventRewardDataTypeMap {
 
 export type EventRewardData<T extends EventRewardDataType = EventRewardDataType> = {
   [K in T]: {
-    type: EventRewardType.data;
+    type: EventRewardType.data | EventRewardType.supportStringWithData;
     dataType: K;
     data: EventRewardDataTypeMap[K];
     value?: string;
@@ -34,6 +35,7 @@ export interface EventRewardTypeMap {
     value: string;
   };
   [EventRewardType.data]: EventRewardData;
+  [EventRewardType.supportStringWithData]: EventRewardData;
   [EventRewardType.supportString]: {
     type: EventRewardType.supportString;
     value?: string;
@@ -90,10 +92,12 @@ export enum EventConditionType {
   'do_not_race' = 'do_not_race',
   'obj' = 'obj',
   'triple_tiara' = 'triple_tiara',
+  'triple_crown' = 'triple_crown',
   'lose_to_rival' = 'lose_to_rival',
   'beat_rival' = 'beat_rival',
   'win_g1_year' = 'win_g1_year',
   'participate' = 'participate',
+  'do_not_participate' = 'do_not_participate',
   'win_as_strat' = 'win_as_strat',
   'win_as_not_strat' = 'win_as_not_strat',
   'pick_and_win' = 'pick_and_win',
@@ -101,12 +105,24 @@ export enum EventConditionType {
   'date' = 'date',
   'third_any_non_objective' = 'third_any_non_objective',
   'win_or' = 'win_or',
-  'rn_race_w' = 'rn_race_w'
+  'rn_race_w' = 'rn_race_w',
+  '3_crown_route' = '3_crown_route',
+  'win_g1_cnt_class_distance' = 'win_g1_cnt_class_distance',
+  'dist_wins_branch' = 'dist_wins_branch',
+  'spring_triple_crown' = 'spring_triple_crown',
+  'win_g1_track' = 'win_g1_track',
+  'win_g1' = 'win_g1',
+  'race_pn' = 'race_pn',
+  'autumn_triple_crown_same_year' = 'autumn_triple_crown_same_year',
+  'ev' = 'ev',
+  'rt_race_w' = 'rt_race_w'
 }
 
 export interface EventConditionDataType {
   [EventConditionType.win]: {conditionType: EventConditionType.win, raceId: number, yearId: number},
   [EventConditionType.lose]: {conditionType: EventConditionType.lose, raceId: number, yearId: number},
+  [EventConditionType.participate]: {conditionType: EventConditionType.participate, raceId: number, yearId: number} | string,
+  [EventConditionType.do_not_participate]: {conditionType: EventConditionType.do_not_participate, raceId: number, yearId: number} | string,
   [EventConditionType.lose_to_rival]: {conditionType: EventConditionType.lose_to_rival, raceId: number, rivalId: number},
   [EventConditionType.beat_rival]: {conditionType: EventConditionType.beat_rival, raceId: number, rivalId: number},
   [EventConditionType.win_as_strat]: {conditionType: EventConditionType.win_as_strat, raceId: number, yearId: number, strategyId: number},
@@ -115,6 +131,9 @@ export interface EventConditionDataType {
   [EventConditionType.dont_pick_and_win]: {conditionType: EventConditionType.dont_pick_and_win, raceId: number, yearId: number},
   [EventConditionType.win_or]: {conditionType: EventConditionType.win_or, race1Id: number, year1Id: number, race2Id: number, year2Id: number},
   [EventConditionType.rn_race_w]: {conditionType: EventConditionType.rn_race_w, opponentIds: string[], amountOfRaces: number},
+  [EventConditionType.win_g1_cnt_class_distance]: {conditionType: EventConditionType.win_g1_cnt_class_distance, amountOfRaces: number, yearId: number, distanceIds: number[]},
+  [EventConditionType.dist_wins_branch]: {conditionType: EventConditionType.dist_wins_branch, distanceId: number},
+  [EventConditionType.race_pn]: {conditionType: EventConditionType.race_pn, raceId: number, yearId: number, position: number},
   // add more if needed
 }
 

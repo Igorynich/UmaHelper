@@ -16,6 +16,8 @@ import {catchError} from 'rxjs/operators';
 import {Trainee} from '../interfaces/trainee';
 import {RACES} from '../interfaces/races';
 import {YEAR} from '../interfaces/year';
+import {DISTANCE} from '../interfaces/distance';
+import {TRACK} from '../interfaces/track';
 
 export const eventTypes: Record<string, { name: string }> = {
   random: {
@@ -93,7 +95,7 @@ export class EventsService {
 
         // let skillReqs$, traineeReqs$;
 
-        const skillIds = allEventRewards.filter(reward => (reward.t === 'sk' || reward.t === 'sg') && reward.d)
+        const skillIds = allEventRewards.filter(reward => (reward.t === 'sk' || reward.t === 'sg' || reward.t === 'ps_h' || reward.t === 'ps_nh') && reward.d)
           .map(reward => reward.d!);
         const uniqueSkillIds = [...new Set(skillIds)];
         let skillReqs$ = this.skillsService.getSkillsByIds(uniqueSkillIds);
@@ -174,7 +176,7 @@ export class EventsService {
       rs: 'Random Stat(s)',
       fe: 'Full Energy Recovery',
       no: 'Nothing Happens',
-      ct: 'Chance of Practice Perfect ○ status',
+      ct: 'Chance of Practice Perfect ○ status',      // ??? 'condition trigger' mb
       nl: 'New Line',
       sc: 'Switch Condition',
       rc: 'Race Change',
@@ -182,7 +184,12 @@ export class EventsService {
       highest_facility: 'Highest Facility',
       fa: 'Fans',
       fd: 'Random Training Facilities Disabled',
-      rr: 'Race Rewards'      // ?
+      rr: 'Race Rewards',      // ?
+      expensive_races: 'Racing consumes more energy',
+      result_good: 'Good Result',
+      result_bad: 'Bad Result',
+      ps_h: 'PS healed',
+      ps_nh: 'PS not healed'
     };
 
     const statusEffectsMap: { [key: number]: string } = {
@@ -198,11 +205,14 @@ export class EventsService {
 
     const conditionsMap: { [key: string]: string } = {
       [EventConditionType.autumn_triple_crown_senior]: 'Win the senior Autumn Triple Crown (Tenno Sho (Autumn) (Senior), Japan Cup (Senior), Arima Kinen (Senior))',
+      [EventConditionType.autumn_triple_crown_same_year]: 'Win the Autumn Triple Crown (Tenno Sho (Autumn) (Senior), Japan Cup (Senior), Arima Kinen (Senior)) in the SAME year',
+      [EventConditionType.spring_triple_crown]: 'Win the Spring Triple Crown (Osaka Hai, Tenno Sho (Spring), Takarazuka Kinen (Senior))',
       [EventConditionType.win]: 'Win',
       [EventConditionType.lose]: 'Lose',
       [EventConditionType.do_not_race]: 'Do Not Race',
       [EventConditionType.obj]: '(Objective Related, Event will Vary Based On Your Result)',
       [EventConditionType.triple_tiara]: 'Win the Triple Tiara (Oka Sho, Japanese Oaks, Shuka Sho)',
+      [EventConditionType.triple_crown]: 'Win the Triple Crown (Satsuki Sho, Tokyo Yushun (Japanese Derby), Kikuka Sho)',
       [EventConditionType.lose_to_rival]: 'Lose to Rival',
       [EventConditionType.participate]: 'Participate',
       [EventConditionType.date]: 'Triggers'
@@ -222,13 +232,6 @@ export class EventsService {
     const eventData = events.en || events;
     const conditionsSet = new Set();
     const mapEvent = (event: UmaEvent): DecodedEvent => {
-      if (event.conditions) {
-        console.warn('EVENT WITH CONDITIONS', event, event.n);   // TODO: decode conditions
-        event.conditions.forEach(c => {
-          conditionsSet.add({condition: c, eventName: event.n, fullEvent: event});
-        });
-      }
-      let diCounter = 0;      // counts --OR--
       return {
         name: event.n,
         alt_placement: event.alt_placement?.map(altPlacement => {
@@ -278,12 +281,17 @@ export class EventsService {
               const yearName = YEAR[Number(yearId)];
               return `Win ${racesAmount}+ G1 Races in ${yearName} Year`;
             }
-            case EventConditionType.participate: {
-              const [conditionType, event] = decoded;
+            case EventConditionType.participate:
+            case EventConditionType.do_not_participate: {
+              const [conditionType, eventOrRaceIdAndYearId] = decoded;
               const eventsMap: Record<string, string> = {
                 debut: 'Make Debut',
               };
-              return `Participate in ${eventsMap[event]}`;
+              if (eventsMap[eventOrRaceIdAndYearId]) {
+                return `Participate in ${eventsMap[eventOrRaceIdAndYearId]}`;
+              }
+              const [raceId, yearId] = eventOrRaceIdAndYearId.toString().indexOf('|') > -1 ? eventOrRaceIdAndYearId.split('|') : [eventOrRaceIdAndYearId, ''];
+              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)};
             }
             case EventConditionType.win_as_strat:
             case EventConditionType.win_as_not_strat: {
@@ -310,6 +318,53 @@ export class EventsService {
               const [conditionType, opponentsString, amountOfRaces] = decoded;
               const opponentIds: number[] = JSON.parse(opponentsString);
               return {conditionType: conditionEncryptedName, opponentIds: opponentIds.map(id => `${id.toString()}01`), amountOfRaces: Number(amountOfRaces)}
+            }
+            case EventConditionType['3_crown_route']: {
+              return 'Select the Triple Crown route';
+            }
+            case EventConditionType.win_g1_cnt_class_distance: {
+              const [conditionType, amountOfRaces, yearId, distanceIdsString] = decoded;
+              console.log('distanceIdsString', distanceIdsString);
+              const distanceIds: number[] = JSON.parse(distanceIdsString);
+              console.log('Distance IDs', distanceIds);
+              return {conditionType: conditionEncryptedName, amountOfRaces: Number(amountOfRaces), yearId: Number(yearId), distanceIds: distanceIds};
+            }
+            case EventConditionType.dist_wins_branch: {
+              const [conditionType, distanceId] = decoded;
+              console.log('distanceId', distanceId);
+              return `Reward depends on amount of ${DISTANCE[Number(distanceId)]} wins`;
+            }
+            case EventConditionType.win_g1_track: {
+              const [conditionType, trackId, amountOfRaces] = decoded;
+              return `Win ${amountOfRaces} G1 races at ${TRACK[Number(trackId)]} track`;
+            }
+            case EventConditionType.win_g1: {
+              const [conditionType, amountOfRaces] = decoded;
+              let amount: number | number[];
+              try {
+                amount = JSON.parse(amountOfRaces) as number[];
+              } catch (error) {
+                // If it's a regular string, return it as is
+                amount = Number(amountOfRaces);
+              }
+              const amountString = Array.isArray(amount) ? `${amount[0]} - ${amount[1]}` : amount.toString();
+              return `Win ${amountString} G1 races`;
+            }
+            case EventConditionType.rt_race_w: {
+              const [conditionType, trackId, amountOfRaces] = decoded;
+              return `Win ${amountOfRaces} race at ${TRACK[Number(trackId)]} track`;
+            }
+            case EventConditionType.race_pn: {
+              const [conditionType, raceIdAndYearId, position] = decoded;
+              const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
+              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId), position: Number(position)}
+            }
+            case EventConditionType.ev: {
+              const [conditionType, eventId] = decoded;
+              const eventsMap: {[key: number]: string} = {
+                501023520: '[Battle With a Raging Dragon]'
+              };
+              return `Trigger the ${eventsMap[Number(eventId)]} training event`;
             }
           }
           return resultString;   // placeholder
@@ -352,6 +407,44 @@ export class EventsService {
                 return {
                   type: EventRewardType.simpleString,
                   value: 'Unknown Skill Gain Reward'
+                };
+              }
+              case 'ps_h': {
+                if (reward.d) {
+                  const skill = data?.skills?.get(reward.d);
+                  if (skill) {
+                    return {
+                      type: EventRewardType.supportStringWithData,
+                      dataType: EventRewardDataType.skill,
+                      data: skill,
+                      prefix: '※',
+                      suffix: 'Healed'
+                    };
+                  }
+                }
+                console.warn(`Unknown ps_h Reward`, reward, event.n);
+                return {
+                  type: EventRewardType.simpleString,
+                  value: 'Unknown ps_h Reward'
+                };
+              }
+              case 'ps_nh': {
+                if (reward.d) {
+                  const skill = data?.skills?.get(reward.d);
+                  if (skill) {
+                    return {
+                      type: EventRewardType.supportStringWithData,
+                      dataType: EventRewardDataType.skill,
+                      data: skill,
+                      prefix: '※',
+                      suffix: 'Not Healed'
+                    };
+                  }
+                }
+                console.warn(`Unknown ps_nh Reward`, reward, event.n);
+                return {
+                  type: EventRewardType.simpleString,
+                  value: 'Unknown ps_nh Reward'
                 };
               }
               case 'bo':
@@ -414,11 +507,14 @@ export class EventsService {
                 };
               }
               case 'rc': {
-                console.warn(`Unknown Race Change Reward`, reward, event.n);
-                const raceId: number = reward.d!;
+                const raceId: number | undefined = reward.d;
+                if (!raceId) {
+                  console.warn(`Unknown Race Change Reward`, reward, event.n);
+                }
+                const raceName: string = RACES.find(r => r.id === raceId)?.name_en || 'Unknown Race';
                 return {
                   type: EventRewardType.simpleString,
-                  value: `Objective Race Changed (id: ${raceId})`
+                  value: `Objective Race Changed to ${raceName}`
                 };
               }
               case 'fd': {
@@ -432,8 +528,6 @@ export class EventsService {
                 const chances = reward.d;
                 const chancesText = `${chances ? `(${chances}%)` : ''}`;
                 const text = rewardMap[reward.t];
-                // const mainText = diCounter === 0 ? 'Randomly Either' : '--OR--';
-                diCounter++;    // TODO figure out when to use Randomly Either
                 return {
                   type: EventRewardType.supportString,
                   value: `${text}${chancesText}`
@@ -469,6 +563,20 @@ export class EventsService {
                 return {
                   type: EventRewardType.simpleString,
                   value: 'Unknown Heal Reward'
+                };
+              }
+              case 'ct': {
+                console.warn('CHECK CT Reward', reward, event.n);
+                return {
+                  type: EventRewardType.supportString,
+                  value: `${reward.d} wins`
+                };
+              }
+              case 'result_good':
+              case 'result_bad': {
+                return {
+                  type: EventRewardType.supportString,
+                  value: `※ ${rewardMap[reward.t]}`
                 };
               }
               default:
