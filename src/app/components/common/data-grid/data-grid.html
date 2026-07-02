@@ -32,7 +32,7 @@
       }
     </div>
   </div>
-  <table mat-table class="data-grid-table" [dataSource]="dataSource" matSort (matSortChange)="handleSort($event)">
+  <table mat-table class="data-grid-table" [dataSource]="displayedData()" matSort (matSortChange)="handleSort($event)">
 
     @if (columnGroups().length) {
       @for (group of columnGroups(); track group.name) {
@@ -200,5 +200,5 @@
     }
     <tr mat-row *matRowDef="let row; columns: displayedColumns()" [class]="row.rarity | rarityClass"></tr>
   </table>
-  <mat-paginator [pageSize]="pageSize()" [pageSizeOptions]="[10, 20, 50, 100]" showFirstLastButtons></mat-paginator>
+  <mat-paginator [length]="totalItems()" [pageIndex]="currentPageIndex()" [pageSize]="currentPageSize()" [pageSizeOptions]="[10, 20, 50, 100]" showFirstLastButtons (page)="onPageChange($event)"></mat-paginator>
 </div>

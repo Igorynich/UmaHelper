@@ -26,7 +26,11 @@
             [addMenu]="addMenu"
             [tabIndex]="ALL_TAB_INDEX"
             [isActive]="selectedTabIndex() === ALL_TAB_INDEX"
-            (add)="onAddTrainee($event)">
+            [pageIndex]="currentPage()"
+            [pageSize]="currentPageSize()"
+            (add)="onAddTrainee($event)"
+            (pageChanged)="currentPage.set($event)"
+            (pageSizeChanged)="currentPageSize.set($event)">
           </app-trainee-list-view>
         </div>
       </mat-tab>
@@ -67,9 +71,13 @@
               [trainees]="tab.cards"
               [tabIndex]="$index"
               [isActive]="selectedTabIndex() === $index"
+              [pageIndex]="currentPage()"
+              [pageSize]="currentPageSize()"
               (add)="onAddTrainee($event)"
               (remove)="onRemoveTrainee($index, $event)"
-              [addMenu]="addMenu">
+              [addMenu]="addMenu"
+              (pageChanged)="currentPage.set($event)"
+              (pageSizeChanged)="currentPageSize.set($event)">
             </app-trainee-list-view>
           </div>
         </mat-tab>

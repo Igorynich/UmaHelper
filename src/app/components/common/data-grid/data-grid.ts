@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -12,7 +11,7 @@ import {
 } from '@angular/core';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { MatSort, MatSortModule, Sort, SortDirection } from '@angular/material/sort';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTableModule } from '@angular/material/table';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import {MatMenu, MatMenuModule} from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
@@ -20,7 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Level } from '../level/level';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import {MatPaginator, MatPaginatorModule, PageEvent} from '@angular/material/paginator';
 import { RarityClassPipe } from '../../../pipes/rarity-class.pipe';
 import { RarityPipe } from '../../../pipes/rarity.pipe';
 import { DataGridStateService } from '../../../services/data-grid-state.service';
@@ -63,7 +62,7 @@ import {SnakeToTitlePipe} from '../../../pipes/snake-to-title.pipe';
   styleUrl: './data-grid.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DataGrid<T> implements AfterViewInit {
+export class DataGrid<T> {
   private dataGridStateService = inject(DataGridStateService);
 
   data = input<T[]>([]);
@@ -76,18 +75,23 @@ export class DataGrid<T> implements AfterViewInit {
   tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
   isActive = input<boolean>(false); // Whether this tab is currently active
   showColumnSelector = input(true);
+  pageIndex = input<number>(0);
 
   levelChanged = output<{ row: T; level: number }>();
   imageClick = output<T>();
   setAllToMax = output();
   addClicked = output<T>();
   removeClicked = output<T>();
+  pageChanged = output<number>();
+  pageSizeChanged = output<number>();
 
   protected SkillDisplayMode = SkillDisplayMode;
 
   protected readonly allColumnKeys = computed(() => this.columns().map((c) => c.key));
   protected readonly visibleColumns = signal<string[]>([]);
   protected readonly displayedColumns = computed(() => this.visibleColumns());
+  protected readonly currentPageIndex = signal<number>(0);
+  protected readonly currentPageSize = signal<number>(10);
   readonly columnGroups = computed(() => {
     const rawGroups = this.columns().reduce((acc, col) => {
       const name = col.group;
@@ -119,8 +123,24 @@ export class DataGrid<T> implements AfterViewInit {
   readonly groupedColumns: Signal<string[]> = computed(() => {
     return this.columns().filter((c) => c.group).map((c) => c.key);
   });
-  protected readonly dataSource = new MatTableDataSource<T>([]);
   protected readonly activeSorts = signal<ActiveSort[]>([]);
+  protected readonly displayedData = computed(() => {
+    const data = this.data();
+    const sorts = this.activeSorts();
+    const pageIndex = this.currentPageIndex();
+    const pageSize = this.currentPageSize();
+
+    // Apply sorting
+    let sortedData = [...data];
+    if (sorts.length > 0) {
+      sortedData = this.applySorting(sortedData, sorts);
+    }
+
+    // Apply pagination
+    const startIndex = pageIndex * pageSize;
+    return sortedData.slice(startIndex, startIndex + pageSize);
+  });
+  protected readonly totalItems = computed(() => this.data().length);
   protected readonly selection = signal<CheckboxSelection>({});
   protected readonly isAllSelected = computed(() => {
     const numSelected = Object.values(this.selection()).filter(selected => selected).length;
@@ -144,11 +164,28 @@ export class DataGrid<T> implements AfterViewInit {
     this.selection.set(initialTabState.selection || {});
     this.currentTabIndex.set(initialTabIndex);
 
+    // Initialize page size from input
     effect(() => {
-      this.dataSource.data = this.data();
-      // Clean up selection for cards that no longer exist
+      const inputPageSize = this.pageSize();
+      if (inputPageSize) {
+        this.currentPageSize.set(inputPageSize);
+      }
+    });
+
+    // Initialize page index from input
+    effect(() => {
+      const inputPageIndex = this.pageIndex();
+      if (inputPageIndex !== undefined) {
+        this.currentPageIndex.set(inputPageIndex);
+      }
+    });
+
+    // Clean up selection when data changes
+    effect(() => {
+      this.data();
       this.cleanupSelection();
     });
+
     effect(() => {
       this.visibleColumns.set(this.allColumnKeys());
     });
@@ -176,26 +213,8 @@ export class DataGrid<T> implements AfterViewInit {
     });
   }
 
-  ngAfterViewInit(): void {
-    const sortRef = this.sort();
-    const paginatorRef = this.paginator();
-
-    if (this.multiSort() && sortRef) {
-      this.dataSource.sort = sortRef;
-      this.dataSource.sortData = (data, sort) => this.sortData(data, sort);
-    } else {
-      this.dataSource.sort = sortRef ?? null;
-    }
-
-    if (paginatorRef) {
-      this.dataSource.paginator = paginatorRef;
-    }
-
-    // Initialize sort state from service
-    this.initializeSortFromService();
-  }
-
-  private initializeSortFromService(): void {
+  // Initialize sort state from service after view init
+  protected initializeSortFromService(): void {
     const tabIndex = this.tabIndex();
     const sortRef = this.sort();
     if (sortRef) {
@@ -219,6 +238,14 @@ export class DataGrid<T> implements AfterViewInit {
       }
     }
   }
+
+  // Use afterRenderEffect to initialize sort after template is rendered
+  protected afterViewInit = effect(() => {
+    const sortRef = this.sort();
+    if (sortRef) {
+      this.initializeSortFromService();
+    }
+  });
 
   protected handleSort(sort: Sort): void {
     const tabIndex = this.tabIndex();
@@ -245,13 +272,9 @@ export class DataGrid<T> implements AfterViewInit {
         this.dataGridStateService.updateTabSort(tabIndex, updatedSorts);
         return updatedSorts;
       });
-      this.dataSource._updateChangeSubscription();
-    } else if (sortRef) {
-      sortRef.active = sort.active;
-      sortRef.direction = sort.direction;
-      this.dataSource.sort = sortRef;
-
+    } else {
       const singleSort: ActiveSort[] = sort.direction ? [{ key: sort.active, direction: sort.direction }] : [];
+      this.activeSorts.set(singleSort);
       // Update service instead of emitting
       this.dataGridStateService.updateTabSort(tabIndex, singleSort);
     }
@@ -320,7 +343,6 @@ export class DataGrid<T> implements AfterViewInit {
       this.dataGridStateService.updateTabSort(tabIndex, updatedSorts);
       return updatedSorts;
     });
-    this.dataSource._updateChangeSubscription();
   }
 
   protected clearSorts(): void {
@@ -329,7 +351,6 @@ export class DataGrid<T> implements AfterViewInit {
     this.activeSorts.set([]);
     // Update service instead of emitting
     this.dataGridStateService.updateTabSort(tabIndex, []);
-    this.dataSource._updateChangeSubscription();
   }
 
   protected getColumnHeader(key: string): string {
@@ -356,14 +377,13 @@ export class DataGrid<T> implements AfterViewInit {
   }
 
 
-  private sortData(data: T[], sort: MatSort): T[] {
-    const activeSorts = this.activeSorts();
-    if (!activeSorts.length) {
+  private applySorting(data: T[], sorts: ActiveSort[]): T[] {
+    if (!sorts.length) {
       return data;
     }
 
     return data.slice().sort((a, b) => {
-      for (const activeSort of activeSorts) {
+      for (const activeSort of sorts) {
         const column = this.columns().find(c => c.key === activeSort.key);
         const sortType = column?.sortType || SortType.String;
 
@@ -448,6 +468,13 @@ export class DataGrid<T> implements AfterViewInit {
   }
 
   protected readonly parseInt = parseInt;
+
+  protected onPageChange(event: PageEvent): void {
+    this.currentPageIndex.set(event.pageIndex);
+    this.currentPageSize.set(event.pageSize);
+    this.pageChanged.emit(event.pageIndex);
+    this.pageSizeChanged.emit(event.pageSize);
+  }
 }
 
 

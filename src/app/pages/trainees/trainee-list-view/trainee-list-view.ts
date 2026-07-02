@@ -85,10 +85,14 @@ export class TraineeListViewComponent {
   addMenu = input<MatMenu>();
   tabIndex = input<number>(-1);
   isActive = input<boolean>(false);
+  pageIndex = input<number>(0);
+  pageSize = input<number>(20);
 
   add = output<DisplayTrainee>();
   remove = output<DisplayTrainee>();
   filterChanged = output<TraineeFilter>();
+  pageChanged = output<number>();
+  pageSizeChanged = output<number>();
 
   protected readonly TraineeRarity = TraineeRarity;
   protected readonly TrainingType = TrainingType;
