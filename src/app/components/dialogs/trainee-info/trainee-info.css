@@ -133,7 +133,6 @@
 
 .aptitudes-container {
   margin-top: 16px;
-  overflow: hidden;
 }
 
 :host ::ng-deep .data-table.mat-mdc-table {

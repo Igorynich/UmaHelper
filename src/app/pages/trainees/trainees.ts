@@ -6,20 +6,21 @@ import {
   inject,
   signal
 } from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
+import {rxResource, toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Router} from '@angular/router';
 import {TraineeService} from '../../services/trainee.service';
 import {TraineesDataService} from '../../services/trainees-data.service';
 import {DisplayTrainee} from '../../interfaces/display-trainee';
 import {Trainee} from '../../interfaces/trainee';
 import {TraineeTab} from '../../interfaces/user-trainees-data';
-import {MatTab, MatTabGroup, MatTabLabel} from '@angular/material/tabs';
+import {NgpTabset, NgpTabList, NgpTabButton, NgpTabPanel} from 'ng-primitives/tabs';
 import {MatIcon} from '@angular/material/icon';
-import {MatButton, MatIconButton} from '@angular/material/button';
+import {MatButton, MatButtonModule, MatIconButton} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {MatTooltip} from '@angular/material/tooltip';
+import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {filter, map} from 'rxjs';
 import {NewTabDialogComponent} from '../support-cards/new-tab-dialog/new-tab-dialog';
 import {ConfirmationDialog} from '../../components/common/confirmation-dialog/confirmation-dialog';
@@ -31,17 +32,19 @@ import {tap} from 'rxjs/operators';
   selector: 'app-trainees',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    MatTabGroup,
-    MatTab,
-    MatTabLabel,
+    NgpTabset,
+    NgpTabList,
+    NgpTabButton,
+    NgpTabPanel,
     TraineeListViewComponent,
     MatIcon,
     MatButton,
-    MatIconButton,
+    MatButtonModule,
     MatTooltip,
     MatMenu,
     MatMenuItem,
     MatMenuTrigger,
+    MatProgressSpinner
   ],
   templateUrl: './trainees.html',
   styleUrl: './trainees.css'
@@ -71,7 +74,6 @@ export class Trainees {
   );
 
   protected dynamicTabs = signal<TraineeTab[]>([]);
-  private isLoadingData = signal(true);
 
   protected hydratedTabsData = computed(() => {
     const allMap = new Map(this.allTrainees().map(t => [t.traineeId, t]));
@@ -82,45 +84,51 @@ export class Trainees {
   });
 
   readonly ALL_TAB_INDEX = -1;
-  protected selectedTabIndex = signal(this.ALL_TAB_INDEX);
+  readonly ALL_TAB_VALUE = 'all-trainees';
+  protected selectedTabValue = signal(this.ALL_TAB_VALUE);
   protected selectedTrainee = signal<DisplayTrainee | null>(null);
   protected currentPage = signal(0);
   protected currentPageSize = signal(20);
 
   private readonly queryParams = toSignal(
-    this.route.queryParamMap.pipe(tap(value => console.log('queryParamMap to Signal', value)),
+    this.route.queryParamMap.pipe(
       map(params => {
-        const tabIndex = params.get('tabIndex') ? Number(params.get('tabIndex')) : null;
-        if (tabIndex !== null) this.selectedTabIndex.set(tabIndex);
-        const page = params.get('page') ? Number(params.get('page')) : null;
-        if (page !== null) this.currentPage.set(page - 1);
+        console.log('queryParams toSignal', params);
+        const tabValue = params.get('tabValue');
+        const page = params.get('page') ? Number(params.get('page')) - 1 : null;
         const pageSize = params.get('pageSize') ? Number(params.get('pageSize')) : null;
-        if (pageSize !== null) this.currentPageSize.set(pageSize);
         return {
-          tabIndex,
+          tabValue,
           page,
           pageSize
-        }
+        };
       })
     ),
-    {initialValue: {tabIndex: null, page: null, pageSize: null}}
+    {initialValue: {tabValue: null, page: null, pageSize: null}}
   );
+
+  protected savedDataResource = rxResource({
+    stream: () => {
+      return this.traineesDataService.userTraineesData$;
+    }
+  });
 
   constructor() {
     effect(() => {
-      console.log('Effect 1, savedData');
-      const savedData = this.traineesDataService.userTraineesData();
-      if (savedData === undefined) return; // still loading
-
+      if (this.savedDataResource.isLoading()) {
+        return;
+      }
+      const savedData = this.savedDataResource.value();
       if (savedData) {
+        console.log('savedData', savedData);
         this.dynamicTabs.set(savedData.tabs);
-        const tabIndex = this.queryParams().tabIndex ?? savedData.selectedTabIndex ?? this.ALL_TAB_INDEX;   // PRIO: queryParams -> savedData -> default
-        this.selectedTabIndex.set(tabIndex);
+        const tabValue = savedData.selectedTabIndex !== undefined ? this.getTabValueFromIndex(savedData.selectedTabIndex) : this.ALL_TAB_VALUE;
+        this.selectedTabValue.set(tabValue);
 
         const tabStates = new Map<number, TabState>();
         const existing = this.dataGridStateService.getAllTabStates();
 
-        tabStates.set(tabIndex, {sort: [], selection: existing.get(tabIndex)?.selection || {}});
+        tabStates.set(this.ALL_TAB_INDEX, {sort: [], selection: existing.get(this.ALL_TAB_INDEX)?.selection || {}});
 
         savedData.tabs.forEach((tab, index) => {
           const existingState = existing.get(index);
@@ -134,29 +142,45 @@ export class Trainees {
 
         this.dataGridStateService.loadTabStates(tabStates);
       } else {
+        console.log('NO savedData');
         this.dynamicTabs.set([]);
-        const tabIndex = this.queryParams().tabIndex ?? this.ALL_TAB_INDEX;   // PRIO: queryParams -> default
-        this.selectedTabIndex.set(tabIndex);
+        const tabValue = this.ALL_TAB_VALUE;
+        this.selectedTabValue.set(tabValue);
         const tabStates = new Map<number, TabState>();
-        tabStates.set(tabIndex, {sort: [], selection: {}});
+        tabStates.set(this.ALL_TAB_INDEX, {sort: [], selection: {}});
         this.dataGridStateService.loadTabStates(tabStates);
       }
-
-      this.isLoadingData.set(false);
     });
 
     effect(() => {
-      const currentTabIdx = this.selectedTabIndex();
+      if (this.savedDataResource.isLoading()) {
+        return;
+      }
+      if (this.queryParams().page) {
+        this.currentPage.set(this.queryParams().page || 0);
+      }
+      if (this.queryParams().pageSize) {
+        this.currentPageSize.set(this.queryParams().pageSize || 20);
+      }
+      if (this.queryParams().tabValue) {
+        this.selectedTabValue.set(this.queryParams().tabValue || this.ALL_TAB_VALUE);
+      }
+    });
+
+    effect(() => {
+      if (this.savedDataResource.isLoading()) {
+        return;
+      }
+      const currentTabValue = this.selectedTabValue();
       const currentPageNum = this.currentPage();
       const currentPageSizeNum = this.currentPageSize();
 
       const queryParams: Record<string, string | null> = {
-        tabIndex: currentTabIdx !== this.ALL_TAB_INDEX ? currentTabIdx.toString() : null,
+        tabValue: currentTabValue !== this.ALL_TAB_VALUE ? currentTabValue : null,
         page: currentPageNum !== 0 ? (currentPageNum + 1).toString() : null,
         pageSize: currentPageSizeNum !== 20 ? currentPageSizeNum.toString() : null
       };
 
-      console.log('Updating queryParams', queryParams);
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams,
@@ -167,12 +191,13 @@ export class Trainees {
 
   protected availableTabs = computed(() =>
     this.dynamicTabs()
-      .map((tab, index) => ({name: tab.name, index}))
-      .filter(tab => tab.index !== this.selectedTabIndex())
+      .map((tab, index) => ({name: tab.name, index, value: this.getTabValueFromIndex(index)}))
+      .filter(tab => tab.value !== this.selectedTabValue())
   );
 
-  protected onTabChange(newIndex: number): void {
-    this.selectedTabIndex.set(newIndex - 1);
+  protected onTabChange(newValue: string): void {
+    console.log('onTabChange', newValue);
+    this.selectedTabValue.set(newValue);
     this.saveData();
   }
 
@@ -181,7 +206,8 @@ export class Trainees {
       .pipe(filter(name => !!name))
       .subscribe(name => {
         this.dynamicTabs.update(tabs => [...tabs, {name, cards: []}]);
-        this.onTabChange(this.hydratedTabsData().length + 1);
+        const newIndex = this.hydratedTabsData().length;
+        this.onTabChange(this.getTabValueFromIndex(newIndex));
         this.saveData();
       });
   }
@@ -192,17 +218,19 @@ export class Trainees {
     this.dialog.open(ConfirmationDialog, {
       data: {title: 'Confirm Deletion', message: `Are you sure you want to delete the tab "${tab.name}"?`}
     }).afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
-      this.dynamicTabs.update(tabs => tabs.filter((_, i) => i !== index));
-      if (this.selectedTabIndex() >= index) {
-        this.selectedTabIndex.update(prev => prev - 1);
+      const removedTabValue = this.getTabValueFromIndex(index);
+      if (this.selectedTabValue() === removedTabValue) {
+        this.selectedTabValue.set(this.ALL_TAB_VALUE);
       }
+      this.dynamicTabs.update(tabs => tabs.filter((_, i) => i !== index));
       this.dataGridStateService.removeTabState(index);
       this.saveData();
     });
   }
 
   protected hasSelectedCards(): boolean {
-    return this.dataGridStateService.getTabSelectedCount(this.selectedTabIndex()) > 0;
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
+    return this.dataGridStateService.getTabSelectedCount(currentTabIndex) > 0;
   }
 
   protected onAddTrainee(trainee: DisplayTrainee): void {
@@ -291,16 +319,16 @@ export class Trainees {
       return newTabs;
     });
     this.saveData();
-    this.dataGridStateService.clearTabSelection(this.selectedTabIndex());
+    this.dataGridStateService.clearTabSelection(this.getTabIndexFromValue(this.selectedTabValue()));
   }
 
   private getSelectedFromCurrentGrid(): DisplayTrainee[] {
-    const idx = this.selectedTabIndex();
-    const selection = this.dataGridStateService.getTabSelection(idx);
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
+    const selection = this.dataGridStateService.getTabSelection(currentTabIndex);
 
-    const pool = idx === this.ALL_TAB_INDEX
+    const pool = currentTabIndex === this.ALL_TAB_INDEX
       ? this.allTrainees()
-      : this.hydratedTabsData()[idx]?.cards ?? [];
+      : this.hydratedTabsData()[currentTabIndex]?.cards ?? [];
 
     return pool.filter(t => selection[t.traineeId.toString()]);
   }
@@ -315,15 +343,26 @@ export class Trainees {
 
   async saveData(manualTrigger: boolean = false): Promise<void> {
     if (!manualTrigger) return;
-    if (this.isLoadingData()) return;
+    if (this.savedDataResource.isLoading()) return;
 
     try {
       await this.traineesDataService.saveUserTraineesData({
         tabs: this.dynamicTabs(),
-        selectedTabIndex: this.selectedTabIndex()
+        selectedTabIndex: this.getTabIndexFromValue(this.selectedTabValue())
       });
     } catch {
       this.snackBar.open('Failed to save your changes', 'Dismiss', {duration: 3000});
     }
+  }
+
+  protected getTabValueFromIndex(index: number): string {
+    if (index === this.ALL_TAB_INDEX) return this.ALL_TAB_VALUE;
+    return `tab-${index}`;
+  }
+
+  protected getTabIndexFromValue(value: string): number {
+    if (value === this.ALL_TAB_VALUE) return this.ALL_TAB_INDEX;
+    const match = value.match(/^tab-(\d+)$/);
+    return match ? parseInt(match[1], 10) : this.ALL_TAB_INDEX;
   }
 }

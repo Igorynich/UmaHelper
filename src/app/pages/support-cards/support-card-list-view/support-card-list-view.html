@@ -97,7 +97,8 @@
   [columns]="visibleColumns()"
   [multiSort]="true"
   [rarityLevelMap]="rarityLevelMap"
-  [pageSize]="20"
+  [pageSize]="pageSize()"
+  [pageIndex]="pageIndex()"
   [isFirstTab]="isFirstTab()"
   [addMenu]="addMenu()"
   [tabIndex]="tabIndex()"
@@ -108,4 +109,6 @@
   (setAllToMax)="onSetAllFilteredToMax()"
   (addClicked)="onAdd($event)"
   (removeClicked)="onRemove($event)"
+  (pageChanged)="pageChanged.emit($event)"
+  (pageSizeChanged)="pageSizeChanged.emit($event)"
 ></app-data-grid>

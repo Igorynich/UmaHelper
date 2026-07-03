@@ -5,6 +5,14 @@
   overflow: hidden;
 }
 
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .page-container {
   flex: 1;
   width: 100%;
@@ -30,6 +38,51 @@
   flex-direction: column;
 }
 
+.tab-list {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  padding-right: 48px; /* Space for add button */
+  gap: 0;
+}
+
+.tab-button {
+  flex: 1;
+  max-width: 180px;
+  min-width: 120px;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.6);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.tab-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.tab-button[data-active] {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+  background-color: rgba(25, 118, 210, 0.04);
+}
+
+.tab-button:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: -2px;
+}
+
+.tab-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .add-tab-button {
   position: absolute;
   top: 6px; /* Align with tab labels */
@@ -50,28 +103,6 @@
   justify-content: center;
 }
 
-/* Make all parent containers allow full width */
-::ng-deep .mdc-tab__text-label {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-::ng-deep .mdc-tab__content {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-::ng-deep .mat-mdc-tab-label-content {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-::ng-deep .mat-mdc-tab {
-  width: 100% !important;
-  max-width: 180px !important;
-  padding-right: 4px !important; /* Reduce right padding */
-  padding-left: 12px !important; /* Keep left padding for text */
-}
 
 .tab-label {
   display: flex;
@@ -119,6 +150,10 @@
   gap: 1rem;
 }
 
+[ngpTabPanel]:not([data-active]) {
+  display: none !important;
+}
+
 .bulk-actions-container {
   display: flex;
   justify-content: space-between;
@@ -139,16 +174,14 @@
 }
 
 /* Make the tab group content take full height */
-::ng-deep .mat-mdc-tab-body-wrapper {
+.tab-group > div:not(.tab-list) {
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Add padding to the right of the tab header to make space for the absolute button */
-::ng-deep .tab-group .mat-mdc-tab-header {
-  padding-right: 48px;
-}
-
-/* Set max width for tabs */
-::ng-deep .mat-mdc-tab {
-  max-width: 180px;
+.tab-group [ngpTabPanel] {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }

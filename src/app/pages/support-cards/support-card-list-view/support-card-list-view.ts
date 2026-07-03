@@ -63,6 +63,8 @@ export class SupportCardListViewComponent {
   addMenu = input<MatMenu>();
   tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
   isActive = input<boolean>(false); // Whether this tab is currently active
+  pageIndex = input<number>(0);
+  pageSize = input<number>(20);
 
   // Modern output functions instead of @Output decorators
   levelChangedInTab = output<{ id: number; level: number }>();
@@ -70,6 +72,8 @@ export class SupportCardListViewComponent {
   remove = output<SupportCardEffectData>();
   filterChanged = output<SupportCardFilter>();
   levelsChangedInFirstTab = output< DisplaySupportCard[]>();
+  pageChanged = output<number>();
+  pageSizeChanged = output<number>();
 
   // Modern ViewChild using contentChild for better performance
   dataGrid = contentChild(DataGrid<SupportCardEffectData>);

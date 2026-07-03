@@ -1,34 +1,36 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import {Component, computed, effect, inject, signal} from '@angular/core';
+import {rxResource, toSignal} from '@angular/core/rxjs-interop';
+import {ActivatedRoute, Router} from '@angular/router';
 import {rarityLevelMap, SupportCardService} from '../../services/support-card.service';
-import { SupportCardsDataService } from '../../services/support-cards-data.service';
-import { DisplaySupportCard } from '../../interfaces/display-support-card';
+import {SupportCardsDataService} from '../../services/support-cards-data.service';
+import {DisplaySupportCard} from '../../interfaces/display-support-card';
 import {SupportCard, SupportCardEffectData} from '../../interfaces/support-card';
-import { SupportCardFilter } from '../../interfaces/user-support-cards-data';
-import {MatTab, MatTabGroup, MatTabLabel} from '@angular/material/tabs';
+import {SupportCardFilter} from '../../interfaces/user-support-cards-data';
+import {NgpTabset, NgpTabList, NgpTabButton, NgpTabPanel} from 'ng-primitives/tabs';
 import {
   SupportCardListViewComponent
 } from './support-card-list-view/support-card-list-view';
 import {MatIcon} from '@angular/material/icon';
 import {MatButton, MatButtonModule} from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { NewTabDialogComponent } from './new-tab-dialog/new-tab-dialog';
-import { filter } from 'rxjs';
-import { ConfirmationDialog } from '../../components/common/confirmation-dialog/confirmation-dialog';
-import { map } from 'rxjs/operators';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import {MatDialog} from '@angular/material/dialog';
+import {NewTabDialogComponent} from './new-tab-dialog/new-tab-dialog';
+import {filter} from 'rxjs';
+import {ConfirmationDialog} from '../../components/common/confirmation-dialog/confirmation-dialog';
+import {map} from 'rxjs/operators';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
-import { DataGridStateService, TabState } from '../../services/data-grid-state.service';
-import { MatTooltip } from '@angular/material/tooltip';
-import { IMAGEKIT_CONFIG } from '../../imagekit.config';
+import {DataGridStateService, TabState} from '../../services/data-grid-state.service';
+import {MatTooltip} from '@angular/material/tooltip';
+import {MatProgressSpinner} from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-support-cards',
   standalone: true,
   imports: [
-    MatTabGroup,
-    MatTab,
-    MatTabLabel,
+    NgpTabset,
+    NgpTabList,
+    NgpTabButton,
+    NgpTabPanel,
     SupportCardListViewComponent,
     MatIcon,
     MatButton,
@@ -37,6 +39,7 @@ import { IMAGEKIT_CONFIG } from '../../imagekit.config';
     MatMenu,
     MatMenuItem,
     MatMenuTrigger,
+    MatProgressSpinner,
   ],
   templateUrl: './support-cards.html',
   styleUrl: './support-cards.css'
@@ -47,10 +50,12 @@ export class SupportCards {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private dataGridStateService = inject(DataGridStateService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   protected allCards = toSignal<SupportCard[], SupportCard[]>(
     this.supportCardService.getSortedSupportCards(),
-    { initialValue: [] }
+    {initialValue: []}
   );
 
   protected allCardsWithDefaults = computed((): DisplaySupportCard[] => {
@@ -61,7 +66,6 @@ export class SupportCards {
   });
 
   protected dynamicTabs = signal<{ name: string; cards: { id: number; level: number }[] }[]>([]);
-  private isLoadingData = signal(true);
 
   protected hydratedTabsData = computed(() => {
     const allCardsMap = new Map(this.allCards().map(c => [c.support_id, c]));
@@ -69,7 +73,7 @@ export class SupportCards {
       const hydratedCards = tab.cards
         .map(c => {
           const fullCard = allCardsMap.get(c.id);
-          return fullCard ? { ...fullCard, level: c.level } : null;
+          return fullCard ? {...fullCard, level: c.level} : null;
         })
         .filter((c): c is NonNullable<typeof c> => c !== null);
 
@@ -83,16 +87,60 @@ export class SupportCards {
   protected readonly rarityLevelMap = rarityLevelMap;
 
   readonly ALL_CARDS_TAB_INDEX: number = -1;
-  protected selectedTabIndex = signal(this.ALL_CARDS_TAB_INDEX);
+  readonly ALL_CARDS_TAB_VALUE: string = 'all-cards';
+  protected selectedTabValue = signal(this.ALL_CARDS_TAB_VALUE);
   protected selectedCard = signal<SupportCardEffectData | null>(null);
   protected firstTabSupportCardsWithLevels = signal<DisplaySupportCard[]>([]);
+  protected currentPage = signal(0);
+  protected currentPageSize = signal(20);
+
+  private readonly queryParams = toSignal(
+    this.route.queryParamMap.pipe(
+      map(params => {
+        console.log('queryParams toSignal', params);
+        const tabValue = params.get('tabValue');
+        // if (tabValue) this.selectedTabValue.set(tabValue);
+        const page = params.get('page') ? Number(params.get('page')) - 1 : null;
+        // if (page !== null) this.currentPage.set(page - 1);
+        const pageSize = params.get('pageSize') ? Number(params.get('pageSize')) : null;
+        // if (pageSize !== null) this.currentPageSize.set(pageSize);
+        return {
+          tabValue,
+          page,
+          pageSize
+        };
+      })
+    ),
+    {initialValue: {tabValue: null, page: null, pageSize: null}}
+  );
+
+  protected savedDataResource = rxResource({
+    stream: () => {
+      return this.supportCardsDataService.userSupportCardsData$;
+    }
+  });
 
   constructor() {
+    effect(onCleanup => {
+      console.log('selectedTabValue', this.selectedTabValue());
+    });
+    effect(onCleanup => {
+      console.log('hydratedTabsData', this.hydratedTabsData());
+    });
+    effect(onCleanup => {
+      console.log('savedDataResource', this.savedDataResource.isLoading(), this.savedDataResource.value());
+    });
+
     effect(() => {
-      const savedData = this.supportCardsDataService.userSupportCardsData();
+      if (this.savedDataResource.isLoading()) {
+        return;
+      }
+      const savedData = this.savedDataResource.value();
       if (savedData) {
+        console.log('savedData', savedData);
         this.dynamicTabs.set(savedData.tabs);
-        this.selectedTabIndex.set(savedData.selectedTabIndex || this.ALL_CARDS_TAB_INDEX);
+        const tabValue = savedData.selectedTabIndex !== undefined ? this.getTabValueFromIndex(savedData.selectedTabIndex) : this.ALL_CARDS_TAB_VALUE;
+        this.selectedTabValue.set(tabValue);
 
         // Load filter and sort states into the service
         const tabStates = new Map<number, TabState>();
@@ -100,7 +148,7 @@ export class SupportCards {
         // Preserve existing selection states from service
         const existingStates = this.dataGridStateService.getAllTabStates();   // TODO rewrite to use single(current) tab state
 
-        // Add state for "All Cards" tab (this.ALL_CARDS_TAB_INDEX) - preserve existing selection or use empty
+        // Add state for "All Cards" tab (this.ALL_CARDS_TAB_VALUE) - preserve existing selection or use empty
         const existingAllCardsState = existingStates.get(this.ALL_CARDS_TAB_INDEX);
         const allCardsTabState: TabState = {
           sort: [],
@@ -123,38 +171,75 @@ export class SupportCards {
         });
         this.dataGridStateService.loadTabStates(tabStates);
 
-        this.isLoadingData.set(false);
       } else {
+        console.log('NO savedData');
         this.dynamicTabs.set([]);
-        this.selectedTabIndex.set(this.ALL_CARDS_TAB_INDEX);
+        const tabValue = this.ALL_CARDS_TAB_VALUE;
+        this.selectedTabValue.set(tabValue);
 
         // Initialize service with empty states
         const tabStates = new Map<number, TabState>();
         // Add empty state for "All Cards" tab (this.ALL_CARDS_TAB_INDEX)
-        tabStates.set(this.ALL_CARDS_TAB_INDEX, { sort: [], selection: {} });
+        tabStates.set(this.ALL_CARDS_TAB_INDEX, {sort: [], selection: {}});
         this.dataGridStateService.loadTabStates(tabStates);
 
-        this.isLoadingData.set(false);
       }
+    });
+
+    effect(() => {
+      if (this.savedDataResource.isLoading()) {
+        return;
+      }
+      if (this.queryParams().page) {
+        this.currentPage.set(this.queryParams().page || 0);
+      }
+      if (this.queryParams().pageSize) {
+        this.currentPageSize.set(this.queryParams().pageSize || 20);
+      }
+      if (this.queryParams().tabValue) {
+        this.selectedTabValue.set(this.queryParams().tabValue || this.ALL_CARDS_TAB_VALUE);
+      }
+    });
+
+    effect(() => {
+      if (this.savedDataResource.isLoading()) {
+        return;
+      }
+      const currentTabValue = this.selectedTabValue();
+      const currentPageNum = this.currentPage();
+      const currentPageSizeNum = this.currentPageSize();
+
+      const queryParams: Record<string, string | null> = {
+        tabValue: currentTabValue !== this.ALL_CARDS_TAB_VALUE ? currentTabValue : null,
+        page: currentPageNum !== 0 ? (currentPageNum + 1).toString() : null,
+        pageSize: currentPageSizeNum !== 20 ? currentPageSizeNum.toString() : null
+      };
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams,
+        queryParamsHandling: 'merge'
+      });
     });
   }
 
   protected availableTabs = computed(() => {
     return this.dynamicTabs()
-      .map((tab, index) => ({ name: tab.name, index: index }))
-      .filter(tab => tab.index !== this.selectedTabIndex());
+      .map((tab, index) => ({name: tab.name, index: index, value: this.getTabValueFromIndex(index)}))
+      .filter(tab => tab.value !== this.selectedTabValue());
   });
 
-  protected onTabChange(newIndex: number): void {
-    // console.log('onTabChange', newIndex - 1);
-    this.selectedTabIndex.set(newIndex - 1);    // -1 needed bc $event of mat-tab-group !== $index of hydratedTabsData(), $event: 0 - All Cards, $index: -1 - All Cards
+  protected onTabChange(newValue: string): void {
+    console.log('onTabChange', newValue);
+    this.selectedTabValue.set(newValue);
     this.saveData();
   }
 
   protected addTab(): void {
     this.dialog.open(NewTabDialogComponent).afterClosed().pipe(filter(name => !!name)).subscribe(name => {
-      this.dynamicTabs.update(tabs => [...tabs, { name, cards: [] }]);
-      this.onTabChange(this.hydratedTabsData().length + 1);
+      this.dynamicTabs.update(tabs => [...tabs, {name, cards: []}]);
+      const newIndex = this.hydratedTabsData().length;
+      this.onTabChange(this.getTabValueFromIndex(newIndex));
       this.saveData();
     });
   }
@@ -170,10 +255,14 @@ export class SupportCards {
     });
 
     dialogRef.afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
-      this.dynamicTabs.update(tabs => tabs.filter((_, i) => i !== index));
-      if (this.selectedTabIndex() >= index) {
-        this.selectedTabIndex.update(prev => prev - 1);
+      console.log('Removing tab', index);
+      const removedTabValue = this.getTabValueFromIndex(index);
+      if (this.selectedTabValue() === removedTabValue) {
+        this.selectedTabValue.set(this.ALL_CARDS_TAB_VALUE);
       }
+      this.dynamicTabs.update(tabs => tabs.filter((_, i) => i !== index));
+
+
       this.dataGridStateService.removeTabState(index);
       this.saveData();
     });
@@ -182,12 +271,12 @@ export class SupportCards {
   protected onLevelChangedInDynamicTab(tabIndex: number, event: { id: number; level: number }): void {
     this.dynamicTabs.update(tabs => {
       const newTabs = [...tabs];
-      const tabToUpdate = { ...newTabs[tabIndex] };
+      const tabToUpdate = {...newTabs[tabIndex]};
       const cardToUpdateIndex = tabToUpdate.cards.findIndex(c => c.id === event.id);
 
       if (cardToUpdateIndex > -1) {
         const newCards = [...tabToUpdate.cards];
-        newCards[cardToUpdateIndex] = { ...newCards[cardToUpdateIndex], level: event.level };
+        newCards[cardToUpdateIndex] = {...newCards[cardToUpdateIndex], level: event.level};
         tabToUpdate.cards = newCards;
         newTabs[tabIndex] = tabToUpdate;
       }
@@ -215,7 +304,7 @@ export class SupportCards {
 
     this.dynamicTabs.update(tabs => {
       const newTabs = [...tabs];
-      const tabToUpdate = { ...newTabs[tabIndex] };
+      const tabToUpdate = {...newTabs[tabIndex]};
 
       const cardExists = tabToUpdate.cards?.some(c => c.id === card.support_id);
 
@@ -251,7 +340,7 @@ export class SupportCards {
     dialogRef.afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
       this.dynamicTabs.update(tabs => {
         const newTabs = [...tabs];
-        const tabToUpdate = { ...newTabs[tabIndex] };
+        const tabToUpdate = {...newTabs[tabIndex]};
         tabToUpdate.cards = tabToUpdate.cards.filter(c => c.id !== card.support_id);
         newTabs[tabIndex] = tabToUpdate;
         return newTabs;
@@ -270,7 +359,7 @@ export class SupportCards {
   }
 
   protected hasSelectedCards(): boolean {
-    const currentTabIndex = this.selectedTabIndex();
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
     return this.dataGridStateService.getTabSelectedCount(currentTabIndex) > 0;
   }
 
@@ -294,7 +383,7 @@ export class SupportCards {
   private addMultipleCardsToTab(cards: SupportCardEffectData[], targetTabIndex: number): void {
     this.dynamicTabs.update(tabs => {
       const newTabs = [...tabs];
-      const tabToUpdate = { ...newTabs[targetTabIndex] };
+      const tabToUpdate = {...newTabs[targetTabIndex]};
       let addedCount = 0;
 
       cards.forEach(card => {
@@ -324,14 +413,14 @@ export class SupportCards {
     });
     this.saveData();
     // Clear selection?
-    const currentTabIndex = this.selectedTabIndex();
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
     this.dataGridStateService.clearTabSelection(currentTabIndex);
   }
 
   private removeMultipleCardsFromTab(tabIndex: number, cards: SupportCardEffectData[]): void {
     this.dynamicTabs.update(tabs => {
       const newTabs = [...tabs];
-      const tabToUpdate = { ...newTabs[tabIndex] };
+      const tabToUpdate = {...newTabs[tabIndex]};
       const cardIdsToRemove = cards.map(c => c.support_id);
 
       tabToUpdate.cards = tabToUpdate.cards.filter(c => !cardIdsToRemove.includes(c.id));
@@ -348,7 +437,7 @@ export class SupportCards {
   }
 
   private getSelectedCardsFromCurrentGrid(): SupportCardEffectData[] {
-    const currentTabIndex = this.selectedTabIndex();
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
     const currentSelection = this.dataGridStateService.getTabSelection(currentTabIndex);
 
     if (currentTabIndex === this.ALL_CARDS_TAB_INDEX) {
@@ -392,13 +481,13 @@ export class SupportCards {
       return;
     }
 
-    if (this.isLoadingData()) return;
+    if (this.savedDataResource.isLoading()) return;
 
     try {
       const tabsWithFiltersAndSorts = this.dynamicTabs().map((tab, index) => {
         // const filter = this.tabFilters().get(index);
         const tabState = this.dataGridStateService.getTabState(index);
-        const result: any = { ...tab };
+        const result: any = {...tab};
         if (tabState.filter) result.filter = tabState.filter;
         if (tabState.sort && tabState.sort.length > 0) result.sort = tabState.sort;
         // Intentionally exclude selection from being saved to Firebase
@@ -407,7 +496,7 @@ export class SupportCards {
 
       await this.supportCardsDataService.saveUserSupportCardsData({
         tabs: tabsWithFiltersAndSorts,
-        selectedTabIndex: this.selectedTabIndex()
+        selectedTabIndex: this.getTabIndexFromValue(this.selectedTabValue())
         // Intentionally exclude allCardsSelection from being saved to Firebase
       });
     } catch (error) {
@@ -420,5 +509,20 @@ export class SupportCards {
 
   protected onSupportCardsWithLevelsChanged(cards: DisplaySupportCard[]) {
     this.firstTabSupportCardsWithLevels.set(cards);
+  }
+
+  protected getTabValueFromIndex(index: number): string {
+    if (index === this.ALL_CARDS_TAB_INDEX) return this.ALL_CARDS_TAB_VALUE;
+    return `tab-${index}`;
+  }
+
+  protected getTabIndexFromValue(value: string): number {
+    if (value === this.ALL_CARDS_TAB_VALUE) return this.ALL_CARDS_TAB_INDEX;
+    const match = value.match(/^tab-(\d+)$/);
+    return match ? parseInt(match[1], 10) : this.ALL_CARDS_TAB_INDEX;
+  }
+
+  protected setSelectedTabValue(value: string | undefined) {
+    this.selectedTabValue.set(value ?? this.ALL_CARDS_TAB_VALUE);
   }
 }

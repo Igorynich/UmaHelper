@@ -13,8 +13,9 @@ export class SupportCardsDataService {
   private firestore: Firestore = inject(Firestore);
   private authService = inject(AuthService);
 
-  private readonly userSupportCardsData$: Observable<UserSupportCardsData | null> = this.authService.user$.pipe(
+  readonly userSupportCardsData$: Observable<UserSupportCardsData | null> = this.authService.user$.pipe(
     switchMap(user => {
+      console.log('User authentication state changed:', user);
       if (user) {
         console.log('Loading user support cards data for user:', user.uid);
         return docData(doc(this.firestore, 'users_sc_data', user.uid)) as Observable<UserSupportCardsData>;

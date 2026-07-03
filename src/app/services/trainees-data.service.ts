@@ -1,11 +1,12 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
-import { doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
+import { doc, docData, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
 import { UserTraineesData } from '../interfaces/user-trainees-data';
 import { authState } from '@angular/fire/auth';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, from, of } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -16,18 +17,14 @@ export class TraineesDataService {
 
   private readonly COLLECTION = 'user_trainees_data';
 
-  readonly userTraineesData = toSignal<UserTraineesData | null>(
-    authState(this.auth).pipe(
-      switchMap(user => {
-        if (!user) return of(null);
-        const ref = doc(this.firestore, `${this.COLLECTION}/${user.uid}`);
-        return from(getDoc(ref)).pipe(
-          map(snap => snap.exists() ? (snap.data() as UserTraineesData) : null)
-        );
-      })
-    ),
-    { initialValue: undefined }
+  readonly userTraineesData$: Observable<UserTraineesData | null> = authState(this.auth).pipe(
+    switchMap(user => {
+      if (!user) return of(null);
+      return docData(doc(this.firestore, `${this.COLLECTION}/${user.uid}`)) as Observable<UserTraineesData>;
+    })
   );
+
+  readonly userTraineesData = toSignal(this.userTraineesData$, { initialValue: undefined });
 
   async saveUserTraineesData(data: Omit<UserTraineesData, 'lastUpdated'>): Promise<void> {
     const user = this.auth.currentUser;

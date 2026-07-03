@@ -1,14 +1,35 @@
-<div class="page-container">
-  <h2>Support Cards</h2>
+@if (savedDataResource.isLoading()) {
+  <div class="loading-container">
+    <mat-spinner diameter="80"></mat-spinner>
+  </div>
+} @else {
+  <div class="page-container">
+    <h2>Support Cards</h2>
 
-  <div class="tab-container">
-    <mat-tab-group class="tab-group" animationDuration="0ms" [selectedIndex]="selectedTabIndex() + 1" (selectedIndexChange)="onTabChange($event)">
-      <mat-tab label="All Cards">
-        <div class="tab-content">
+    <div class="tab-container">
+      <div ngpTabset class="tab-group" [(ngpTabsetValue)]="selectedTabValue">
+        <div ngpTabList class="tab-list">
+          <button ngpTabButton [ngpTabButtonValue]="'all-cards'" class="tab-button">All Cards</button>
+          @for (tab of hydratedTabsData(); track $index) {
+            <button ngpTabButton [ngpTabButtonValue]="getTabValueFromIndex($index)" class="tab-button">
+              <div class="tab-label">
+                <span>{{ tab.name }}</span>
+                <button
+                  mat-icon-button
+                  class="close-tab-button"
+                  (click)="removeTab($event, $index)"
+                  matTooltip="Remove tab">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            </button>
+          }
+        </div>
+        <div ngpTabPanel [ngpTabPanelValue]="'all-cards'" class="tab-content">
           <div class="bulk-actions-container">
             <div class="left-buttons">
               <button
-                matButton="outlined"
+                mat-button="outlined"
                 color="primary"
                 [matMenuTriggerFor]="addMenu"
                 [disabled]="!hasSelectedCards()"
@@ -17,7 +38,7 @@
                 Add Selected
               </button>
             </div>
-            <button matButton="filled" (click)="saveData(true)">Save Data</button>
+            <button mat-button="filled" (click)="saveData(true)">Save Data</button>
           </div>
           <app-support-card-list-view
             [cards]="allCardsWithDefaults()"
@@ -25,32 +46,21 @@
             [isFirstTab]="true"
             [addMenu]="addMenu"
             [tabIndex]="ALL_CARDS_TAB_INDEX"
-            [isActive]="selectedTabIndex() === ALL_CARDS_TAB_INDEX"
+            [isActive]="selectedTabValue() === 'all-cards'"
+            [pageIndex]="currentPage()"
+            [pageSize]="currentPageSize()"
             (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
+            (pageChanged)="currentPage.set($event)"
+            (pageSizeChanged)="currentPageSize.set($event)"
           >
           </app-support-card-list-view>
         </div>
-      </mat-tab>
-
-      @for (tab of hydratedTabsData(); track $index) {
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <div class="tab-label">
-              <span>{{ tab.name }}</span>
-              <button
-                matIconButton
-                class="close-tab-button"
-                (click)="removeTab($event, $index)"
-                matTooltip="Remove tab">
-                <mat-icon>close</mat-icon>
-              </button>
-            </div>
-          </ng-template>
-          <div class="tab-content">
+        @for (tab of hydratedTabsData(); track $index) {
+          <div ngpTabPanel [ngpTabPanelValue]="getTabValueFromIndex($index)" class="tab-content">
             <div class="bulk-actions-container">
               <div class="left-buttons">
                 <button
-                  matButton="outlined"
+                  mat-button="outlined"
                   [disabled]="!hasSelectedCards()"
                   [matMenuTriggerFor]="addMenu"
                   matTooltip="Add selected cards to tab">
@@ -58,7 +68,7 @@
                   Add Selected
                 </button>
                 <button
-                  matButton="outlined"
+                  mat-button="outlined"
                   color="warn"
                   [disabled]="!hasSelectedCards()"
                   (click)="onBulkRemove($index)"
@@ -67,31 +77,35 @@
                   Remove Selected
                 </button>
               </div>
-              <button matButton="filled" color="warn" (click)="saveData()">Save Data</button>
+              <button mat-button="filled" color="warn" (click)="saveData()">Save Data</button>
             </div>
             <app-support-card-list-view
               [cards]="tab.cards"
               [tabIndex]="$index"
-              [isActive]="selectedTabIndex() === $index"
+              [isActive]="selectedTabValue() === getTabValueFromIndex($index)"
+              [pageIndex]="currentPage()"
+              [pageSize]="currentPageSize()"
               (levelChangedInTab)="onLevelChangedInDynamicTab($index, $event)"
               (add)="onAddCard($event)"
               (remove)="onRemoveCard($index, $event)"
               (filterChanged)="onFilterChanged($index, $event)"
               (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
+              (pageChanged)="currentPage.set($event)"
+              (pageSizeChanged)="currentPageSize.set($event)"
               [addMenu]="addMenu">
             </app-support-card-list-view>
           </div>
-        </mat-tab>
-      }
-    </mat-tab-group>
+        }
+      </div>
 
-    <button mat-icon-button (click)="addTab()" class="add-tab-button" matTooltip="Add new tab">
-      <mat-icon>add</mat-icon>
-    </button>
+      <button mat-icon-button (click)="addTab()" class="add-tab-button" matTooltip="Add new tab">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
   </div>
-</div>
+}
 <mat-menu #addMenu="matMenu">
-  @for (tab of availableTabs(); track tab.index) {
+  @for (tab of availableTabs(); track tab.value) {
     <button mat-menu-item (click)="addCardToTab(selectedCard(), tab.index)">{{ tab.name }}</button>
   }
 </mat-menu>
