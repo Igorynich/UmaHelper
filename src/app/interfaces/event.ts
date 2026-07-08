@@ -111,21 +111,34 @@ export enum EventConditionType {
   'dist_wins_branch' = 'dist_wins_branch',
   'spring_triple_crown' = 'spring_triple_crown',
   'win_g1_track' = 'win_g1_track',
+  'win_g1_strat' = 'win_g1_strat',
   'win_g1' = 'win_g1',
   'race_pn' = 'race_pn',
   'autumn_triple_crown_same_year' = 'autumn_triple_crown_same_year',
   'ev' = 'ev',
-  'rt_race_w' = 'rt_race_w'
+  'rt_race_w' = 'rt_race_w',
+  'rival_draw' = 'rival_draw',
+  'racetrack_wins_branch' = 'racetrack_wins_branch',
+  'fan' = 'fan',
+  'fans_before_finals' = 'fans_before_finals',
+  'y_dt_gn_race_no_w' = 'y_dt_gn_race_no_w',
+  'brian_five' = 'brian_five',
+  'win_connect_live' = 'win_connect_live',   // smart falcon
+  'win_streak_graded' = 'win_streak_graded',
+  'win_on_streak' = 'win_on_streak'
 }
 
 export interface EventConditionDataType {
   [EventConditionType.win]: {conditionType: EventConditionType.win, raceId: number, yearId: number},
   [EventConditionType.lose]: {conditionType: EventConditionType.lose, raceId: number, yearId: number},
+  [EventConditionType.win_on_streak]: {conditionType: EventConditionType.win_on_streak, raceId: number, yearId: number},
   [EventConditionType.participate]: {conditionType: EventConditionType.participate, raceId: number, yearId: number} | string,
   [EventConditionType.do_not_participate]: {conditionType: EventConditionType.do_not_participate, raceId: number, yearId: number} | string,
-  [EventConditionType.lose_to_rival]: {conditionType: EventConditionType.lose_to_rival, raceId: number, rivalId: number},
-  [EventConditionType.beat_rival]: {conditionType: EventConditionType.beat_rival, raceId: number, rivalId: number},
+  [EventConditionType.lose_to_rival]: {conditionType: EventConditionType.lose_to_rival, raceId: number, yearId: number, rivalId: number},
+  [EventConditionType.beat_rival]: {conditionType: EventConditionType.beat_rival, raceId: number, yearId: number, rivalId: number},
+  [EventConditionType.rival_draw]: {conditionType: EventConditionType.rival_draw, raceId: number, yearId: number, rivalId: number},
   [EventConditionType.win_as_strat]: {conditionType: EventConditionType.win_as_strat, raceId: number, yearId: number, strategyId: number},
+  [EventConditionType.win_g1_strat]: {conditionType: EventConditionType.win_g1_strat, strategyId: number, amountOfRaces?: number},
   [EventConditionType.win_as_not_strat]: {conditionType: EventConditionType.win_as_not_strat, raceId: number, yearId: number, strategyId: number},
   [EventConditionType.pick_and_win]: {conditionType: EventConditionType.pick_and_win, raceId: number, yearId: number},
   [EventConditionType.dont_pick_and_win]: {conditionType: EventConditionType.dont_pick_and_win, raceId: number, yearId: number},
@@ -134,6 +147,9 @@ export interface EventConditionDataType {
   [EventConditionType.win_g1_cnt_class_distance]: {conditionType: EventConditionType.win_g1_cnt_class_distance, amountOfRaces: number, yearId: number, distanceIds: number[]},
   [EventConditionType.dist_wins_branch]: {conditionType: EventConditionType.dist_wins_branch, distanceId: number},
   [EventConditionType.race_pn]: {conditionType: EventConditionType.race_pn, raceId: number, yearId: number, position: number},
+  [EventConditionType.fan]: {conditionType: EventConditionType.fan, fanAmount: number},
+  [EventConditionType.fans_before_finals]: {conditionType: EventConditionType.fans_before_finals, fanAmount: number},
+  [EventConditionType.y_dt_gn_race_no_w]: {conditionType: EventConditionType.y_dt_gn_race_no_w, yearId: number, criteriaName: string, criteriaValue: number, criteriaBranch: number, numberOfRaces: number},     // y_dt_gn_race_no_w",3,"dist",0,"g",2 - bamboo memory
   // add more if needed
 }
 

@@ -58,11 +58,17 @@
                     <li>{{ condition }}</li>
                   }
                 }
+                @case (EventConditionType.win_on_streak) {
+                  <li>Win <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display>, while being on active win streak</li>
+                }
                 @case (EventConditionType.lose_to_rival) {
-                  <li>Loose <app-entity-display [raceId]="condition.raceId"></app-entity-display> to <app-entity-display [traineeId]="condition.rivalId"></app-entity-display></li>
+                  <li>Loose <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display> to <app-entity-display [traineeId]="condition.rivalId"></app-entity-display></li>
                 }
                 @case (EventConditionType.beat_rival) {
-                  <li>Beat <app-entity-display [traineeId]="condition.rivalId"></app-entity-display> at <app-entity-display [raceId]="condition.raceId"></app-entity-display></li>
+                  <li>Beat <app-entity-display [traineeId]="condition.rivalId"></app-entity-display> at <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
+                }
+                @case (EventConditionType.rival_draw) {
+                  <li>Draw with <app-entity-display [traineeId]="condition.rivalId"></app-entity-display> at <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
                 }
                 @case (EventConditionType.win_as_strat) {
                   <li>Win <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display> as {{STRATEGY[condition.strategyId]}}</li>

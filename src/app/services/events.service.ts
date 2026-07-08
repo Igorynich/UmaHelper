@@ -18,6 +18,7 @@ import {RACES} from '../interfaces/races';
 import {YEAR} from '../interfaces/year';
 import {DISTANCE} from '../interfaces/distance';
 import {TRACK} from '../interfaces/track';
+import {STRATEGY} from '../interfaces/strategy';
 
 export const eventTypes: Record<string, { name: string }> = {
   random: {
@@ -189,17 +190,32 @@ export class EventsService {
       result_good: 'Good Result',
       result_bad: 'Bad Result',
       ps_h: 'PS healed',
-      ps_nh: 'PS not healed'
+      ps_nh: 'PS not healed',
+      brian_tryhard: 'Increased difficulty and rewards of future training goals',
+      unspecified_stats: '2 Stats',      // smart falcon
+      track_hint: 'Relevant Track Skill Hint',
+      se_h: 'Status Effect Healed',
+      se_nh: 'Status Effect Not Healed',
     };
 
     const statusEffectsMap: { [key: number]: string } = {
       1: 'Night Owl',
       2: 'Slacker',
       4: 'Slow Metabolism',
+      6: 'Practice Poor',
       7: 'Fast Learner',
       8: 'Charming ○',
       9: 'Hot Topic',
       10: 'Practice Perfect ○',
+      11: 'Practice Perfect ◎',
+      12: 'Under the Weather',
+      13: 'Shining Brightly',
+      14: 'Fan Promise (Hokkaido)',      // 14-18 Smart Falcon 1st secret event
+      15: 'Fan Promise (Hokuto)',
+      16: 'Fan Promise (Nakayama)',
+      17: 'Fan Promise (Kansai)',
+      18: 'Fan Promise (Kokura)',
+      19: 'Not Ready',      // meisho doto Feeling Dizzy
       100: 'Pure Passion: Team Sirius'
     };
 
@@ -215,7 +231,9 @@ export class EventsService {
       [EventConditionType.triple_crown]: 'Win the Triple Crown (Satsuki Sho, Tokyo Yushun (Japanese Derby), Kikuka Sho)',
       [EventConditionType.lose_to_rival]: 'Lose to Rival',
       [EventConditionType.participate]: 'Participate',
-      [EventConditionType.date]: 'Triggers'
+      [EventConditionType.date]: 'Triggers',
+      [EventConditionType.brian_five]: 'Or win at least 5 G1 races before Senior year',
+      [EventConditionType.win_connect_live]: 'Finish your Fan Promise from the previous event',
     };
 
     const switchConditionMap: { [key: string]: (rewardData: any[]) => string } = {
@@ -253,8 +271,10 @@ export class EventsService {
           switch (conditionEncryptedName) {
             case EventConditionType.win:
             case EventConditionType.lose:
+            case EventConditionType.win_on_streak: {
               const [raceId, yearId] = decoded[1].toString().indexOf('|') > -1 ? decoded[1].split('|') : [decoded[1], ''];
               return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)}
+            }
             case EventConditionType.do_not_race:
             case EventConditionType.date: {
               const [conditionType, year, month, half] = decoded;
@@ -265,14 +285,17 @@ export class EventsService {
               break;
             }
             case EventConditionType.lose_to_rival:
-            case EventConditionType.beat_rival: {
-              const [conditionType, raceId, rivalTraineeShortId] = decoded;
+            case EventConditionType.beat_rival:
+            case EventConditionType.rival_draw: {
+              const [conditionType, raceIdAndYearId, rivalTraineeShortId] = decoded;
+              const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
               const race = RACES.find(r => r.id === Number(raceId));
               // const raceName = race?.name_en || `Race ${raceId}`;
               console.log('Data', data);
               return {
                 conditionType: conditionEncryptedName,
                 raceId: Number(raceId),
+                yearId: Number(yearId),
                 rivalId: Number(`${rivalTraineeShortId}01`)
               }
             }
@@ -331,12 +354,19 @@ export class EventsService {
             }
             case EventConditionType.dist_wins_branch: {
               const [conditionType, distanceId] = decoded;
-              console.log('distanceId', distanceId);
               return `Reward depends on amount of ${DISTANCE[Number(distanceId)]} wins`;
+            }
+            case EventConditionType.racetrack_wins_branch: {
+              const [conditionType, trackId] = decoded;
+              return `Reward depends on amount of wins at the ${TRACK[Number(trackId)]} track`;
             }
             case EventConditionType.win_g1_track: {
               const [conditionType, trackId, amountOfRaces] = decoded;
-              return `Win ${amountOfRaces} G1 races at ${TRACK[Number(trackId)]} track`;
+              return `Win ${amountOfRaces || 1} G1 race(s) at the ${TRACK[Number(trackId)]} track`;
+            }
+            case EventConditionType.win_g1_strat: {
+              const [conditionType, strategyId, amountOfRaces] = decoded;
+              return `Win ${amountOfRaces || 1} race(s) as ${STRATEGY[Number(strategyId)]}`;
             }
             case EventConditionType.win_g1: {
               const [conditionType, amountOfRaces] = decoded;
@@ -352,7 +382,7 @@ export class EventsService {
             }
             case EventConditionType.rt_race_w: {
               const [conditionType, trackId, amountOfRaces] = decoded;
-              return `Win ${amountOfRaces} race at ${TRACK[Number(trackId)]} track`;
+              return `Win ${amountOfRaces} race at the ${TRACK[Number(trackId)]} track`;
             }
             case EventConditionType.race_pn: {
               const [conditionType, raceIdAndYearId, position] = decoded;
@@ -366,6 +396,28 @@ export class EventsService {
               };
               return `Trigger the ${eventsMap[Number(eventId)]} training event`;
             }
+            case EventConditionType.fan: {
+              const [conditionType, fanAmount] = decoded;
+              return `Have at least ${fanAmount} fans`;
+            }
+            case EventConditionType.fans_before_finals: {
+              const [conditionType, fanAmount] = decoded;
+              return `Have at least ${fanAmount} fans before the finals`;
+            }
+            case EventConditionType.y_dt_gn_race_no_w: {
+              console.warn('CHECK criteria event', decoded);
+              const [conditionType, yearId, criteriaName, criteriaValue, criteriaBranch, numberOfRaces] = decoded;
+              const criterias: {[key: string]:  Record<number, string>} = {
+                dist: DISTANCE,
+                track: TRACK,
+                str: STRATEGY
+              };
+              return `Win ${numberOfRaces} non-objective ${criteriaBranch.toLocaleUpperCase()} ${criterias[criteriaName][Number(criteriaValue)]} race(s) in ${YEAR[Number(yearId)]} year`;
+            }
+            case EventConditionType.win_streak_graded: {
+              const [conditionType, numberOfRaces] = decoded;
+              return `Get a win streak of ${numberOfRaces} G races(G1, G2 or G3)`;
+            }
           }
           return resultString;   // placeholder
         }),
@@ -376,7 +428,7 @@ export class EventsService {
               case 'sk':
                 // console.log(`Unknown Skill Reward`, reward, event.n);
                 if (reward.d) {
-                  const skill = data?.skills?.get(reward.d);      // TODO: probly return id only
+                  const skill = data?.skills?.get(Number(reward.d));      // TODO: probly return id only
                   if (skill) {
                     return {
                       type: EventRewardType.data,
@@ -386,6 +438,7 @@ export class EventsService {
                     };
                   }
                 }
+                console.log('DATA SKILLS', data?.skills);
                 console.warn('Unknown Skill Hint Reward', reward, event.n);
                 return {
                   type: EventRewardType.simpleString,
@@ -506,6 +559,48 @@ export class EventsService {
                   value: `${isRandom ? '(random) ' : ''}Get ${effectName} Status`
                 };
               }
+              case 'se_h': {
+                const effectId: number = reward.d!;
+                const effectName: string = statusEffectsMap[effectId] || 'Unknown Effect';
+                if (!statusEffectsMap[effectId]) {
+                  console.warn(`Unknown status effect ID: ${effectId} in ${event.n}`);
+                }
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: `${effectName} was Healed`
+                };
+              }
+              case 'se_nh': {
+                const effectId: number = reward.d!;
+                const effectName: string = statusEffectsMap[effectId] || 'Unknown Effect';
+                if (!statusEffectsMap[effectId]) {
+                  console.warn(`Unknown status effect ID: ${effectId} in ${event.n}`);
+                }
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: `${effectName} was Not Healed`
+                };
+              }
+              case 'he': {
+                const effectId = reward.d;
+                if (!effectId) {
+                  return {
+                    type: EventRewardType.simpleString,
+                    value: 'Heal negative status effect'
+                  };
+                }
+                const effectName: string = statusEffectsMap[effectId] || 'Unknown Effect';
+                if (!statusEffectsMap[effectId]) {
+                  console.warn(`Unknown status effect ID: ${effectId} in ${event.n}`);
+                }
+                const isRandom: boolean = !!reward.r;
+                return {
+                  type: EventRewardType.simpleString,
+                  value: `${isRandom ? '(random) ' : ''}Heal ${effectName} Status`
+                };
+              }
               case 'rc': {
                 const raceId: number | undefined = reward.d;
                 if (!raceId) {
@@ -577,6 +672,36 @@ export class EventsService {
                 return {
                   type: EventRewardType.supportString,
                   value: `※ ${rewardMap[reward.t]}`
+                };
+              }
+              case 'et': {
+                const evtMap: Record<number, string> = {
+                  501037525: 'The Outcome of Flash\'s Plan'
+                };
+                const evt = evtMap[Number(reward.d)];
+                if (!evt) {
+                  console.warn('Unknown Event Reward', reward, event.n);
+                  return {
+                    type: EventRewardType.simpleString,
+                    value: 'Unknown Event Reward'
+                  };
+                }
+                return {
+                  type: EventRewardType.simpleString,
+                  value: `Event [${evt}] will occur next turn`
+                };
+              }
+              case 'stat_not_disabled': {
+                console.warn('CHECK stat_not_disabled Reward', reward, event.n);
+                return {
+                  type: EventRewardType.simpleString,
+                  value: `Stat That was Not Disabled ${reward.v}`
+                };
+              }
+              case 'unspecified_stats': {
+                return {
+                  type: EventRewardType.simpleString,
+                  value: `${reward.d} Stat(s) ${reward.v}`
                 };
               }
               default:
