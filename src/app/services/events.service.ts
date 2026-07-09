@@ -196,6 +196,11 @@ export class EventsService {
       track_hint: 'Relevant Track Skill Hint',
       se_h: 'Status Effect Healed',
       se_nh: 'Status Effect Not Healed',
+      rl: 'Racing Locked',
+      ra: 'Race Abandoned',
+      motivation_good: 'Mood Good or better',     // Agnes Tachyon
+      motivation_not_good: 'Mood Normal or worse',    // Agnes Tachyon
+      pl: 'Placement'
     };
 
     const statusEffectsMap: { [key: number]: string } = {
@@ -274,6 +279,10 @@ export class EventsService {
             case EventConditionType.win_on_streak: {
               const [raceId, yearId] = decoded[1].toString().indexOf('|') > -1 ? decoded[1].split('|') : [decoded[1], ''];
               return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)}
+            }
+            case EventConditionType.race_w2: {
+              const [conditionType, raceId] = decoded;
+              return {conditionType: conditionEncryptedName, raceId: Number(raceId)}
             }
             case EventConditionType.do_not_race:
             case EventConditionType.date: {
@@ -417,6 +426,10 @@ export class EventsService {
             case EventConditionType.win_streak_graded: {
               const [conditionType, numberOfRaces] = decoded;
               return `Get a win streak of ${numberOfRaces} G races(G1, G2 or G3)`;
+            }
+            case EventConditionType.ct: {
+              const [conditionType, conditionString] = decoded;
+              return `${conditionString}`;
             }
           }
           return resultString;   // placeholder
@@ -702,6 +715,48 @@ export class EventsService {
                 return {
                   type: EventRewardType.simpleString,
                   value: `${reward.d} Stat(s) ${reward.v}`
+                };
+              }
+              case 'rl': {
+                const amountOfTurns = reward.d;
+                if (!amountOfTurns) {
+                  console.warn('RL(racing locked) reward wo amountOfTurns', reward, event.n);
+                }
+                return {
+                  type: EventRewardType.simpleString,
+                  value: `Cannot race for ${amountOfTurns} turns`
+                };
+              }
+              case 'ra': {
+                const raceId = reward.d;
+                const raceName = RACES.find(r => r.id === Number(raceId!))?.name_en;
+                if (!raceId || !raceName) {
+                  console.warn('RA(race abandoned) reward: race unknown error', reward, event.n);
+                }
+                return {
+                  type: EventRewardType.simpleString,
+                  value: `Objective race ${raceName || 'Unknown Race'} is cancelled`
+                };
+              }
+              case 'motivation_good':
+              case 'motivation_not_good': {
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: `${rewardMap[reward.t]}`
+                };
+              }
+              case 'pl': {
+                const placement = reward.d!;
+                if (!placement) {
+                  console.warn('PL(placement) reward without placement', reward, event.n);
+                }
+                const [place1, place2] = placement as unknown as (number | null)[];
+                const resStr = place2 ? `Place ${place1} - ${place2}` : `Place ${place1} and below`;
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: resStr
                 };
               }
               default:

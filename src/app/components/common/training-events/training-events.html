@@ -41,6 +41,9 @@
                 @case (EventConditionType.win) {
                   <li>Win <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
                 }
+                @case (EventConditionType.race_w2) {
+                  <li>Win <app-entity-display [raceId]="condition.raceId"></app-entity-display> twice</li>
+                }
                 @case (EventConditionType.lose) {
                   <li>Loose <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
                 }

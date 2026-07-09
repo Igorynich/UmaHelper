@@ -125,11 +125,14 @@ export enum EventConditionType {
   'brian_five' = 'brian_five',
   'win_connect_live' = 'win_connect_live',   // smart falcon
   'win_streak_graded' = 'win_streak_graded',
-  'win_on_streak' = 'win_on_streak'
+  'win_on_streak' = 'win_on_streak',
+  'race_w2' = 'race_w2',
+  'ct' = 'ct'
 }
 
 export interface EventConditionDataType {
   [EventConditionType.win]: {conditionType: EventConditionType.win, raceId: number, yearId: number},
+  [EventConditionType.race_w2]: {conditionType: EventConditionType.race_w2, raceId: number},
   [EventConditionType.lose]: {conditionType: EventConditionType.lose, raceId: number, yearId: number},
   [EventConditionType.win_on_streak]: {conditionType: EventConditionType.win_on_streak, raceId: number, yearId: number},
   [EventConditionType.participate]: {conditionType: EventConditionType.participate, raceId: number, yearId: number} | string,
