@@ -114,52 +114,53 @@
         <p><em>Reward:</em>
         <ul class="rewards-list">
           @for (reward of choice.rewards; track $index) {
-            @switch (reward.type) {
-              @case (EventRewardType.simpleString) {
-                <li>{{ reward.value }}</li>
-              }
-              @case (EventRewardType.supportString) {
-                @if (reward.value) {
-                  <u>
-                    @if (reward.prefix) {
-                      <mark>{{ reward.prefix }} </mark>
-                    }
-                    <span>{{ reward.value }}</span>
-                    @if (reward.suffix) {
-                      <mark> {{ reward.suffix }}</mark>
-                    }
-                  </u>
-                } @else {
-                  <!--empty line-->
-                  <div></div>
+            @if (reward) {
+              @switch (reward.type) {
+                @case (EventRewardType.simpleString) {
+                  <li>{{ reward.value }}</li>
                 }
-              }
-              @case (EventRewardType.data) {
-                @switch (reward.dataType) {
-                  @case (EventRewardDataType.skill) {
-                    <li>
+                @case (EventRewardType.supportString) {
+                  @if (reward.value) {
+                    <u>
                       @if (reward.prefix) {
-                        {{ reward.prefix }}
+                        <mark>{{ reward.prefix }} </mark>
                       }
-                      <span class="skill-reward-inline">
+                      <span>{{ reward.value }}</span>
+                      @if (reward.suffix) {
+                        <mark> {{ reward.suffix }}</mark>
+                      }
+                    </u>
+                  } @else {
+                    <!--empty line-->
+                    <div></div>
+                  }
+                }
+                @case (EventRewardType.data) {
+                  @switch (reward.dataType) {
+                    @case (EventRewardDataType.skill) {
+                      <li>
+                        @if (reward.prefix) {
+                          {{ reward.prefix }}
+                        }
+                        <span class="skill-reward-inline">
                             <app-skill-display [skill]="reward.data" [mode]="SkillDisplayMode.Text"
                                                style="display: inline-block;"></app-skill-display>
-                      @if (reward.value) {
-                        <span>{{ reward.value }}</span>
-                      }
-                        @if (reward.suffix) {
-                          {{ reward.suffix }}
-                        }
+                          @if (reward.value) {
+                            <span>{{ reward.value }}</span>
+                          }
+                          @if (reward.suffix) {
+                            {{ reward.suffix }}
+                          }
                           </span></li>
-                  }
-                  @case (EventRewardDataType.bond) {
-                    <li><span>{{ reward.data.itemData.name_en }}{{ reward.value }}</span></li>
+                    }
+                    @case (EventRewardDataType.bond) {
+                      <li><span>{{ reward.data.itemData.name_en }}{{ reward.value }}</span></li>
+                    }
                   }
                 }
-              }
-              @case (EventRewardType.supportStringWithData) {
-                @switch (reward.dataType) {
-                  @case (EventRewardDataType.skill) {
+                @case (EventRewardType.supportStringWithData) {
+                  @switch (reward.dataType) {
+                    @case (EventRewardDataType.skill) {
                       @if (reward.prefix) {
                         {{ reward.prefix }}
                       }
@@ -173,6 +174,7 @@
                           {{ reward.suffix }}
                         }
                           </span>
+                    }
                   }
                 }
               }
