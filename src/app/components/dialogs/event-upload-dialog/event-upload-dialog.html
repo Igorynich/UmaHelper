@@ -53,7 +53,9 @@
                   <p><strong>Choice:</strong> {{ choice.text || '(No choice text)' }}</p>
                   <ul class="rewards-list">
                     @for(reward of choice.rewards; track $index) {
-                      <li>{{ reward.value }}</li>
+                      @if (reward) {
+                        <li>{{ reward.value }}</li>
+                      }
                     }
                   </ul>
                 </div>

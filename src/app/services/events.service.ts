@@ -200,7 +200,8 @@ export class EventsService {
       ra: 'Race Abandoned',
       motivation_good: 'Mood Good or better',     // Agnes Tachyon
       motivation_not_good: 'Mood Normal or worse',    // Agnes Tachyon
-      pl: 'Placement'
+      pl: 'Placement',
+      se_has: 'Has Certain Status Effect'   // Heirs to the Throne
     };
 
     const statusEffectsMap: { [key: number]: string } = {
@@ -221,7 +222,8 @@ export class EventsService {
       17: 'Fan Promise (Kansai)',
       18: 'Fan Promise (Kokura)',
       19: 'Not Ready',      // meisho doto Feeling Dizzy
-      100: 'Pure Passion: Team Sirius'
+      100: 'Pure Passion: Team Sirius',
+      101: 'Pure Passion: Heirs to the Throne'
     };
 
     const conditionsMap: { [key: string]: string } = {
@@ -453,10 +455,11 @@ export class EventsService {
                 }
                 console.log('DATA SKILLS', data?.skills);
                 console.warn('Unknown Skill Hint Reward', reward, event.n);
-                return {
+                /*return {
                   type: EventRewardType.simpleString,
                   value: 'Unknown Skill Hint Reward'
-                };
+                };*/
+                return null;
               case 'sg': {
                 if (reward.d) {
                   const skill = data?.skills?.get(reward.d);
@@ -525,7 +528,7 @@ export class EventsService {
                     }
                   }
                 }
-                console.warn('Unresolved Bond Reward', reward, event.n);
+                // console.warn('Unresolved Bond Reward', reward, event.n);
                 return {
                   type: EventRewardType.simpleString,
                   value: `${rewardMap[reward.t]} ${reward.v}`   // (ID: ${reward.d})
@@ -757,6 +760,17 @@ export class EventsService {
                   type: EventRewardType.supportString,
                   prefix: '※',
                   value: resStr
+                };
+              }
+              case 'se_has': {
+                const statusEffect = statusEffectsMap[reward.d!];
+                if (!statusEffect) {
+                  console.warn('Unknown status effect', reward, event.n);
+                }
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: `Has ${statusEffect}`
                 };
               }
               default:

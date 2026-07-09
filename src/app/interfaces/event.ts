@@ -47,7 +47,7 @@ export interface EventRewardTypeMap {
 export type DecodedEventReward<T extends EventRewardType = EventRewardType> = {
   [K in T]: K extends EventRewardType.data
     ? EventRewardData
-    : EventRewardTypeMap[K];
+    : EventRewardTypeMap[K] | null;
 }[T];
 
 export interface EventReward {
