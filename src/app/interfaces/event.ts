@@ -127,7 +127,8 @@ export enum EventConditionType {
   'win_streak_graded' = 'win_streak_graded',
   'win_on_streak' = 'win_on_streak',
   'race_w2' = 'race_w2',
-  'ct' = 'ct'
+  'ct' = 'ct',
+  'win_g1_length' = 'win_g1_length'
 }
 
 export interface EventConditionDataType {

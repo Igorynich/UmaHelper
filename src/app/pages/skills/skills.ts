@@ -1,11 +1,11 @@
 import {MatSelectModule} from '@angular/material/select';
 import {MatOptionModule} from '@angular/material/core';
-import {Component, computed, inject, signal} from '@angular/core';
+import {Component, computed, effect, inject, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MatCardModule} from '@angular/material/card';
 import {SkillsService} from '../../services/skills.service';
 import {Skill} from '../../interfaces/skill';
-import {debounceTime, distinctUntilChanged, first, map, tap} from 'rxjs';
+import {debounceTime, distinctUntilChanged, map} from 'rxjs';
 import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {MatIconModule} from '@angular/material/icon';
 import {MatIconButton} from '@angular/material/button';
@@ -13,13 +13,14 @@ import {SpinnerService} from '../../services/spinner';
 import {FormControl, ReactiveFormsModule} from '@angular/forms';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
-import {toSignal} from '@angular/core/rxjs-interop';
+import {rxResource, toSignal} from '@angular/core/rxjs-interop';
 import { SkillDisplay } from '../../components/common/skill-display/skill-display';
 import { matchesNameFilter } from '../../utils/name-filter.utils';
 import {ModalControlService} from '../../services/modal-control';
 import {SupportCardInfo} from '../../components/dialogs/support-card-info/support-card-info';
 import {SkillDialogComponent} from '../../components/common/skill-dialog/skill-dialog';
 import {TraineeInfo} from '../../components/dialogs/trainee-info/trainee-info';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-skills',
@@ -33,6 +34,7 @@ import {TraineeInfo} from '../../components/dialogs/trainee-info/trainee-info';
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatAutocompleteModule,
     MatSelectModule,
     MatOptionModule,
     SkillDisplay,
@@ -176,12 +178,30 @@ export class SkillsComponent {
     distinctUntilChanged(),
   ), {initialValue: [] as string[]});
 
-  private skills = signal<Skill[]>([]);
+  skillsResource = rxResource({
+    stream: () => this.skillsService.getSkills().pipe(
+      map(skills => skills.sort((a, b) => a.iconid - b.iconid)),
+    ),
+  });
+
+  readonly allSkillNames = computed(() => {
+    const skills = this.skillsResource.value() ?? [];
+    return [...new Set(skills.map(s => s.name_en || s.enname).filter(Boolean))].sort();
+  });
+
+  readonly filteredOptions = computed(() => {
+    const filterValue = (this.filter$() || '').toLowerCase();
+    const names = this.allSkillNames();
+    if (!filterValue) return names;
+    return names.filter(name => name.toLowerCase().includes(filterValue));
+  });
+
   filteredSkills = computed(() => {
+    const skills: Skill[] = this.skillsResource.value() ?? [];
     const nameFilter = this.filter$() || '';
     const descFilter = this.descFilter$() || '';
     const selectedTypes = this.typeFilter$() || [];
-    return this.skills().filter(skill => {
+    return skills.filter(skill => {
       const matchesName = matchesNameFilter(nameFilter, skill.name_en ?? skill.enname);
       const matchesDesc = matchesNameFilter(descFilter, skill.desc_en ?? '');
       const matchesTypes = selectedTypes.length === 0 || selectedTypes.every(type => skill.type.includes(type));
@@ -191,29 +211,35 @@ export class SkillsComponent {
 
 
   constructor() {
-    this.spinnerService.show();
-    // todo use resource?
-    this.skillsService.getSkills().pipe(
-      // map(skills => skills.sort((a, b) => a.enname.localeCompare(b.enname))),
-      map(skills => skills.sort((a, b) => a.iconid - b.iconid)),
-      first(),
-      tap(skills => {
-        this.skills.set(skills);
+    effect(() => {
+      const isLoading = this.skillsResource.isLoading();
+      if (isLoading) {
+        this.spinnerService.show();
+      } else {
+        this.spinnerService.hide();
+      }
+    });
+
+    // uniq types checker
+    effect(() => {
+      const skills = this.skillsResource.value();
+      if (skills) {
         console.log('Skills', skills);
-        /*const types = new Set<string>();
+        const types = new Set<string>();
         skills.forEach(skill => {
           skill.type.forEach(t => types.add(t));
         });
         const sortedArray = [...types].sort((a, b) => a.localeCompare(b));
-        console.log('Uniq Types', sortedArray);*/
-        this.spinnerService.hide();
-        skills.forEach(skill => {         // Debug
-          // this.openSkillDialog(skill, true);
-        });
-      }),
-    ).subscribe();
+        console.log('Uniq Types', sortedArray);
+        const knownTypes = this.typeFilters.map(t => t.values.map(v => v.value)).flat();
+        console.log('Known Types', knownTypes);
+        const unknownTypes = sortedArray.filter(t => !knownTypes.includes(t));
+        if (unknownTypes.length > 0) {
+          console.warn('Unknown Types', unknownTypes);
+        }
+      }
+    });
 
-    // register dialogs
     this.modalControlService.register('supportCardInfo', SupportCardInfo);
     this.modalControlService.register('skillInfo', SkillDialogComponent);
     this.modalControlService.register('traineeInfo', TraineeInfo);

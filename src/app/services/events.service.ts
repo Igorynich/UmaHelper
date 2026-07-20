@@ -222,6 +222,7 @@ export class EventsService {
       17: 'Fan Promise (Kansai)',
       18: 'Fan Promise (Kokura)',
       19: 'Not Ready',      // meisho doto Feeling Dizzy
+      21: 'Ominous Portent',      // Copano Rickey In the Circle of Light
       100: 'Pure Passion: Team Sirius',
       101: 'Pure Passion: Heirs to the Throne'
     };
@@ -432,6 +433,18 @@ export class EventsService {
             case EventConditionType.ct: {
               const [conditionType, conditionString] = decoded;
               return `${conditionString}`;
+            }
+            case EventConditionType.win_g1_length: {
+              const [conditionType, raceType, amountOfRaces] = decoded;
+              const raceTypeMap: {[key: number]: string} = {
+                4: 'Dirt',
+              };
+              const raceTypeString = raceTypeMap[Number(raceType)];
+              if (!raceTypeString) {
+                console.warn(`Unknown Race Type`, raceType);
+                return `Win ${amountOfRaces} races`;
+              }
+              return `Win ${amountOfRaces} ${raceTypeString} races`;
             }
           }
           return resultString;   // placeholder

@@ -4,7 +4,12 @@
     <div class="text-filters-row">
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Filter by name</mat-label>
-        <input matInput [formControl]="filterControl">
+        <input matInput [formControl]="filterControl" [matAutocomplete]="auto">
+        <mat-autocomplete #auto="matAutocomplete">
+          @for (option of filteredOptions(); track option) {
+            <mat-option [value]="option">{{ option }}</mat-option>
+          }
+        </mat-autocomplete>
         @if (filterControl.value) {
           <button matSuffix mat-icon-button aria-label="Clear" (click)="clearFilter()">
             <mat-icon>close</mat-icon>
