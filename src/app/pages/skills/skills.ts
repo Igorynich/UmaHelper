@@ -20,7 +20,8 @@ import {ModalControlService} from '../../services/modal-control';
 import {SupportCardInfo} from '../../components/dialogs/support-card-info/support-card-info';
 import {SkillDialogComponent} from '../../components/common/skill-dialog/skill-dialog';
 import {TraineeInfo} from '../../components/dialogs/trainee-info/trainee-info';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
+import {MatTooltip} from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-skills',
@@ -38,6 +39,7 @@ import {MatAutocompleteModule} from '@angular/material/autocomplete';
     MatSelectModule,
     MatOptionModule,
     SkillDisplay,
+    MatTooltip,
   ],
   templateUrl: './skills.html',
   styleUrl: './skills.css',
@@ -186,14 +188,14 @@ export class SkillsComponent {
 
   readonly allSkillNames = computed(() => {
     const skills = this.skillsResource.value() ?? [];
-    return [...new Set(skills.map(s => s.name_en || s.enname).filter(Boolean))].sort();
+    return this.skillsService.getSkillNames(skills);
   });
 
   readonly filteredOptions = computed(() => {
     const filterValue = (this.filter$() || '').toLowerCase();
     const names = this.allSkillNames();
     if (!filterValue) return names;
-    return names.filter(name => name.toLowerCase().includes(filterValue));
+    return names.filter(name => matchesNameFilter(filterValue, name));
   });
 
   filteredSkills = computed(() => {
@@ -255,5 +257,20 @@ export class SkillsComponent {
 
   clearTypeFilter() {
     this.typeFilterControl.setValue([]);
+  }
+
+  onOptionSelected(event: MatAutocompleteSelectedEvent): void {
+    const selectedValue = event.option.value;
+    const currentInputValue = this.filter$() || '';
+
+    const parts = currentInputValue.split(/[&+]/).map(p => p.trim());
+
+    if (parts.length > 0) {
+      parts[parts.length - 1] = selectedValue;
+    } else {
+      parts.push(selectedValue);
+    }
+
+    this.filterControl.setValue(parts.join('+'));
   }
 }

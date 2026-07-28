@@ -89,7 +89,7 @@
       </div>
     </div>
 
-    <div class="filter-group">
+    <!--<div class="filter-group">
       <label class="filter-group-label">Unique Skill</label>
       <mat-form-field appearance="outline" class="filter-field name-field">
         <input matInput formControlName="uniqName" placeholder="Unique skill name">
@@ -99,6 +99,63 @@
           </button>
         }
       </mat-form-field>
+    </div>-->
+
+    <div class="filter-group skill-group">
+      <div class="skill-filter-wrapper">
+        @if (!showSkillFilters() || skillsResource.isLoading()) {
+          <button mat-stroked-button type="button" class="expand-skills-btn" (click)="showSkillFilters.set(true)" [disabled]="skillsResource.isLoading()">
+            @if (skillsResource.isLoading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              <ng-container>
+                <mat-icon>search</mat-icon>Filter by skills
+              </ng-container>
+            }
+          </button>
+        } @else {
+          <div class="skill-fields-row">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="skill-field">
+              <mat-label>Skill name</mat-label>
+              <mat-icon matPrefix matTooltip="Use '+' or '&' to add multiple filters, for ex, 'corner+straight'">info</mat-icon>
+              <input matInput formControlName="skillName" [matAutocomplete]="auto">
+              @if (filterForm.get('skillName')?.value) {
+                <button matSuffix mat-icon-button aria-label="Clear" (click)="clearSkillNameFilter()">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+              <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onOptionSelected($event)">
+                @for (option of filteredSkillOptions(); track option) {
+                  <mat-option [value]="option">{{ option }}</mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="skill-field">
+              <mat-label>Skill description</mat-label>
+              <input matInput formControlName="skillDesc">
+              @if (filterForm.get('skillDesc')?.value) {
+                <button matSuffix mat-icon-button aria-label="Clear" (click)="clearSkillDescFilter()">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="skill-field">
+              <mat-label>Skill type</mat-label>
+              <mat-select formControlName="skillTypes" multiple>
+                @for (group of typeFilters; track group.name) {
+                  <mat-optgroup [label]="group.name">
+                    @for (option of group.values; track option.value) {
+                      <mat-option [value]="option.value">{{ option.name }}</mat-option>
+                    }
+                  </mat-optgroup>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        }
+      </div>
     </div>
 
   </div>
@@ -118,7 +175,7 @@
   [tabIndex]="tabIndex()"
   [isActive]="isActive()"
   [showColumnSelector]="false"
-  [pageIndex]="pageIndex()"
+  [pageIndex]="adjustedPageIndex()"
   (imageClick)="openImageModal($event)"
   (addClicked)="onAdd($event)"
   (removeClicked)="onRemove($event)"

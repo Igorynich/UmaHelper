@@ -1,18 +1,22 @@
 // src/app/pages/trainees/trainee-list-view/trainee-list-view.ts
 import {
   ChangeDetectionStrategy, Component, computed, DestroyRef,
-  effect, inject, input, output
+  effect, inject, input, output, signal
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, tap } from 'rxjs';
+import { debounceTime, map, tap } from 'rxjs/operators';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
 import { MatMenu } from '@angular/material/menu';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatTooltip } from '@angular/material/tooltip';
 import { DataGrid } from '../../../components/common/data-grid/data-grid';
 import { DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
 import { DataGridStateService } from '../../../services/data-grid-state.service';
@@ -31,6 +35,7 @@ import { TraineeInfo } from '../../../components/dialogs/trainee-info/trainee-in
 import {ModalControlService} from '../../../services/modal-control';
 import {SupportCardInfo} from '../../../components/dialogs/support-card-info/support-card-info';
 import {SkillDialogComponent} from '../../../components/common/skill-dialog/skill-dialog';
+import { SkillsService } from '../../../services/skills.service';
 
 type AptitudeStat = SurfaceAptitude | DistanceAptitude | StrategyAptitude;
 
@@ -40,6 +45,10 @@ export interface TraineeRow {
   imageUrl: string;
   rarity: number;
   skills_unique: number[];
+  skills_awakening: number[];
+  skills_event: number[];
+  // skills_evo: number[];
+  skills_innate: number[];
   speed: number;
   stamina: number;
   power: number;
@@ -70,7 +79,11 @@ export interface TraineeRow {
     MatButtonModule,
     MatCheckboxModule,
     MatIconModule,
+    MatIconButton,
     TitleCasePipe,
+    MatAutocompleteModule,
+    MatProgressSpinner,
+    MatTooltip,
   ],
   templateUrl: './trainee-list-view.html',
   styleUrl: './trainee-list-view.css'
@@ -79,6 +92,7 @@ export class TraineeListViewComponent {
   private destroyRef = inject(DestroyRef);
   private dataGridStateService = inject(DataGridStateService);
   private modalControlService = inject(ModalControlService);
+  private skillsService = inject(SkillsService);
 
   trainees = input<DisplayTrainee[]>([]);
   isFirstTab = input<boolean>(false);
@@ -100,6 +114,8 @@ export class TraineeListViewComponent {
   protected readonly DistanceAptitude = DistanceAptitude;
   protected readonly StrategyAptitude = StrategyAptitude;
   protected readonly AptitudeGrade = AptitudeGrade;
+
+  protected readonly showSkillFilters = signal(false);
 
   protected readonly rarityOptions = [
     // TraineeRarity.FiveStar,
@@ -149,6 +165,36 @@ export class TraineeListViewComponent {
     { label: '=', value: '=' },
   ];
 
+  readonly typeFilters = [
+    { name: 'Strategy', values: [{ name: 'Any', value: 'nac' }, { name: 'Front Runner', value: 'run' }, { name: 'Pace Chaser', value: 'ldr' }, { name: 'Late Surger', value: 'btw' }, { name: 'End Closer', value: 'cha' }] },
+    { name: 'Distance', values: [{ name: 'Sprint', value: 'sho' }, { name: 'Mile', value: 'mil' }, { name: 'Medium', value: 'med' }, { name: 'Long', value: 'lng' }] },
+    { name: 'Surface', values: [{ name: 'Turf', value: 'tur' }, { name: 'Dirt', value: 'dir' }] },
+    { name: 'Part of the Race', values: [{ name: 'Early Race', value: 'l_0' }, { name: 'Mid Race', value: 'l_1' }, { name: 'Late Race', value: 'l_2' }, { name: 'Last Spurt', value: 'l_3' }] },
+    { name: 'Track Section', values: [{ name: 'Corner', value: 'cor' }, { name: 'Final Corner', value: 'f_c' }, { name: 'Straight', value: 'str' }, { name: 'Final Straight', value: 'f_s' }, { name: 'Slope', value: 'slo' }] },
+    { name: 'Skill Type', values: [{ name: 'Debuff', value: 'dbf' }] }
+  ];
+
+  readonly allSkillNames = computed(() => {
+    const skills = this.skillsResource.value() ?? [];
+    return this.skillsService.getSkillNames(skills);
+  });
+
+  readonly filteredSkillOptions = computed(() => {
+    const filterValue = (this.filters()?.skillName || '').toLowerCase();
+    const names = this.allSkillNames();
+    if (!filterValue) return names;
+    return names.filter(name => matchesNameFilter(filterValue, name));
+  });
+
+  protected readonly skillsResource = rxResource({
+    params: () => (this.showSkillFilters() ? true : undefined),
+    stream: () => {
+      return this.skillsService.getSkills().pipe(
+        map(skills => skills.sort((a, b) => a.iconid - b.iconid))
+      );
+    },
+  });
+
   protected readonly filterForm = new FormGroup({
     name: new FormControl('', { nonNullable: true }),
     rarity: new FormControl<TraineeRarity[]>([], { nonNullable: true }),
@@ -159,6 +205,17 @@ export class TraineeListViewComponent {
     aptitudeOperator: new FormControl<FilterOperator>('>=', { nonNullable: true }),
     aptitudeValue: new FormControl<AptitudeGrade | ''>('', { nonNullable: true }),
     uniqName: new FormControl('', { nonNullable: true }),
+    skillName: new FormControl('', { nonNullable: true }),
+    skillDesc: new FormControl('', { nonNullable: true }),
+    skillTypes: new FormControl<string[]>([], { nonNullable: true })
+  });
+
+  // Adjusts the page index to 0 if the filtered data is less than or equal to the page size
+  protected adjustedPageIndex = computed(() => {
+    if (this.filteredRows().length <= this.pageSize() && this.pageIndex() > 0) {
+      return 0;
+    }
+    return this.pageIndex();
   });
 
   constructor() {
@@ -177,6 +234,9 @@ export class TraineeListViewComponent {
           aptitudeOperator: f.aptitude?.operator || '>=',
           aptitudeValue: f.aptitude?.value || '',
           uniqName: f.uniqName || '',
+          skillName: f.skillName || '',
+          skillDesc: f.skillDesc || '',
+          skillTypes: f.skillTypes || [],
         }, { emitEvent: false });
       }
     });
@@ -205,6 +265,9 @@ export class TraineeListViewComponent {
             value: v.aptitudeValue || '',
           },
           uniqName: v.uniqName || '',
+          skillName: v.skillName || '',
+          skillDesc: v.skillDesc || '',
+          skillTypes: v.skillTypes || [],
         };
         this.filterChanged.emit(f);
       }),
@@ -219,6 +282,10 @@ export class TraineeListViewComponent {
       imageUrl: t.imageUrl,
       rarity: t.itemData.rarity,
       skills_unique: t.itemData.skills_unique,
+      skills_awakening: t.itemData.skills_awakening,
+      skills_event: t.itemData.skills_event,
+      // skills_evo: t.itemData.skills_evo,
+      skills_innate: t.itemData.skills_innate,
       speed: t.itemData.stat_bonus[0] ?? 0,
       stamina: t.itemData.stat_bonus[1] ?? 0,
       power: t.itemData.stat_bonus[2] ?? 0,
@@ -243,6 +310,8 @@ export class TraineeListViewComponent {
   protected readonly filteredRows = computed((): TraineeRow[] => {
     const rows = this.processedRows();
     const v = this.filters();
+    const allSkills = this.skillsResource.value() ?? [];
+    const isSkillFilteringActive = this.showSkillFilters();
 
     const name = v?.name || '';
     const rarities = v?.rarity || [];
@@ -253,6 +322,24 @@ export class TraineeListViewComponent {
     const aptOp = v?.aptitudeOperator || '>=';
     const aptVal = v?.aptitudeValue || '';
     const uniqName = v?.uniqName || '';
+
+    // Sub-filtering skills
+    let matchedSkillIds: Set<number> | null = null;
+    if (isSkillFilteringActive) {
+      const sName = (v?.skillName || '').toLowerCase();
+      const sDesc = (v?.skillDesc || '').toLowerCase();
+      const sTypes = v?.skillTypes || [];
+
+      if (sName || sDesc || sTypes.length > 0) {
+        const filteredSkills = allSkills.filter(skill => {
+          const matchesName = matchesNameFilter(sName, skill.name_en ?? skill.enname);
+          const matchesDesc = matchesNameFilter(sDesc, skill.desc_en ?? '');
+          const matchesTypes = sTypes.length === 0 || sTypes.every(t => skill.type.includes(t));
+          return matchesName && matchesDesc && matchesTypes;
+        });
+        matchedSkillIds = new Set(filteredSkills.map(s => s.id));
+      }
+    }
 
     return rows.filter(row => {
       if (name && !matchesNameFilter(name, row.name)) return false;
@@ -271,7 +358,20 @@ export class TraineeListViewComponent {
         const filterNum = APTITUDE_GRADE_ORDER.indexOf(aptVal as AptitudeGrade);
         if (!this.compareNumbers(gradeNum, aptOp, filterNum)) return false;
       }
-      return true;
+
+      let skillMatch = true;
+      if (matchedSkillIds) {
+        const traineeSkills = [
+          ...(row.skills_awakening ?? []),
+          ...(row.skills_event ?? []),
+          // ...(row.skills_evo ?? []),
+          ...(row.skills_innate ?? []),
+          ...(row.skills_unique ?? [])
+        ];
+        skillMatch = traineeSkills.some(id => matchedSkillIds!.has(id));
+      }
+
+      return skillMatch;
     });
   });
 
@@ -329,6 +429,9 @@ export class TraineeListViewComponent {
       aptitudeOperator: '>=',
       aptitudeValue: '',
       uniqName: '',
+      skillName: '',
+      skillDesc: '',
+      skillTypes: [],
     });
   }
 
@@ -338,6 +441,29 @@ export class TraineeListViewComponent {
 
   protected clearUniqFilter(): void {
     this.filterForm.get('uniqName')?.setValue('');
+  }
+
+  protected clearSkillNameFilter(): void {
+    this.filterForm.get('skillName')?.setValue('');
+  }
+
+  protected clearSkillDescFilter(): void {
+    this.filterForm.get('skillDesc')?.setValue('');
+  }
+
+  onOptionSelected(event: MatAutocompleteSelectedEvent): void {
+    const selectedValue = event.option.value;
+    const currentInputValue = this.filters()?.skillName || '';
+
+    const parts = currentInputValue.split(/[&+]/).map(p => p.trim());
+
+    if (parts.length > 0) {
+      parts[parts.length - 1] = selectedValue;
+    } else {
+      parts.push(selectedValue);
+    }
+
+    this.filterForm.get('skillName')?.setValue(parts.join('+'));
   }
 
   protected onAdd(row: TraineeRow): void {

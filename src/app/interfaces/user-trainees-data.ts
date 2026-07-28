@@ -23,6 +23,9 @@ export interface TraineeFilter {
   statBonus: TraineeStatBonusFilter;
   aptitude: TraineeAptitudeFilter;
   uniqName: string;
+  skillName: string;
+  skillDesc: string;
+  skillTypes: string[];
 }
 
 export interface TraineeTab {

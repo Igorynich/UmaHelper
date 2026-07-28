@@ -9,6 +9,9 @@ export interface SupportCardFilter {
   operator: '>=' | '<=' | '>' | '<' | '=';
   value: number | null;
   showUpcomingCards: boolean;
+  skillName: string;
+  skillDesc: string;
+  skillTypes: string[];
 }
 
 export interface SupportCardTab {

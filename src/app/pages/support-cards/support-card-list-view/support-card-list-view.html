@@ -1,9 +1,10 @@
 <form [formGroup]="filterForm" class="filter-container">
   <div class="filter-row">
     <div class="filter-group">
-      <!--<label class="filter-group-label">Name</label>-->
       <mat-form-field appearance="outline" class="filter-field name-field" subscriptSizing="dynamic">
-        <input matInput formControlName="name" placeholder="Enter card name">
+        <mat-label>Card name</mat-label>
+        <mat-icon matPrefix matTooltip="Use '+' or '&' to add multiple filters, for ex, 'kita+sato'">info</mat-icon>
+        <input matInput formControlName="name">
         @if (filterForm.get('name')?.value) {
           <button matSuffix mat-icon-button aria-label="Clear" (click)="clearNameFilter()">
             <mat-icon>close</mat-icon>
@@ -46,9 +47,9 @@
     </div>
 
     <div class="filter-group effect-group">
-      <!--<label class="filter-group-label">Effect</label>-->
       <div class="effect-controls">
         <mat-form-field appearance="outline" class="filter-field effect-field" subscriptSizing="dynamic">
+          <mat-label>Effect</mat-label>
           <mat-select formControlName="effectId">
             <mat-option value="">All</mat-option>
             @for (effect of allEffects(); track effect.id) {
@@ -59,6 +60,7 @@
 
         <div class="value-inputs">
           <mat-form-field appearance="outline" class="operator-field" subscriptSizing="dynamic">
+            <!--<mat-label>Operator</mat-label>-->
             <mat-select formControlName="operator">
               @for (op of operatorOptions; track op.value) {
                 <mat-option [value]="op.value">{{ op.label }}</mat-option>
@@ -66,9 +68,67 @@
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline" class="value-field" subscriptSizing="dynamic">
-            <input matInput type="number" formControlName="value" placeholder="Value">
+            <mat-label>Value</mat-label>
+            <input matInput type="number" formControlName="value">
           </mat-form-field>
         </div>
+      </div>
+    </div>
+
+    <div class="filter-group skill-group">
+      <div class="skill-filter-wrapper">
+        @if (!showSkillFilters() || skillsResource.isLoading()) {
+          <button mat-stroked-button type="button" class="expand-skills-btn" (click)="showSkillFilters.set(true)" [disabled]="skillsResource.isLoading()">
+            @if (skillsResource.isLoading()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              <ng-container>
+                <mat-icon>search</mat-icon>Filter by skills
+              </ng-container>
+            }
+          </button>
+        } @else {
+          <div class="skill-fields-row">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="skill-field">
+              <mat-label>Skill name</mat-label>
+              <mat-icon matPrefix matTooltip="Use '+' or '&' to add multiple filters, for ex, 'corner+straight'">info</mat-icon>
+              <input matInput formControlName="skillName" [matAutocomplete]="auto">
+              @if (filterForm.get('skillName')?.value) {
+                <button matSuffix mat-icon-button aria-label="Clear" (click)="clearSkillNameFilter()">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+              <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onOptionSelected($event)">
+                @for (option of filteredSkillOptions(); track option) {
+                  <mat-option [value]="option">{{ option }}</mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="skill-field">
+              <mat-label>Skill description</mat-label>
+              <input matInput formControlName="skillDesc">
+              @if (filterForm.get('skillDesc')?.value) {
+                <button matSuffix mat-icon-button aria-label="Clear" (click)="clearSkillDescFilter()">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="skill-field">
+              <mat-label>Skill type</mat-label>
+              <mat-select formControlName="skillTypes" multiple>
+                @for (group of typeFilters; track group.name) {
+                  <mat-optgroup [label]="group.name">
+                    @for (option of group.values; track option.value) {
+                      <mat-option [value]="option.value">{{ option.name }}</mat-option>
+                    }
+                  </mat-optgroup>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        }
       </div>
     </div>
 
@@ -98,7 +158,7 @@
   [multiSort]="true"
   [rarityLevelMap]="rarityLevelMap"
   [pageSize]="pageSize()"
-  [pageIndex]="pageIndex()"
+  [pageIndex]="adjustedPageIndex()"
   [isFirstTab]="isFirstTab()"
   [addMenu]="addMenu()"
   [tabIndex]="tabIndex()"

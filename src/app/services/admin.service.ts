@@ -196,7 +196,7 @@ export class AdminService {
     const allowedKeys: (keyof Skill)[] = [
       'id', 'activation', 'char', 'condition_groups', 'cost', 'desc_en', 'desc_ko',
       'desc_tw', 'endesc', 'enname', 'iconid', 'jpdesc', 'jpname', 'name_en',
-      'name_ko', 'name_tw', 'rarity', 'type'
+      'name_ko', 'name_tw', 'rarity', 'type', 'unreleased'
     ];
 
     return allowedKeys.reduce((acc, key) => {

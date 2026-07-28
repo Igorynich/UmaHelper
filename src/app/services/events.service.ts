@@ -201,7 +201,8 @@ export class EventsService {
       motivation_good: 'Mood Good or better',     // Agnes Tachyon
       motivation_not_good: 'Mood Normal or worse',    // Agnes Tachyon
       pl: 'Placement',
-      se_has: 'Has Certain Status Effect'   // Heirs to the Throne
+      se_has: 'Has Certain Status Effect',   // Heirs to the Throne
+      mt: 'Performance tokens you have the least'
     };
 
     const statusEffectsMap: { [key: number]: string } = {
@@ -223,6 +224,7 @@ export class EventsService {
       18: 'Fan Promise (Kokura)',
       19: 'Not Ready',      // meisho doto Feeling Dizzy
       21: 'Ominous Portent',      // Copano Rickey In the Circle of Light
+      22: 'Idol\'s Promise (Kawasaki)',   // grandlive Smart Falcon
       100: 'Pure Passion: Team Sirius',
       101: 'Pure Passion: Heirs to the Throne'
     };
@@ -531,7 +533,11 @@ export class EventsService {
               }
               case 'bo':
                 if (reward.d) {
-                  const bondTrainee = data?.trainees?.get(reward.d);
+                  const notableCharacters: {[key: number]: Trainee} = {
+                    9001: {itemData: {name_en: 'Tazuna Hayakawa'}} as Trainee,
+                    9002: {itemData: {name_en: 'Director Akikawa'}} as Trainee
+                  };
+                  const bondTrainee = data?.trainees?.get(reward.d) || notableCharacters[reward.d];
                   if (bondTrainee) {
                     return {
                       type: EventRewardType.data,
@@ -541,7 +547,7 @@ export class EventsService {
                     }
                   }
                 }
-                // console.warn('Unresolved Bond Reward', reward, event.n);
+                console.warn('Unresolved Bond Reward', reward, event.n);
                 return {
                   type: EventRewardType.simpleString,
                   value: `${rewardMap[reward.t]} ${reward.v}`   // (ID: ${reward.d})

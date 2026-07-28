@@ -7,8 +7,15 @@ html, body {
   width: 100%;
   height: 100%;
 }
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
 
 .skill-tooltip {
   white-space: pre-wrap;
@@ -39,48 +46,27 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 }
 
 .snackbar-success {
-  --mat-snack-bar-container-color: #2e7d32;      /* Green background */
+  --mat-snack-bar-container-color: #2e7d32; /* Green background */
   /*--mat-snack-bar-supporting-text-color: #ffffff; !* White text *!*/
   /*--mat-snack-bar-button-color: #ffffff;         !* White action button *!*/
 }
 
 .snackbar-error {
-  --mat-snack-bar-container-color: #d32f2f;      /* Red background */
+  --mat-snack-bar-container-color: #d32f2f; /* Red background */
   /*--mdc-snackbar-supporting-text-color: #ffffff; !* White text *!*/
   /*--mat-snack-bar-button-color: #ffffff;         !* White action button *!*/
 }
 
 .snackbar-warning {
-  --mat-snack-bar-container-color: #ed6c02;      /* Red background */
+  --mat-snack-bar-container-color: #ed6c02; /* Red background */
   /*--mdc-snackbar-supporting-text-color: #ffffff; !* White text *!*/
   /*--mat-snack-bar-button-color: #ffffff;         !* White action button *!*/
 }
 
-/* Глобальное уменьшение высоты Material Outline полей */
-.mat-mdc-form-field-wrapper {
-  margin-bottom: -1.25em !important;
-}
-
-.mat-mdc-text-field-wrapper.mdc-text-field--outlined {
-  height: 40px !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.mat-mdc-form-field-flex {
-  height: 40px !important;
-}
-
-.mat-mdc-form-field-infix {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
-  min-height: 40px !important;
-}
-
-.mat-mdc-select-trigger {
-  margin-top: -2px !important;
-}
-
-.mat-mdc-form-field-label-wrapper {
-  top: -8px !important;
+// makes mat-icons vertically centered
+mat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
 }

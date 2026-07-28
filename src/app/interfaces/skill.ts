@@ -93,4 +93,5 @@ export interface Skill {
   name_tw?: string;
   rarity: Rarity;
   type: string[];
+  unreleased?: string[];
 }

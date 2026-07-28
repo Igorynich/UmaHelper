@@ -1,35 +1,47 @@
-import {Component, computed, DestroyRef, effect, inject, input, signal, contentChild, output} from '@angular/core';
-import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  contentChild
+} from '@angular/core';
+import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
+import { MatButtonModule, MatIconButton } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatMenu } from '@angular/material/menu';
+import { MatSelectModule } from '@angular/material/select';
+import {debounceTime, delay, map, tap} from 'rxjs/operators';
 import { DataGrid } from '../../../components/common/data-grid/data-grid';
 import { DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
+import { SkillDialogComponent } from '../../../components/common/skill-dialog/skill-dialog';
+import { SupportCardInfo } from '../../../components/dialogs/support-card-info/support-card-info';
+import { SupportCardRatings } from '../../../components/dialogs/support-card-ratings/support-card-ratings';
+import { TraineeInfo } from '../../../components/dialogs/trainee-info/trainee-info';
 import { DisplaySupportCard, Rarity } from '../../../interfaces/display-support-card';
-import { effectMap } from '../../../maps/effect.map';
-import {EffectId, UniqEffectId} from '../../../interfaces/effect-id.enum';
-import { SupportCardFilter } from '../../../interfaces/user-support-cards-data';
-import {debounceTime} from 'rxjs';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { RarityPipe } from '../../../pipes/rarity.pipe';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
-import { MatIconButton } from '@angular/material/button';
+import { EffectId, UniqEffectId } from '../../../interfaces/effect-id.enum';
+import { SupportCardEffectData } from '../../../interfaces/support-card';
 import { SupportCardType } from '../../../interfaces/support-card-type.enum';
-import { MatDialog } from '@angular/material/dialog';
-import {SupportCardRatings} from '../../../components/dialogs/support-card-ratings/support-card-ratings';
-import {MatMenu} from '@angular/material/menu';
+import { SupportCardFilter } from '../../../interfaces/user-support-cards-data';
+import { effectMap } from '../../../maps/effect.map';
 import { DataGridStateService } from '../../../services/data-grid-state.service';
-import { SupportCardEffectData }
-from '../../../interfaces/support-card';
-import {rarityLevelMap, SupportCardService } from '../../../services/support-card.service';
+import { ModalControlService } from '../../../services/modal-control';
+import { SkillsService } from '../../../services/skills.service';
+import { rarityLevelMap, SupportCardService } from '../../../services/support-card.service';
 import { matchesNameFilter } from '../../../utils/name-filter.utils';
-import {tap} from 'rxjs/operators';
-import {ModalControlService} from '../../../services/modal-control';
-import {SupportCardInfo} from '../../../components/dialogs/support-card-info/support-card-info';
-import {SkillDialogComponent} from '../../../components/common/skill-dialog/skill-dialog';
-import {TraineeInfo} from '../../../components/dialogs/trainee-info/trainee-info';
+import { RarityPipe } from '../../../pipes/rarity.pipe';
+import {MatProgressSpinner} from '@angular/material/progress-spinner';
+import {MatTooltip} from '@angular/material/tooltip';
 
 type Operator = '>=' | '<=' | '>' | '<' | '=';
 
@@ -38,18 +50,22 @@ type Operator = '>=' | '<=' | '>' | '<' | '=';
   standalone: true,
   imports: [
     DataGrid,
-    ReactiveFormsModule,
-    RarityPipe,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
+    MatAutocompleteModule,
     MatButtonModule,
     MatCheckboxModule,
+    MatFormFieldModule,
     MatIconModule,
-    MatIconButton
+    MatIconButton,
+    MatInputModule,
+    MatSelectModule,
+    ReactiveFormsModule,
+    RarityPipe,
+    MatProgressSpinner,
+    MatTooltip,
   ],
   templateUrl: './support-card-list-view.html',
-  styleUrl: './support-card-list-view.css'
+  styleUrl: './support-card-list-view.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SupportCardListViewComponent {
   private destroyRef = inject(DestroyRef);
@@ -57,62 +73,33 @@ export class SupportCardListViewComponent {
   private modalControlService = inject(ModalControlService);
   private dataGridStateService = inject(DataGridStateService);
   private supportCardService = inject(SupportCardService);
+  private skillsService = inject(SkillsService);
 
   cards = input<DisplaySupportCard[]>([]);
   isFirstTab = input<boolean>(false);
   addMenu = input<MatMenu>();
-  tabIndex = input<number>(-1); // Used to identify which tab this grid belongs to
-  isActive = input<boolean>(false); // Whether this tab is currently active
+  tabIndex = input<number>(-1);
+  isActive = input<boolean>(false);
   pageIndex = input<number>(0);
   pageSize = input<number>(20);
 
-  // Modern output functions instead of @Output decorators
   levelChangedInTab = output<{ id: number; level: number }>();
   add = output<SupportCardEffectData>();
   remove = output<SupportCardEffectData>();
   filterChanged = output<SupportCardFilter>();
-  levelsChangedInFirstTab = output< DisplaySupportCard[]>();
+  levelsChangedInFirstTab = output<DisplaySupportCard[]>();
   pageChanged = output<number>();
   pageSizeChanged = output<number>();
 
-  // Modern ViewChild using contentChild for better performance
   dataGrid = contentChild(DataGrid<SupportCardEffectData>);
-
-  constructor() {
-    effect(() => {
-      if (this.isFirstTab()) {
-        this.levelsChangedInFirstTab.emit(this.supportCardsWithLevels());
-      }
-    });
-
-    effect(() => {
-      // Initialize levelChanges when cards input changes
-      const newCards = this.cards();
-      const initialLevels = new Map<number, number>();
-      for (const card of newCards) {
-        if (card.level !== undefined) {
-          initialLevels.set(card.support_id, card.level);
-        }
-      }
-      this.levelChanges.set(initialLevels);
-    });
-
-    effect(() => {
-      // Sync filter state with service when tab changes
-      const tabIndex = this.tabIndex();
-      const tabState = this.dataGridStateService.getTabState(tabIndex);
-      if (tabState.filter) {
-        this.filterForm.patchValue(tabState.filter, { emitEvent: false });
-      }
-    });
-    // register dialogs
-    this.modalControlService.register('supportCardInfo', SupportCardInfo);
-    this.modalControlService.register('skillInfo', SkillDialogComponent);
-    this.modalControlService.register('traineeInfo', TraineeInfo);
-  }
 
   protected readonly Rarity = Rarity;
   protected readonly rarityLevelMap = rarityLevelMap;
+  protected readonly SupportCardType = SupportCardType;
+  protected readonly Object = Object;
+
+  protected readonly showSkillFilters = signal(false);
+
   protected readonly operatorOptions: { label: string, value: Operator }[] = [
     { label: '>=', value: '>=' },
     { label: '<=', value: '<=' },
@@ -121,10 +108,37 @@ export class SupportCardListViewComponent {
     { label: '=', value: '=' },
   ];
 
-  protected readonly SupportCardType = SupportCardType;
+  readonly typeFilters = [
+    { name: 'Strategy', values: [{ name: 'Any', value: 'nac' }, { name: 'Front Runner', value: 'run' }, { name: 'Pace Chaser', value: 'ldr' }, { name: 'Late Surger', value: 'btw' }, { name: 'End Closer', value: 'cha' }] },
+    { name: 'Distance', values: [{ name: 'Sprint', value: 'sho' }, { name: 'Mile', value: 'mil' }, { name: 'Medium', value: 'med' }, { name: 'Long', value: 'lng' }] },
+    { name: 'Surface', values: [{ name: 'Turf', value: 'tur' }, { name: 'Dirt', value: 'dir' }] },
+    { name: 'Part of the Race', values: [{ name: 'Early Race', value: 'l_0' }, { name: 'Mid Race', value: 'l_1' }, { name: 'Late Race', value: 'l_2' }, { name: 'Last Spurt', value: 'l_3' }] },
+    { name: 'Track Section', values: [{ name: 'Corner', value: 'cor' }, { name: 'Final Corner', value: 'f_c' }, { name: 'Straight', value: 'str' }, { name: 'Final Straight', value: 'f_s' }, { name: 'Slope', value: 'slo' }] },
+    { name: 'Skill Type', values: [{ name: 'Debuff', value: 'dbf' }] }
+  ];
 
-  private readonly allSupportTypes = Object.values(SupportCardType) as SupportCardType[];
-  private readonly allRarities = [Rarity.SSR, Rarity.SR, Rarity.R] as const;
+  readonly allSkillNames = computed(() => {
+    const skills = this.skillsResource.value() ?? [];
+    return this.skillsService.getSkillNames(skills);
+    // return [...new Set(skills.map(s => (s.name_en || s.enname).replace(/[×○◎]/g, '').trim()).filter(Boolean))].sort();
+  });
+
+  readonly filteredSkillOptions = computed(() => {
+    const filterValue = (this.filters()?.skillName || '').toLowerCase();
+    const names = this.allSkillNames();
+    if (!filterValue) return names;
+    return names.filter(name => matchesNameFilter(filterValue, name));
+  });
+
+  protected readonly skillsResource = rxResource({
+    params: () => (this.showSkillFilters() ? true : undefined),
+    stream: () => {
+      return this.skillsService.getSkills().pipe(
+        // delay(2000),   // delay for spinner tests
+        map(skills => skills.sort((a, b) => a.iconid - b.iconid))
+      );
+    },
+  });
 
   protected readonly filterForm = new FormGroup({
     name: new FormControl('', { nonNullable: true }),
@@ -133,45 +147,23 @@ export class SupportCardListViewComponent {
     effectId: new FormControl<EffectId | ''>('', { nonNullable: true }),
     operator: new FormControl<Operator>('>=', { nonNullable: true }),
     value: new FormControl<number | null>(null),
-    showUpcomingCards: new FormControl<boolean>(false, { nonNullable: true })
+    showUpcomingCards: new FormControl<boolean>(false, { nonNullable: true }),
+    skillName: new FormControl('', { nonNullable: true }),
+    skillDesc: new FormControl('', { nonNullable: true }),
+    skillTypes: new FormControl<string[]>([], { nonNullable: true })
   });
 
+  private readonly allSupportTypes = Object.values(SupportCardType) as SupportCardType[];
+  private readonly allRarities = [Rarity.SSR, Rarity.SR, Rarity.R] as const;
   protected readonly rarityOptions = [...this.allRarities];
 
-  protected toggleFilterItem(
-    controlName: 'rarity' | 'type',
-    item: Rarity | SupportCardType
-  ): void {
-    if (controlName === 'rarity') {
-      const control = this.filterForm.get('rarity');
-      const current = control?.value ?? [];
-      const updated = current.includes(item as Rarity)
-        ? current.filter(value => value !== item)
-        : [...current, item as Rarity];
-      control?.setValue(updated);
-      return;
+  // Adjusts the page index to 0 if the filtered data is less than or equal to the page size
+  protected adjustedPageIndex = computed(() => {
+    if (this.filteredData().length <= this.pageSize() && this.pageIndex() > 0) {
+      return 0;
     }
-
-    const control = this.filterForm.get('type');
-    const current = control?.value ?? [];
-    const updated = current.includes(item as SupportCardType)
-      ? current.filter(value => value !== item)
-      : [...current, item as SupportCardType];
-    control?.setValue(updated);
-  }
-
-  protected isFilterItemSelected(controlName: 'rarity', item: Rarity): boolean;
-  protected isFilterItemSelected(controlName: 'type', item: SupportCardType): boolean;
-  protected isFilterItemSelected(
-    controlName: 'rarity' | 'type',
-    item: Rarity | SupportCardType
-  ): boolean {
-    if (controlName === 'rarity') {
-      return this.filterForm.get('rarity')?.value.includes(item as Rarity) ?? false;
-    }
-
-    return this.filterForm.get('type')?.value.includes(item as SupportCardType) ?? false;
-  }
+    return this.pageIndex();
+  });
 
   private readonly filters = toSignal(
     this.filterForm.valueChanges.pipe(
@@ -185,10 +177,14 @@ export class SupportCardListViewComponent {
             effectId: filterValue.effectId || '',
             operator: filterValue.operator || '>=',
             value: filterValue.value ?? null,
-            showUpcomingCards: filterValue.showUpcomingCards ?? false
+            showUpcomingCards: filterValue.showUpcomingCards ?? false,
+            skillName: filterValue.skillName || '',
+            skillDesc: filterValue.skillDesc || '',
+            skillTypes: filterValue.skillTypes || [],
           };
           this.filterChanged.emit(completeFilter);
-      }}),
+        }
+      }),
       takeUntilDestroyed(this.destroyRef)
     )
   );
@@ -268,6 +264,8 @@ export class SupportCardListViewComponent {
   protected readonly filteredData = computed(() => {
     const data = this.processedData();
     const filters = this.filters();
+    const allSkills = this.skillsResource.value() ?? [];
+    const isSkillFilteringActive = this.showSkillFilters();
 
     const name = filters?.name || '';
     const rarities = filters?.rarity || [];
@@ -276,6 +274,24 @@ export class SupportCardListViewComponent {
     const operator = filters?.operator || '>=';
     const value = filters?.value;
     const showUpcomingCards = filters?.showUpcomingCards ?? false;
+
+    // Sub-filtering skills
+    let matchedSkillIds: Set<number> | null = null;
+    if (isSkillFilteringActive) {
+      const sName = (filters?.skillName || '').toLowerCase();
+      const sDesc = (filters?.skillDesc || '').toLowerCase();
+      const sTypes = filters?.skillTypes || [];
+
+      if (sName || sDesc || sTypes.length > 0) {
+        const filteredSkills = allSkills.filter(skill => {
+          const matchesName = matchesNameFilter(sName, skill.name_en ?? skill.enname);
+          const matchesDesc = matchesNameFilter(sDesc, skill.desc_en ?? '');
+          const matchesTypes = sTypes.length === 0 || sTypes.every(t => skill.type.includes(t));
+          return matchesName && matchesDesc && matchesTypes;
+        });
+        matchedSkillIds = new Set(filteredSkills.map(s => s.id));
+      }
+    }
 
     return data.filter(card => {
       const nameMatch = matchesNameFilter(name, card.char_name);
@@ -305,7 +321,16 @@ export class SupportCardListViewComponent {
         }
       }
 
-      return nameMatch && rarityMatch && typeMatch && upcomingMatch && effectMatch;
+      let skillMatch = true;
+      if (matchedSkillIds) {
+        const cardSkills = [
+          ...(card.event_skills ?? []),
+          ...(card.hints?.hint_skills ?? [])
+        ];
+        skillMatch = cardSkills.some(id => matchedSkillIds!.has(id));
+      }
+
+      return nameMatch && rarityMatch && typeMatch && upcomingMatch && effectMatch && skillMatch;
     });
   });
 
@@ -331,6 +356,37 @@ export class SupportCardListViewComponent {
     return result;
   });
 
+  constructor() {
+    effect(() => {
+      if (this.isFirstTab()) {
+        this.levelsChangedInFirstTab.emit(this.supportCardsWithLevels());
+      }
+    });
+
+    effect(() => {
+      const newCards = this.cards();
+      const initialLevels = new Map<number, number>();
+      for (const card of newCards) {
+        if (card.level !== undefined) {
+          initialLevels.set(card.support_id, card.level);
+        }
+      }
+      this.levelChanges.set(initialLevels);
+    });
+
+    effect(() => {
+      const tabIndex = this.tabIndex();
+      const tabState = this.dataGridStateService.getTabState(tabIndex);
+      if (tabState.filter) {
+        this.filterForm.patchValue(tabState.filter, { emitEvent: false });
+      }
+    });
+
+    this.modalControlService.register('supportCardInfo', SupportCardInfo);
+    this.modalControlService.register('skillInfo', SkillDialogComponent);
+    this.modalControlService.register('traineeInfo', TraineeInfo);
+  }
+
   protected onLevelChanged({ row, level }: { row: SupportCardEffectData; level: number }): void {
     this.levelChanges.update(m => {
       const newM = new Map<number, number>(m);
@@ -341,28 +397,26 @@ export class SupportCardListViewComponent {
   }
 
   protected resetFilters(): void {
-    this.filterForm.reset({
-      name: '',
-      rarity: [],
-      type: [],
-      effectId: '',
-      operator: '>=',
-      value: null,
-      showUpcomingCards: false
-    });
+    this.filterForm.reset();
   }
 
   protected clearNameFilter(): void {
     this.filterForm.get('name')?.setValue('');
   }
 
-  protected readonly Object = Object;
+  protected clearSkillNameFilter(): void {
+    this.filterForm.get('skillName')?.setValue('');
+  }
+
+  protected clearSkillDescFilter(): void {
+    this.filterForm.get('skillDesc')?.setValue('');
+  }
 
   protected openImageModal(cardData: SupportCardEffectData): void {
     const fullCardData = this.supportCardsWithLevels().find(card => card.support_id === cardData.support_id);
     if (fullCardData) {
       this.modalControlService.open('supportCardInfo', {
-        data: {card: fullCardData},
+        data: { card: fullCardData },
         maxWidth: '90vw',
         maxHeight: '90vh',
       });
@@ -393,10 +447,59 @@ export class SupportCardListViewComponent {
   }
 
   protected onAdd(card: SupportCardEffectData): void {
+    console.log('Adding card:', card);
     this.add.emit(card);
   }
 
   protected onRemove(card: SupportCardEffectData): void {
     this.remove.emit(card);
+  }
+
+  protected isFilterItemSelected(
+    controlName: 'rarity' | 'type',
+    item: Rarity | SupportCardType
+  ): boolean {
+    if (controlName === 'rarity') {
+      return this.filterForm.get('rarity')?.value.includes(item as Rarity) ?? false;
+    }
+
+    return this.filterForm.get('type')?.value.includes(item as SupportCardType) ?? false;
+  }
+
+  protected toggleFilterItem(
+    controlName: 'rarity' | 'type',
+    item: Rarity | SupportCardType
+  ): void {
+    if (controlName === 'rarity') {
+      const control = this.filterForm.get('rarity');
+      const current = control?.value ?? [];
+      const updated = current.includes(item as Rarity)
+        ? current.filter(value => value !== item)
+        : [...current, item as Rarity];
+      control?.setValue(updated);
+      return;
+    }
+
+    const control = this.filterForm.get('type');
+    const current = control?.value ?? [];
+    const updated = current.includes(item as SupportCardType)
+      ? current.filter(value => value !== item)
+      : [...current, item as SupportCardType];
+    control?.setValue(updated);
+  }
+
+  onOptionSelected(event: MatAutocompleteSelectedEvent): void {
+    const selectedValue = event.option.value;
+    const currentInputValue = this.filters()?.skillName || '';
+
+    const parts = currentInputValue.split(/[&+]/).map(p => p.trim());
+
+    if (parts.length > 0) {
+      parts[parts.length - 1] = selectedValue;
+    } else {
+      parts.push(selectedValue);
+    }
+
+    this.filterForm.get('skillName')?.setValue(parts.join('+'));
   }
 }

@@ -211,12 +211,12 @@ export class SkillsService {
   private filterValidSkills(skills: Skill[]): Skill[] {
     return skills.filter(skill =>
       skill.name_en &&           // Not null/undefined
-      skill.name_en.trim() !== '' // Not empty or whitespace
+      skill.name_en.trim() !== '' &&    // Not empty or whitespace
+      !skill.unreleased?.includes('en')   // Not unreleased
     );
   }
 
-  /*private isCurrentVersion(skillVersions: number[]): boolean {
-    return true;
-    return skillVersions ? skillVersions.some(version => version <= this.CURRENT_VERSION) : true;
-  }*/
+  getSkillNames(skills: Skill[]): string[] {
+    return [...new Set(skills.map(s => (s.name_en || s.enname).replace(/[×○◎]/g, '').trim()).filter(Boolean))].sort();
+  }
 }
