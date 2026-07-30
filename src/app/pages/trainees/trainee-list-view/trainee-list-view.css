@@ -170,3 +170,17 @@
     margin: auto;
   }
 }
+
+/* Группа сброса */
+.reset-group {
+  border: none;
+  background: transparent;
+  padding: 0;
+  justify-content: center;
+}
+
+.reset-btn {
+  height: 40px;
+  color: #d32f2f !important;
+  border-color: #ffcdd2 !important;
+}

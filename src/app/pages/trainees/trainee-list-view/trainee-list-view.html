@@ -158,10 +158,15 @@
       </div>
     </div>
 
-  </div>
-
-  <div class="action-buttons">
-    <button mat-raised-button type="button" (click)="resetFilters()">Reset Filters</button>
+    <div class="filter-group reset-group">
+      <!--<label class="filter-group-label">Actions</label>-->
+      <div class="action-container">
+        <button mat-stroked-button type="button" class="reset-btn" (click)="resetFilters()">
+          <mat-icon>restart_alt</mat-icon>
+          Reset
+        </button>
+      </div>
+    </div>
   </div>
 </form>
 

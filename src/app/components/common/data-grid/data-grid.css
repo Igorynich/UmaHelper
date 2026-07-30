@@ -1,8 +1,14 @@
 .data-grid-container {
+  width: 100%;
+  max-width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
 }
 
 .data-grid-toolbar {
-  display: flex;
+  display: none;
   justify-content: space-between;
   align-items: center;
   padding-bottom: 1rem;
@@ -314,4 +320,30 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+}
+
+.table-container {
+  overflow-x: auto;   /* Enables the horizontal scrollbar */
+  position: sticky;   /* Keeps the element pinned */
+  bottom: 0;          /* Locks the horizontal scrollbar to the bottom of the visible screen */
+  width: 100%;        /* Spans the full width of the parent */
+  /*max-height: 50vh;*/   /* Adjust this value so the container fits nicely on the screen */
+  background-color: white;
+}
+
+/* 1st Layer: The Paginator */
+.sticky-paginator {
+  position: sticky;
+  top: 0;
+  z-index: 10; /* Highest priority layer */
+  background-color: white; /* Prevents rows from showing through */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* 2nd Layer: The Table Headers */
+.table-container :host ::ng-deep .mat-mdc-header-row {
+  position: sticky;
+  top: 56px; /* Pushed down exactly by the height of the paginator */
+  z-index: 9;  /* Below paginator, but above scrolling body rows */
+  background-color: white; /* Prevents rows from showing through */
 }

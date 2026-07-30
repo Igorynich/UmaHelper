@@ -32,173 +32,177 @@
       }
     </div>
   </div>
-  <table mat-table class="data-grid-table" [dataSource]="displayedData()" matSort (matSortChange)="handleSort($event)">
 
-    @if (columnGroups().length) {
-      @for (group of columnGroups(); track group.name) {
-        <ng-container [matColumnDef]="group.name">
-          <th mat-header-cell *matHeaderCellDef [attr.colspan]="group.colspan" [style.width]="group.width"
-              class="group-header"> {{ group.name }}
-          </th>
-        </ng-container>
+  <mat-paginator [length]="totalItems()" [pageIndex]="currentPageIndex()" [pageSize]="currentPageSize()" [pageSizeOptions]="[10, 20, 50, 100]" showFirstLastButtons (page)="onPageChange($event)"></mat-paginator>
+  <div class="table-container">
+    <table mat-table class="data-grid-table" [dataSource]="displayedData()" matSort (matSortChange)="handleSort($event)">
+
+      @if (columnGroups().length) {
+        @for (group of columnGroups(); track group.name) {
+          <ng-container [matColumnDef]="group.name">
+            <th mat-header-cell *matHeaderCellDef [attr.colspan]="group.colspan" [style.width]="group.width"
+                class="group-header"> {{ group.name }}
+            </th>
+          </ng-container>
+        }
       }
-    }
 
-    @for (column of columns(); track column.key) {
-      <ng-container [matColumnDef]="column.key" [stickyEnd]="column.stickyEnd">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header [id]="column.key" [arrowPosition]="'before'"
-            [matTooltip]="column.tooltip || ''" [style.width]="column.width" [attr.rowspan]="2">
-          <div class="header-content-wrapper">
-            @switch (column.type) {
-              @case ('checkbox') {
-                <mat-checkbox
-                  [checked]="isAllSelected()"
-                  [indeterminate]="isSomeSelected()"
-                  (change)="masterToggle()"
-                  (click)="$event.stopPropagation()">
-                </mat-checkbox>
-              }
-              @case ('statBonus') {
-                <img
-                  [src]="'assets/types/' + (column.key === 'wits' ? 'intelligence' : column.key).toLowerCase() + '.png'"
-                  [alt]="column.header"
-                  width="24"
-                >
-              }
-              @default {
-                <span>{{ column.header }}</span>
-                @if (column.key === 'level') {
-                  <button mat-icon-button (click)="onSetAllToMax($event)" matTooltip="Set all to max level"
-                          class="header-button">
-                    <mat-icon>trending_up</mat-icon>
-                  </button>
+      @for (column of columns(); track column.key) {
+        <ng-container [matColumnDef]="column.key" [stickyEnd]="column.stickyEnd">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header [id]="column.key" [arrowPosition]="'before'"
+              [matTooltip]="column.tooltip || ''" [style.width]="column.width" [attr.rowspan]="2">
+            <div class="header-content-wrapper">
+              @switch (column.type) {
+                @case ('checkbox') {
+                  <mat-checkbox
+                    [checked]="isAllSelected()"
+                    [indeterminate]="isSomeSelected()"
+                    (change)="masterToggle()"
+                    (click)="$event.stopPropagation()">
+                  </mat-checkbox>
+                }
+                @case ('statBonus') {
+                  <img
+                    [src]="'assets/types/' + (column.key === 'wits' ? 'intelligence' : column.key).toLowerCase() + '.png'"
+                    [alt]="column.header"
+                    width="24"
+                  >
+                }
+                @default {
+                  <span>{{ column.header }}</span>
+                  @if (column.key === 'level') {
+                    <button mat-icon-button (click)="onSetAllToMax($event)" matTooltip="Set all to max level"
+                            class="header-button">
+                      <mat-icon>trending_up</mat-icon>
+                    </button>
+                  }
                 }
               }
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row" [style.width]="column.width">
+            @if (column.key === displayedColumns()[0] && (row.rarity | rarityClass) === 'rarity-ssr') {
+              <div class="ssr-background-layer"></div>
             }
-          </div>
-        </th>
-        <td mat-cell *matCellDef="let row" [style.width]="column.width">
-          @if (column.key === displayedColumns()[0] && (row.rarity | rarityClass) === 'rarity-ssr') {
-            <div class="ssr-background-layer"></div>
-          }
-          <div class="cell-content-wrapper">
-            @switch (column.type) {
-              @case ('checkbox') {
-                <mat-checkbox
-                  [checked]="isRowSelected(row)"
-                  [indeterminate]="false"
-                  (change)="toggleRow(row)"
-                  (click)="$event.stopPropagation()">
-                </mat-checkbox>
-              }
-              @case ('level') {
-                <app-level
-                  [currentLevel]="row[column.key] || rarityLevelMap()[row.rarity].default"
-                  [maxLevel]="rarityLevelMap()[row.rarity].max"
-                  (levelChange)="onLevelChanged(row, $event)"
-                ></app-level>
-              }
-              @case ('unique') {
-                @if (row.uniqueDisplayData) {
-                  <div [class.locked-effect]="row.uniqueDisplayData.isCardUniqueLocked">
-                    <span>{{ row.uniqueDisplayData.levelDisplay }}</span>
-                    @for (effect of row.uniqueDisplayData.effectsDisplay; track $index) {
-                      <div>{{ effect.shortName }}@if (effect.value) {
-                        <span>: {{ effect.value }}</span>
-                      }</div>
-                    }
+            <div class="cell-content-wrapper">
+              @switch (column.type) {
+                @case ('checkbox') {
+                  <mat-checkbox
+                    [checked]="isRowSelected(row)"
+                    [indeterminate]="false"
+                    (change)="toggleRow(row)"
+                    (click)="$event.stopPropagation()">
+                  </mat-checkbox>
+                }
+                @case ('level') {
+                  <app-level
+                    [currentLevel]="row[column.key] || rarityLevelMap()[row.rarity].default"
+                    [maxLevel]="rarityLevelMap()[row.rarity].max"
+                    (levelChange)="onLevelChanged(row, $event)"
+                  ></app-level>
+                }
+                @case ('unique') {
+                  @if (row.uniqueDisplayData) {
+                    <div [class.locked-effect]="row.uniqueDisplayData.isCardUniqueLocked">
+                      <span>{{ row.uniqueDisplayData.levelDisplay }}</span>
+                      @for (effect of row.uniqueDisplayData.effectsDisplay; track $index) {
+                        <div>{{ effect.shortName }}@if (effect.value) {
+                          <span>: {{ effect.value }}</span>
+                        }</div>
+                      }
+                    </div>
+                  } @else {
+                    -
+                  }
+                }
+                @case ('rarity') {
+                  {{ row[column.key] | rarity }}
+                }
+                @case ('type') {
+                  <img [src]="'assets/types/' + row[column.key].toLowerCase() + '.png'"
+                       [alt]="row[column.key]"
+                       width="24"
+                  >
+                }
+                @case ('actions') {
+                  <div class="text-center">
+                    <mat-icon color="primary" [matMenuTriggerFor]="addMenu() || null" matTooltip="Add Action"
+                              (click)="onActionClick('add', row)">add
+                    </mat-icon>
+                    <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action"
+                              [class.disabled-button]="isFirstTab()">remove
+                    </mat-icon>
                   </div>
-                } @else {
-                  -
                 }
-              }
-              @case ('rarity') {
-                {{ row[column.key] | rarity }}
-              }
-              @case ('type') {
-                <img [src]="'assets/types/' + row[column.key].toLowerCase() + '.png'"
-                     [alt]="row[column.key]"
-                     width="24"
-                >
-              }
-              @case ('actions') {
-                <div class="text-center">
-                  <mat-icon color="primary" [matMenuTriggerFor]="addMenu() || null" matTooltip="Add Action"
-                            (click)="onActionClick('add', row)">add
-                  </mat-icon>
-                  <mat-icon color="warn" (click)="onActionClick('remove', row)" matTooltip="Remove Action"
-                            [class.disabled-button]="isFirstTab()">remove
-                  </mat-icon>
-                </div>
-              }
-              @case ('characterImage') {
-                @if ($any(row).characterImageUrl) {
-                  <ik-image [path]=$any(row).characterImageUrl [transformation]="[{height: '56', aspectRatio: '3:4'}]"
-                            (click)="onImageClick(row)" class="character-image character-image-hover"
-                            matTooltip="View details">
-                  </ik-image>
-                  <!--<img
-                    (click)="onImageClick(row)"
-                    [src]="$any(row).characterImageUrl"
-                    [alt]="$any(row).char_name"
-                    class="character-image character-image-hover"
-                    matTooltip="View details"
-                    width="48"
-                    height="56"
-                  >-->
-                }
-                <span [class.upcoming-card]="!row.release_en">{{ $any(row).char_name }}</span>
-              }
-              @case ('traineeImage') {
-                <div class="trainee-cell-container">
-                  @if ($any(row).imageUrl) {
-                    <ik-image [path]=$any(row).imageUrl [transformation]="[{'height': '56', 'width': '48'}]"
+                @case ('characterImage') {
+                  @if ($any(row).characterImageUrl) {
+                    <ik-image [path]=$any(row).characterImageUrl [transformation]="[{height: '56', aspectRatio: '3:4'}]"
                               (click)="onImageClick(row)" class="character-image character-image-hover"
                               matTooltip="View details">
                     </ik-image>
+                    <!--<img
+                      (click)="onImageClick(row)"
+                      [src]="$any(row).characterImageUrl"
+                      [alt]="$any(row).char_name"
+                      class="character-image character-image-hover"
+                      matTooltip="View details"
+                      width="48"
+                      height="56"
+                    >-->
                   }
-                  <div class="trainee-info-wrapper">
-                    <div style="font-weight: bold;"  class="text-center">{{ $any(row).title }}</div>
-                    <div  class="text-center">{{ $any(row).name }}</div>
-                    <div style="font-size: 0.9em; opacity: 0.8;" class="text-center">{{ $any(row).version ? `(${$any(row).version | snakeToTitle})`  : "" }}</div>
+                  <span [class.upcoming-card]="!row.release_en">{{ $any(row).char_name }}</span>
+                }
+                @case ('traineeImage') {
+                  <div class="trainee-cell-container">
+                    @if ($any(row).imageUrl) {
+                      <ik-image [path]=$any(row).imageUrl [transformation]="[{'height': '56', 'width': '48'}]"
+                                (click)="onImageClick(row)" class="character-image character-image-hover"
+                                matTooltip="View details">
+                      </ik-image>
+                    }
+                    <div class="trainee-info-wrapper">
+                      <div style="font-weight: bold;"  class="text-center">{{ $any(row).title }}</div>
+                      <div  class="text-center">{{ $any(row).name }}</div>
+                      <div style="font-size: 0.9em; opacity: 0.8;" class="text-center">{{ $any(row).version ? `(${$any(row).version | snakeToTitle})`  : "" }}</div>
+                    </div>
                   </div>
-                </div>
-              }
-              @case ('traineeRarity') {
-                <span class="trainee-stars">
+                }
+                @case ('traineeRarity') {
+                  <span class="trainee-stars">
                       @for (star of starsArray($any(row).rarity); track $index) {
                         <span class="star">★</span>
                       }
                     </span>
+                }
+                @case ('traineeUniq') {
+                  <div class="uniq-skills">
+                    @for (skillId of $any(row).skills_unique; track skillId) {
+                      <app-skill-display [skillId]="skillId" [mode]="SkillDisplayMode.Text"></app-skill-display>
+                    }
+                  </div>
+                }
+                @case ('statBonus') {
+                  <div class="text-center">{{ row[column.key] }}%</div>
+                }
+                @case ('aptitude') {
+                  <div class="aptitude-grade text-center" [class]="'grade-' + row[column.key]">{{ row[column.key] }}</div>
+                }
+                @default {
+                  <div
+                    [class]="[(row[column.key] | effectValue:column.key)?.cssClass, 'text-center']">{{ (row[column.key] | effectValue:column.key).value }}</div>
+                }
               }
-              @case ('traineeUniq') {
-                <div class="uniq-skills">
-                  @for (skillId of $any(row).skills_unique; track skillId) {
-                    <app-skill-display [skillId]="skillId" [mode]="SkillDisplayMode.Text"></app-skill-display>
-                  }
-                </div>
-              }
-              @case ('statBonus') {
-                <div class="text-center">{{ row[column.key] }}%</div>
-              }
-              @case ('aptitude') {
-                <div class="aptitude-grade text-center" [class]="'grade-' + row[column.key]">{{ row[column.key] }}</div>
-              }
-              @default {
-                <div
-                  [class]="[(row[column.key] | effectValue:column.key)?.cssClass, 'text-center']">{{ (row[column.key] | effectValue:column.key).value }}</div>
-              }
-            }
-          </div>
-        </td>
-      </ng-container>
-    }
+            </div>
+          </td>
+        </ng-container>
+      }
 
-    <tr mat-header-row *matHeaderRowDef="notGroupedColumns()"></tr>
-    @if (columnGroups().length) {
-      <tr mat-header-row *matHeaderRowDef="groupedColumns()"></tr>
-    }
-    <tr mat-row *matRowDef="let row; columns: displayedColumns()" [class]="row.rarity | rarityClass"></tr>
-  </table>
+      <tr mat-header-row *matHeaderRowDef="notGroupedColumns()"></tr>
+      @if (columnGroups().length) {
+        <tr mat-header-row *matHeaderRowDef="groupedColumns()"></tr>
+      }
+      <tr mat-row *matRowDef="let row; columns: displayedColumns()" [class]="row.rarity | rarityClass"></tr>
+    </table>
+  </div>
   <mat-paginator [length]="totalItems()" [pageIndex]="currentPageIndex()" [pageSize]="currentPageSize()" [pageSizeOptions]="[10, 20, 50, 100]" showFirstLastButtons (page)="onPageChange($event)"></mat-paginator>
 </div>
