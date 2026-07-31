@@ -10,12 +10,14 @@ export enum EventRewardType {
 
 export enum EventRewardDataType {
   skill,
-  bond
+  bond,
+  statusEffect
 }
 
 export interface EventRewardDataTypeMap {
   [EventRewardDataType.skill]: Skill;
   [EventRewardDataType.bond]: Trainee;
+  [EventRewardDataType.statusEffect]: number;
 }
 
 export type EventRewardData<T extends EventRewardDataType = EventRewardDataType> = {

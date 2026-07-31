@@ -19,6 +19,7 @@ import {YEAR} from '../interfaces/year';
 import {DISTANCE} from '../interfaces/distance';
 import {TRACK} from '../interfaces/track';
 import {STRATEGY} from '../interfaces/strategy';
+import {STATUS_EFFECTS} from '../interfaces/status-effects';
 
 export const eventTypes: Record<string, { name: string }> = {
   random: {
@@ -203,30 +204,6 @@ export class EventsService {
       pl: 'Placement',
       se_has: 'Has Certain Status Effect',   // Heirs to the Throne
       mt: 'Performance tokens you have the least'
-    };
-
-    const statusEffectsMap: { [key: number]: string } = {
-      1: 'Night Owl',
-      2: 'Slacker',
-      4: 'Slow Metabolism',
-      6: 'Practice Poor',
-      7: 'Fast Learner',
-      8: 'Charming ○',
-      9: 'Hot Topic',
-      10: 'Practice Perfect ○',
-      11: 'Practice Perfect ◎',
-      12: 'Under the Weather',
-      13: 'Shining Brightly',
-      14: 'Fan Promise (Hokkaido)',      // 14-18 Smart Falcon 1st secret event
-      15: 'Fan Promise (Hokuto)',
-      16: 'Fan Promise (Nakayama)',
-      17: 'Fan Promise (Kansai)',
-      18: 'Fan Promise (Kokura)',
-      19: 'Not Ready',      // meisho doto Feeling Dizzy
-      21: 'Ominous Portent',      // Copano Rickey In the Circle of Light
-      22: 'Idol\'s Promise (Kawasaki)',   // grandlive Smart Falcon
-      100: 'Pure Passion: Team Sirius',
-      101: 'Pure Passion: Heirs to the Throne'
     };
 
     const conditionsMap: { [key: string]: string } = {
@@ -584,41 +561,50 @@ export class EventsService {
               }
               case 'se': {
                 const effectId: number = reward.d!;
-                const effectName: string = statusEffectsMap[effectId] || 'Unknown Effect';
-                if (!statusEffectsMap[effectId]) {
+                const statusEffect = STATUS_EFFECTS[effectId];
+                if (!statusEffect) {
                   console.warn(`Unknown status effect ID: ${effectId} in ${event.n}`);
                 }
                 const isRandom: boolean = !!reward.r;
                 return {
-                  type: EventRewardType.simpleString,
-                  value: `${isRandom ? '(random) ' : ''}Get ${effectName} Status`
+                  type: EventRewardType.data,
+                  dataType: EventRewardDataType.statusEffect,
+                  data: Number(effectId),
+                  prefix: `${isRandom ? '(random) ' : ''}`+'Get'
                 };
               }
               case 'se_h': {
+                // console.warn('CHECK Healed Status Effect Reward', reward, event.n);
                 const effectId: number = reward.d!;
-                const effectName: string = statusEffectsMap[effectId] || 'Unknown Effect';
-                if (!statusEffectsMap[effectId]) {
+                const statusEffect = STATUS_EFFECTS[effectId];
+                if (!statusEffect) {
                   console.warn(`Unknown status effect ID: ${effectId} in ${event.n}`);
                 }
                 return {
-                  type: EventRewardType.supportString,
+                  type: EventRewardType.supportStringWithData,
+                  dataType: EventRewardDataType.statusEffect,
+                  data: Number(effectId),
                   prefix: '※',
-                  value: `${effectName} was Healed`
+                  value: `was Healed`
                 };
               }
               case 'se_nh': {
+                // console.warn('CHECK Healed Status Effect Reward', reward, event.n);
                 const effectId: number = reward.d!;
-                const effectName: string = statusEffectsMap[effectId] || 'Unknown Effect';
-                if (!statusEffectsMap[effectId]) {
+                const statusEffect = STATUS_EFFECTS[effectId];
+                if (!statusEffect) {
                   console.warn(`Unknown status effect ID: ${effectId} in ${event.n}`);
                 }
                 return {
-                  type: EventRewardType.supportString,
+                  type: EventRewardType.supportStringWithData,
+                  dataType: EventRewardDataType.statusEffect,
+                  data: Number(effectId),
                   prefix: '※',
-                  value: `${effectName} was Not Healed`
+                  value: `was Not Healed`
                 };
               }
               case 'he': {
+                // console.warn('CHECK Healed Status Effect Reward', reward, event.n);
                 const effectId = reward.d;
                 if (!effectId) {
                   return {
@@ -626,14 +612,30 @@ export class EventsService {
                     value: 'Heal negative status effect'
                   };
                 }
-                const effectName: string = statusEffectsMap[effectId] || 'Unknown Effect';
-                if (!statusEffectsMap[effectId]) {
+                const statusEffect = STATUS_EFFECTS[effectId];
+                if (!statusEffect) {
                   console.warn(`Unknown status effect ID: ${effectId} in ${event.n}`);
                 }
                 const isRandom: boolean = !!reward.r;
                 return {
-                  type: EventRewardType.simpleString,
-                  value: `${isRandom ? '(random) ' : ''}Heal ${effectName} Status`
+                  type: EventRewardType.data,
+                  dataType: EventRewardDataType.statusEffect,
+                  data: Number(effectId),
+                  prefix: `${isRandom ? '(random) ' : ''}`+'Heal'
+                };
+              }
+              case 'se_has': {
+                console.warn('CHECK HAS Status Effect Reward', reward, event.n);
+                const effectId = reward.d!;
+                const statusEffect = STATUS_EFFECTS[effectId];
+                if (!statusEffect) {
+                  console.warn(`Unknown status effect ID: ${effectId} in ${event.n}`);
+                }
+                return {
+                  type: EventRewardType.supportStringWithData,
+                  dataType: EventRewardDataType.statusEffect,
+                  data: Number(effectId),
+                  prefix: '※ Has '
                 };
               }
               case 'rc': {
@@ -696,7 +698,7 @@ export class EventsService {
                 };
               }
               case 'ct': {
-                console.warn('CHECK CT Reward', reward, event.n);
+                // console.warn('CHECK CT Reward', reward, event.n);
                 return {
                   type: EventRewardType.supportString,
                   value: `${reward.d} wins`
@@ -779,17 +781,6 @@ export class EventsService {
                   type: EventRewardType.supportString,
                   prefix: '※',
                   value: resStr
-                };
-              }
-              case 'se_has': {
-                const statusEffect = statusEffectsMap[reward.d!];
-                if (!statusEffect) {
-                  console.warn('Unknown status effect', reward, event.n);
-                }
-                return {
-                  type: EventRewardType.supportString,
-                  prefix: '※',
-                  value: `Has ${statusEffect}`
                 };
               }
               default:

@@ -156,6 +156,12 @@
                     @case (EventRewardDataType.bond) {
                       <li><span>{{ reward.data.itemData.name_en }}{{ reward.value }}</span></li>
                     }
+                    @case (EventRewardDataType.statusEffect) {
+                      <li>@if (reward.prefix) {
+                        {{ reward.prefix }}
+                      }<span><app-entity-display [statusEffectId]="reward.data"></app-entity-display> Status</span>
+                      </li>
+                    }
                   }
                 }
                 @case (EventRewardType.supportStringWithData) {
@@ -167,6 +173,20 @@
                       <span class="skill-reward-inline">
                             <app-skill-display [skill]="reward.data" [mode]="SkillDisplayMode.Text"
                                                style="display: inline-block;"></app-skill-display>
+                        @if (reward.value) {
+                          <span>{{ reward.value }}</span>
+                        }
+                        @if (reward.suffix) {
+                          {{ reward.suffix }}
+                        }
+                          </span>
+                    }
+                    @case (EventRewardDataType.statusEffect) {
+                      @if (reward.prefix) {
+                        {{ reward.prefix }}
+                      }
+                      <span class="skill-reward-inline">
+                            <app-entity-display [statusEffectId]="reward.data"></app-entity-display>
                         @if (reward.value) {
                           <span>{{ reward.value }}</span>
                         }

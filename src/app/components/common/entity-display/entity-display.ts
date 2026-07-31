@@ -12,9 +12,10 @@ import {Observable, of} from 'rxjs';
 import {RACES} from '../../../interfaces/races';
 import {Race} from '../../../interfaces/race';
 import {YEAR} from '../../../interfaces/year';
+import {STATUS_EFFECTS, StatusEffect} from '../../../interfaces/status-effects';
 
 export type DisplayMode = 'text' | 'img';
-export type EntityType = 'trainee' | 'support-card' | 'race';
+export type EntityType = 'trainee' | 'support-card' | 'race' | 'status-effect';
 
 @Component({
   selector: 'app-entity-display',
@@ -31,15 +32,16 @@ export class EntityDisplay {
   supportCardId = input<string | undefined>(undefined);
   raceId = input<string | number| undefined>(undefined);
   yearId = input<string | number | undefined>(undefined);
+  statusEffectId = input<number | undefined>(undefined);
   mode = input<DisplayMode>('text');
 
-  protected entityResource: ResourceRef<Trainee | SupportCard | Race | null | undefined> = rxResource({
+  protected entityResource: ResourceRef<Trainee | SupportCard | Race | StatusEffect| null | undefined> = rxResource({
     params: () => ({
-      id: (this.traineeId() || this.supportCardId() || this.raceId())?.toString()
+      id: (this.traineeId() || this.supportCardId() || this.raceId() || this.statusEffectId())?.toString()
     }),
     stream: ({ params }) => {
       if (!params.id) return of(null);
-      let request: Observable<Trainee | SupportCard | Race | null> = of(null);
+      let request: Observable<Trainee | SupportCard | Race | StatusEffect| null> = of(null);
       if (this.traineeId()) {
         request = this.traineeService.getTraineeById(params.id);
       }
@@ -48,6 +50,12 @@ export class EntityDisplay {
       }
       if (this.raceId()) {
         request = of(RACES.find(r => r.id === Number(params.id)) || null);
+      }
+      if (this.statusEffectId()) {
+        if (!STATUS_EFFECTS[Number(params.id)]) {
+          console.warn(`Unknown status effect ID: ${params.id}`);
+        }
+        request = of(STATUS_EFFECTS[Number(params.id)] || {name: 'Unknown Status Effect', desc: ''});
       }
       return request;
     }
@@ -77,6 +85,10 @@ export class EntityDisplay {
     return this.raceId() ? this.entityResource.value() as Race : undefined;
   });
 
+  readonly statusEffectSignal = computed(() => {
+    return this.statusEffectId() ? this.entityResource.value() as StatusEffect : undefined;
+  });
+
   readonly entityType = computed(() => {
     if (this.traineeSignal()) {
       return 'trainee' as EntityType;
@@ -87,6 +99,9 @@ export class EntityDisplay {
     if (this.raceSignal()) {
       return 'race' as EntityType;
     }
+    if (this.statusEffectSignal()) {
+      return 'status-effect' as EntityType;
+    }
     return null;
   });
 
@@ -94,6 +109,7 @@ export class EntityDisplay {
     const trainee = this.traineeSignal();
     const supportCard = this.supportCardSignal();
     const race = this.raceSignal();
+    const status = this.statusEffectSignal();
 
     if (trainee) {
       return trainee.itemData.name_en;
@@ -107,6 +123,9 @@ export class EntityDisplay {
         return `${race.name_en} (${yearName})`;
       }
       return race.name_en;
+    }
+    if (status) {
+      return status.name;
     }
     return 'Unknown Entity';
   });

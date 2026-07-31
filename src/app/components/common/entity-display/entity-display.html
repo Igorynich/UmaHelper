@@ -32,6 +32,10 @@
   @if (mode() === 'text') {
     <span class="entity-name">{{ displayName() }}</span>
   }
+} @else if (entityType() === 'status-effect' && statusEffectSignal(); as status) {
+  @if (mode() === 'text') {
+    <span class="entity-name help" [matTooltip]="status.desc">{{ displayName() }}</span>
+  }
 } @else if (entityResource.isLoading()) {
   <div class="loading-container">
     <div class="spinner"></div>
