@@ -470,6 +470,24 @@ export class EventsService {
                   value: 'Unknown Skill Gain Reward'
                 };
               }
+              case 'sre': {
+                if (reward.d) {
+                  const skill = data?.skills?.get(reward.d);
+                  if (skill) {
+                    return {
+                      type: EventRewardType.data,
+                      dataType: EventRewardDataType.skill,
+                      data: skill,
+                      prefix: 'Remove'
+                    };
+                  }
+                }
+                console.warn(`Unknown Skill Remove Reward`, reward, event.n);
+                return {
+                  type: EventRewardType.simpleString,
+                  value: 'Unknown Skill Gain Reward'
+                };
+              }
               case 'ps_h': {
                 if (reward.d) {
                   const skill = data?.skills?.get(reward.d);
@@ -529,6 +547,13 @@ export class EventsService {
                   type: EventRewardType.simpleString,
                   value: `${rewardMap[reward.t]} ${reward.v}`   // (ID: ${reward.d})
                 };
+              case 'bo_ch':
+                return {
+                  type: EventRewardType.data,
+                  dataType: EventRewardDataType.bond,
+                  data: {itemData: {name_en: 'Director Akikawa'}} as Trainee,
+                  value: ` Bond ${reward.v}`
+                }
               case 'nl':
                 return {
                   type: EventRewardType.supportString
