@@ -53,7 +53,7 @@ export class SupportCards {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  protected allCards = toSignal<SupportCard[], SupportCard[]>(
+  protected allCards = toSignal<SupportCard[], SupportCard[]>(    //TODO: make a resource
     this.supportCardService.getSortedSupportCards(),
     {initialValue: []}
   );

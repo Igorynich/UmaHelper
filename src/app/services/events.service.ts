@@ -770,6 +770,20 @@ export class EventsService {
                   value: `${rewardMap[reward.t]}`
                 };
               }
+              case 'fans_minimum': {
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: `At least ${reward.d} fans`
+                };
+              }
+              case 'fans_maximum': {
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: `Less than ${reward.d} fans`
+                };
+              }
               case 'pl': {
                 const placement = reward.d!;
                 if (!placement) {
