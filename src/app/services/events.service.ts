@@ -784,6 +784,20 @@ export class EventsService {
                   value: `Less than ${reward.d} fans`
                 };
               }
+              case 'bp2': {
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: `Picked option ${reward.v} in previous two chain events`
+                };
+              }
+              case 'other_cases': {
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: ` In other cases`
+                };
+              }
               case 'pl': {
                 const placement = reward.d!;
                 if (!placement) {
