@@ -5,24 +5,27 @@ export enum EventRewardType {
   simpleString,
   data,
   supportString,
-  supportStringWithData
+  supportStringWithData,
+  unknown
 }
 
 export enum EventRewardDataType {
   skill,
   bond,
-  statusEffect
+  statusEffect,
+  unknown
 }
 
 export interface EventRewardDataTypeMap {
   [EventRewardDataType.skill]: Skill;
   [EventRewardDataType.bond]: Trainee;
   [EventRewardDataType.statusEffect]: number;
+  [EventRewardDataType.unknown]: { event: UmaEvent, reward: EventReward };
 }
 
 export type EventRewardData<T extends EventRewardDataType = EventRewardDataType> = {
   [K in T]: {
-    type: EventRewardType.data | EventRewardType.supportStringWithData;
+    type: EventRewardType.data | EventRewardType.supportStringWithData | EventRewardType.unknown;
     dataType: K;
     data: EventRewardDataTypeMap[K];
     value?: string;
@@ -44,6 +47,7 @@ export interface EventRewardTypeMap {
     prefix?: string;
     suffix?: string;
   };
+  [EventRewardType.unknown]: EventRewardData;
 }
 
 export type DecodedEventReward<T extends EventRewardType = EventRewardType> = {
@@ -90,6 +94,7 @@ export interface DecodedEvent {
 export enum EventConditionType {
   'autumn_triple_crown_senior' = 'autumn_triple_crown_senior',
   'win' = 'win',
+  do_not_win = 'do_not_win',
   'lose' = 'lose',
   'do_not_race' = 'do_not_race',
   'obj' = 'obj',
@@ -135,6 +140,7 @@ export enum EventConditionType {
 
 export interface EventConditionDataType {
   [EventConditionType.win]: {conditionType: EventConditionType.win, raceId: number, yearId: number},
+  [EventConditionType.do_not_win]: {conditionType: EventConditionType.do_not_win, raceId: number, yearId: number},
   [EventConditionType.race_w2]: {conditionType: EventConditionType.race_w2, raceId: number},
   [EventConditionType.lose]: {conditionType: EventConditionType.lose, raceId: number, yearId: number},
   [EventConditionType.win_on_streak]: {conditionType: EventConditionType.win_on_streak, raceId: number, yearId: number},

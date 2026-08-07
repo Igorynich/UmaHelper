@@ -241,5 +241,58 @@
         }
       </mat-card-content>
     </mat-card>
+
+    <h1 class="main-header">Unknown Events</h1>
+
+    <mat-card class="admin-card">
+      <mat-card-header>
+        <mat-card-title>Check Events</mat-card-title>
+        <mat-card-subtitle>Check events for unknown rewards.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="button-row">
+          <button mat-raised-button color="accent" [disabled]="false" (click)="onCheckSupCardsEvents()">
+            <mat-icon>settings</mat-icon> Check Sup Cards' Events
+          </button>
+          <button mat-raised-button color="accent" [disabled]="false" (click)="onCheckTraineesEvents()">
+            <mat-icon>settings</mat-icon> Check Trainees' Events
+          </button>
+        </div>
+        @if (checkForSupCardsEvents() && !unknownSupCardsEventsResource.isLoading()) {
+          <div class="table-row">
+            <h5 class="text-center">Sup Cards</h5>
+            @if (unknownSupCardsEventsResource.value()!.length > 0) {
+              @for (row of unknownSupCardsEventsResource.value(); track $index) {
+                <p>{{ row.entityName }}: ({{ row.eventGroup }}) {{ row.eventName }} - <b [matTooltip]="`d: ${row.reward.t}; r: ${row.reward.r}; v: ${row.reward.v}; t: ${row.reward.t}`">'{{ row.reward.t }}'</b> (choice {{row.choiceIndex}})</p>
+              }
+            } @else {
+              No unknown events found.
+            }
+          </div>
+        } @else if (unknownSupCardsEventsResource.isLoading()) {
+          <div class="progress-row">
+            <mat-spinner diameter="20" class="text-center"></mat-spinner>
+          </div>
+        }
+
+        @if (checkForTraineesEvents() && !unknownTraineesEventsResource.isLoading()) {
+          <div class="table-row">
+            <h5 class="text-center">Trainees</h5>
+            @if (unknownTraineesEventsResource.value()!.length > 0) {
+              @for (row of unknownTraineesEventsResource.value(); track $index) {
+                <p>{{ row.entityName }}: ({{ row.eventGroup }}) {{ row.eventName }} - <b [matTooltip]="`d: ${row.reward.t}; r: ${row.reward.r}; v: ${row.reward.v}; t: ${row.reward.t}`">'{{ row.reward.t }}'</b> (choice {{row.choiceIndex}})</p>
+              }
+            } @else {
+              No unknown events found.
+            }
+          </div>
+        } @else if (unknownTraineesEventsResource.isLoading()) {
+          <div class="progress-row">
+            <mat-spinner diameter="20" class="text-center"></mat-spinner>
+          </div>
+        }
+
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>

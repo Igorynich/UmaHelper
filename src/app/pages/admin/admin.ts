@@ -19,16 +19,20 @@ import {Trainee} from '../../interfaces/trainee';
 import {SkillMap} from '../../interfaces/skill-map';
 import {SkillsService} from '../../services/skills.service';
 import {SupportCardService} from '../../services/support-card.service';
-import {forkJoin, of, take} from 'rxjs';
-import {catchError, map, switchMap, tap} from 'rxjs/operators';
-import {EventsService, evntTypeConvertFn} from '../../services/events.service';
+import {combineLatest, forkJoin, from, of, take, toArray} from 'rxjs';
+import {catchError, concatMap, map, switchMap, tap} from 'rxjs/operators';
+import {EventsService, eventTypes, evntTypeConvertFn} from '../../services/events.service';
 import {cleanNestedArrays} from '../../utils/helpers';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
+import {DecodedEvent, EventReward, EventRewardType, UmaEvent} from '../../interfaces/event';
+import {rxResource, toSignal} from '@angular/core/rxjs-interop';
+import {TraineeService} from '../../services/trainee.service';
+import {MatTooltip} from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, ImagekitioAngularModule, MatProgressSpinner],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, ImagekitioAngularModule, MatProgressSpinner, MatTooltip],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
@@ -38,6 +42,7 @@ export class AdminComponent {
   private snackBar = inject(MatSnackBar);
   private skillsService = inject(SkillsService);
   private supportCardService = inject(SupportCardService);
+  private traineeService = inject(TraineeService);
   private eventsService = inject(EventsService);
 
   private readonly SNACKBAR_DURATION = 5000;
@@ -55,8 +60,8 @@ export class AdminComponent {
   isSupportCardLoading = signal(false);
   isTraineeLoading = signal(false);
   supportCardUploadProgress = signal<UploadProgress | null>(null);
-  traineeUploadProgress = signal<{success: boolean, failed: boolean} | null>(null);
-  traineeEventsUploadProgress = signal<{success: boolean, failed: boolean} | null>(null);
+  traineeUploadProgress = signal<{ success: boolean, failed: boolean } | null>(null);
+  traineeEventsUploadProgress = signal<{ success: boolean, failed: boolean } | null>(null);
   supportCardComparisonResult: WritableSignal<SupportCardComparison | null> = signal(null);
   traineeComparisonResult: WritableSignal<SupportCardComparison | null> = signal(null);
 
@@ -360,7 +365,8 @@ export class AdminComponent {
           this.isTraineeLoading.set(true);
           const cleanedEvents = cleanNestedArrays(this.getTraineeEvents(trainee));
           const traineeId = trainee.itemData.card_id;
-          const eventsUpload$ = cleanedEvents ? this.adminService.uploadEvents(traineeId.toString(), cleanedEvents).pipe(tap({next: () => {
+          const eventsUpload$ = cleanedEvents ? this.adminService.uploadEvents(traineeId.toString(), cleanedEvents).pipe(tap({
+            next: () => {
               this.traineeEventsUploadProgress.set({
                 success: true,
                 failed: false
@@ -374,7 +380,9 @@ export class AdminComponent {
                 success: false,
                 failed: true
               });
-            }})) : of(null).pipe(tap({next: () => {
+            }
+          })) : of(null).pipe(tap({
+            next: () => {
               this.traineeEventsUploadProgress.set({
                 success: false,
                 failed: true
@@ -383,7 +391,8 @@ export class AdminComponent {
               this.snackBar.open(`Trainee events were not found`, 'Close', {
                 panelClass: ['snackbar-warning'],
               });
-            }}));
+            }
+          }));
 
           return forkJoin([
             this.adminService.uploadTrainee(trainee).pipe(tap({
@@ -408,7 +417,8 @@ export class AdminComponent {
           ]);
         }
         return of(null);
-      })).subscribe({complete: () => {
+      })).subscribe({
+      complete: () => {
         if (this.traineeUploadProgress()?.success && this.traineeEventsUploadProgress()?.success) {
           this.snackBar.open(
             `Successfully uploaded both Trainee(${trainee!.itemData.name_en}) and her Events`,
@@ -417,7 +427,8 @@ export class AdminComponent {
           );
         }
         this.isTraineeLoading.set(false);
-      }});
+      }
+    });
   }
 
   getTraineeEvents(trainee: Trainee & { eventData: { en: string } }) {
@@ -443,7 +454,10 @@ export class AdminComponent {
   onCompareSupportCards() {
     const supportCards = this.loadedSupportCards();
     if (!supportCards) {
-      this.snackBar.open('No support card data loaded. Please load a file first.', 'Close', {panelClass: 'snackbar-error', duration: this.SNACKBAR_DURATION});
+      this.snackBar.open('No support card data loaded. Please load a file first.', 'Close', {
+        panelClass: 'snackbar-error',
+        duration: this.SNACKBAR_DURATION
+      });
       return;
     }
     this.isSupportCardLoading.set(true);
@@ -623,5 +637,130 @@ export class AdminComponent {
         })
       )
       .subscribe();
+  }
+
+  protected checkForSupCardsEvents = signal(false);
+  protected checkForTraineesEvents = signal(false);
+
+  protected unknownSupCardsEventsResource = rxResource({
+    params: () => (this.checkForSupCardsEvents() ? true : undefined),
+    stream: () => {
+      return this.supportCardService.getSortedSupportCards(true).pipe(
+        map(cards => cards.filter(card => !!card.release_en)), switchMap(cards => {
+          const cardWithEvents$ = cards.map(card =>
+            this.eventsService.getAndDecodeEvents(card.support_id.toString()).pipe(
+              map(events => ({card, events}))
+            )
+          );
+          return combineLatest(cardWithEvents$);
+          // concat version
+          /*return from(cards).pipe(
+            concatMap(card =>
+              this.eventsService.getAndDecodeEvents(card.support_id.toString()).pipe(
+                map(events => ({ card, events }))
+              )
+            ),
+            toArray()
+          )*/
+        }),
+        map((cardsWitEvents) => {
+          console.log('cardsWitEvents', cardsWitEvents);
+          const unknownRewards = cardsWitEvents.reduce((acc, cardWithEvents) => {
+            const events = cardWithEvents.events;
+            Object.keys(eventTypes).forEach(key => {
+              const keyEvents = events?.[key] || [];
+              keyEvents.forEach(event => {
+                event.choices.forEach((choice, choiceIndex) => {
+                  choice.rewards.forEach(reward => {
+                    if (reward?.type === EventRewardType.unknown) {
+                      acc.push({
+                        entityName: `${cardWithEvents.card.char_name}-${cardWithEvents.card.type}-${cardWithEvents.card.support_id}`,
+                        eventGroup: key,
+                        eventName: event.name,
+                        choiceIndex,
+                        reward: (reward.data as {
+                          event: UmaEvent;
+                          reward: EventReward;
+                        }).reward
+                      });
+                    }
+                  });
+                });
+              });
+            });
+            return acc;
+          }, [] as {
+            entityName: string,
+            eventGroup: string,
+            eventName: string,
+            choiceIndex: number,
+            reward: EventReward
+          }[]);
+          console.log('SC unknownRewards', unknownRewards);
+          return unknownRewards;
+        })
+      );
+    },
+  });
+
+  protected unknownTraineesEventsResource = rxResource({
+    params: () => (this.checkForTraineesEvents() ? true : undefined),
+    stream: () => {
+      return this.traineeService.getRawTrainees().pipe(
+        switchMap(trainees => {
+          const traineesWithEvents$ = trainees.map(trainee =>
+            this.eventsService.getAndDecodeEvents(trainee.itemData.card_id.toString()).pipe(
+              map(events => ({trainee, events}))
+            )
+          );
+          return combineLatest(traineesWithEvents$);
+        }),
+        map((traineesWithEvents) => {
+          console.log('traineesWithEvents', traineesWithEvents);
+          const unknownRewards = traineesWithEvents.reduce((acc, traineeWithEvents) => {
+            const events = traineeWithEvents.events;
+            Object.keys(eventTypes).forEach(key => {
+              const keyEvents = events?.[key] || [];
+              keyEvents.forEach(event => {
+                event.choices.forEach((choice, choiceIndex) => {
+                  choice.rewards.forEach(reward => {
+                    if (reward?.type === EventRewardType.unknown) {
+                      acc.push({
+                        entityName: `${traineeWithEvents.trainee.itemData.version ? `(${traineeWithEvents.trainee.itemData.version})` : ''}${traineeWithEvents.trainee.itemData.name_en}`,
+                        eventGroup: key,
+                        eventName: event.name,
+                        choiceIndex,
+                        reward: (reward.data as {
+                          event: UmaEvent;
+                          reward: EventReward;
+                        }).reward
+                      });
+                    }
+                  });
+                });
+              });
+            });
+            return acc;
+          }, [] as {
+            entityName: string,
+            eventGroup: string,
+            eventName: string,
+            choiceIndex: number,
+            reward: EventReward
+          }[]);
+          console.log('Trainees unknownRewards', unknownRewards);
+          return unknownRewards;
+        })
+      );
+    },
+  });
+
+
+  protected onCheckSupCardsEvents() {
+    this.checkForSupCardsEvents.set(true);
+  }
+
+  protected onCheckTraineesEvents() {
+    this.checkForTraineesEvents.set(true);
   }
 }

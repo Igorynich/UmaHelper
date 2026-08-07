@@ -159,7 +159,7 @@ export class EventsService {
       po: 'Power',
       en: 'Energy',
       pt: 'Skill Points',
-      bo: 'Bond',
+      // bo: 'Bond',
       sk: 'Skill Hint',
       di: '--- OR ---',
       ee: 'Event Ended',
@@ -211,6 +211,7 @@ export class EventsService {
       [EventConditionType.autumn_triple_crown_same_year]: 'Win the Autumn Triple Crown (Tenno Sho (Autumn) (Senior), Japan Cup (Senior), Arima Kinen (Senior)) in the SAME year',
       [EventConditionType.spring_triple_crown]: 'Win the Spring Triple Crown (Osaka Hai, Tenno Sho (Spring), Takarazuka Kinen (Senior))',
       [EventConditionType.win]: 'Win',
+      [EventConditionType.do_not_win]: 'Do Not Win',
       [EventConditionType.lose]: 'Lose',
       [EventConditionType.do_not_race]: 'Do Not Race',
       [EventConditionType.obj]: '(Objective Related, Event will Vary Based On Your Result)',
@@ -231,6 +232,11 @@ export class EventsService {
         const racesAmount: number = rewardData[3];
         // Get a Win Streak of 7+ G1 races as Front Runner
         return `Get a Win Streak of ${racesAmount}+ G${raceType} Races as Front Runner`;
+      },
+      lose: (rewardData: any[]) => {
+        const raceId: number = rewardData[1];
+        const raceName: string = RACES.find(race => Number(race.id) === Number(raceId))?.name_en || 'Unknown Race';
+        return `Loose ${raceName}`;
       }
     };
 
@@ -257,6 +263,7 @@ export class EventsService {
           console.log('decoded', decoded);
           switch (conditionEncryptedName) {
             case EventConditionType.win:
+            case EventConditionType.do_not_win:
             case EventConditionType.lose:
             case EventConditionType.win_on_streak: {
               const [raceId, yearId] = decoded[1].toString().indexOf('|') > -1 ? decoded[1].split('|') : [decoded[1], ''];
@@ -447,9 +454,10 @@ export class EventsService {
                 }
                 console.log('DATA SKILLS', data?.skills);
                 console.warn('Unknown Skill Hint Reward', reward, event.n);
-                /*return {
-                  type: EventRewardType.simpleString,
-                  value: 'Unknown Skill Hint Reward'
+               /* return {
+                  type: EventRewardType.unknown,
+                  dataType: EventRewardDataType.unknown,
+                  data: { event, reward }
                 };*/
                 return null;
               case 'sg': {
@@ -542,7 +550,7 @@ export class EventsService {
                     }
                   }
                 }
-                console.warn('Unresolved Bond Reward', reward, event.n);
+                // console.warn('Unresolved Bond Reward', reward, event.n);
                 return {
                   type: EventRewardType.simpleString,
                   value: `${rewardMap[reward.t]} ${reward.v}`   // (ID: ${reward.d})
@@ -572,9 +580,17 @@ export class EventsService {
                 }
                 console.warn('Unresolved Switch Condition Reward', reward, event.n);
                 return {
+                  type: EventRewardType.unknown,
+                  dataType: EventRewardDataType.unknown,
+                  data: {
+                    event,
+                    reward
+                  }
+                };
+                /*return {
                   type: EventRewardType.simpleString,
                   value: `Unknown Switch Condition`
-                };
+                };*/
               case 'rs': {
                 const type = rewardMap[reward.t];
                 const amount: number = reward.d!;
@@ -840,6 +856,14 @@ export class EventsService {
                 const type = rewardMap[reward.t];
                 if (!type) {
                   console.warn(`Unknown reward type encountered: ${reward.t} in ${event.n}`, event);
+                  return {
+                    type: EventRewardType.unknown,
+                    dataType: EventRewardDataType.unknown,
+                    data: {
+                      event,
+                      reward
+                    }
+                  };
                 }
                 let result = `${type || `Unknown (${reward.t})`}`;
                 if (reward.v) result += ` ${reward.v}`;
@@ -853,7 +877,7 @@ export class EventsService {
         }))
       };
     };
-    console.warn('conditionsSet', conditionsSet);
+    // console.warn('conditionsSet', conditionsSet);
 
     return Object.keys(eventData).reduce((acc, key) => {
       if (Array.isArray(eventData[key])) {
