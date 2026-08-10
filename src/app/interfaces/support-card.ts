@@ -14,12 +14,38 @@ export interface SupportCardHintOther {
   hint_value: number;
 }
 
+export interface SupportCardHintOtherAdvanced {
+  /**
+   * Level.
+   * Example: 30
+   */
+  level?: number;
+  /**
+   * Stats.
+   * Example: [
+   *                         {
+   *                             "hint_type": 2,
+   *                             "hint_value": 4
+   *                         },
+   *                         {
+   *                             "hint_type": 3,
+   *                             "hint_value": 12
+   *                         },
+   *                         {
+   *                             "hint_type": 30,
+   *                             "hint_value": 2
+   *                         }
+   *                     ]
+   */
+  stats: SupportCardHintOther[];
+}
+
 export interface SupportCardHints {
   /**
    * Array of other hints.
    * Example: [{ hint_type: 1, hint_value: 1 }]
    */
-  hint_others: SupportCardHintOther[] | SupportCardHintOther[][];
+  hint_others: (SupportCardHintOther | SupportCardHintOther[] | SupportCardHintOtherAdvanced)[];
   /**
    * Array of skill hint IDs.
    * Example: [200162, 200232]

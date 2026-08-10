@@ -78,9 +78,9 @@
               <mat-icon>insights</mat-icon>
             </div>
             <div class="skill-info">
-              <div class="skill-name">Stat gain</div>
+              <div class="skill-name">Stat gain{{group.level ? ` (Level ${group.level})` : ''}}</div>
               <ul class="stat-gains-list">
-                @for (gain of group; track $index) {
+                @for (gain of group.value; track $index) {
                   <li class="stat-gain-item"><span>{{ gain }}</span></li>
                 }
               </ul>

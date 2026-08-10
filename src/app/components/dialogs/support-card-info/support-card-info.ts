@@ -10,7 +10,11 @@ import {SkillDisplay, SkillDisplayMode} from '../../common/skill-display/skill-d
 import {MatCard} from '@angular/material/card';
 import {EventsService} from '../../../services/events.service';
 import {TrainingEventsComponent} from '../../common/training-events/training-events';
-import {SupportCardEffectData, SupportCardHintOther} from '../../../interfaces/support-card';
+import {
+  SupportCardEffectData,
+  SupportCardHintOther,
+  SupportCardHintOtherAdvanced
+} from '../../../interfaces/support-card';
 import { SupportCardService, rarityLevelMap } from '../../../services/support-card.service';
 import { EffectId } from '../../../interfaces/effect-id.enum';
 import { Level } from '../../common/level/level';
@@ -51,7 +55,7 @@ export class SupportCardInfo {
   protected readonly rarityLevelMap = rarityLevelMap;
   protected readonly level: WritableSignal<number> = signal(this.rawCardData().level || rarityLevelMap[this.rawCardData().rarity].default);
   protected hintSkills = signal<Skill[]>([]);
-  protected statGains = signal<string[][]>([]);
+  protected statGains = signal<{ level?: number, value: string[] }[]>([]);
   protected eventSkills = signal<Skill[]>([]);
 
   // Stat difference feature
@@ -167,20 +171,15 @@ export class SupportCardInfo {
           return `${effectName} +${h.hint_value}`;
         };
 
-        // Type guard для проверки, является ли элемент массивом
-        const isArrayOfHints = (h: SupportCardHintOther | SupportCardHintOther[]): h is SupportCardHintOther[] => Array.isArray(h);
-
-        let gains: string[][];
-        const hasOptions = hintsOthers.some(isArrayOfHints);
-
-        if (hasOptions) {
-          gains = hintsOthers.map((hint) => {
-            const items = isArrayOfHints(hint) ? hint : [hint];
-            return items.map(formatHint);
-          });
-        } else {
-          // Если опций нет, значит hintsOthers это SupportCardHintOther[]
-          gains = [(hintsOthers as SupportCardHintOther[]).map(formatHint)];
+        let gains: { level?: number, value: string[] }[];
+        const isNormalized = hintsOthers.every(item => item && typeof item === 'object' && 'stats' in item);
+        if (isNormalized) {
+          gains = hintsOthers.map(hint  => ({
+            level: (hint as SupportCardHintOtherAdvanced).level,
+            value: (hint as SupportCardHintOtherAdvanced).stats.map(formatHint)
+          }));
+        } else {        // TODO: remove when(if) all cards normalized
+          gains = [{value: (hintsOthers as SupportCardHintOther[]).map(formatHint)}];
         }
 
         this.statGains.set(gains);
