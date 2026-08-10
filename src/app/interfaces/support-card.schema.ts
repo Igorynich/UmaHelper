@@ -7,8 +7,20 @@ const SupportCardHintOtherSchema = z.object({
   hint_value: z.number(),
 });
 
+const SupportCardHintOtherAdvancedSchema = z.object({
+  level: z.number(),
+  stats: z.array(SupportCardHintOtherSchema)
+});
+
 const SupportCardHintsSchema = z.object({
-  hint_others: z.array(SupportCardHintOtherSchema).or(z.array(z.array(SupportCardHintOtherSchema))),
+  hint_others:
+    z.array(
+      z.union([
+        SupportCardHintOtherSchema,
+        z.array(SupportCardHintOtherSchema),
+        SupportCardHintOtherAdvancedSchema
+      ])
+    ),
   hint_skills: z.array(z.number()),
 });
 

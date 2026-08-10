@@ -9,7 +9,7 @@ import { HttpClient } from '@angular/common/http';
 import { Skill } from '../interfaces/skill';
 import { concatMap, forkJoin, from, map, Observable, of, take, tap } from 'rxjs';
 import { SkillsService } from './skills.service';
-import { SupportCard } from '../interfaces/support-card';
+import {SupportCard, SupportCardHintOther, SupportCardHintOtherAdvanced} from '../interfaces/support-card';
 import { z, ZodError } from 'zod';
 import { SupportCardService } from './support-card.service';
 import {Trainee, TraineeData} from '../interfaces/trainee';
@@ -211,9 +211,45 @@ export class AdminService {
   }
 
   private prepareSupportCardForUpload(supportCard: SupportCard): any {
-    const { effects, ...rest } = supportCard;
+    const { hints, effects, ...rest } = supportCard;
     const effectsAsObjects = effects.map(effectArray => ({ values: effectArray }));
-    return cleanNestedArrays({ ...rest, effects: effectsAsObjects }, this.supportCardService.POTENTIALLY_NESTED_ARRAY_KEYS);
+    const isHintOther = (item: any): item is SupportCardHintOther => {
+      return item && typeof item === 'object' && 'hint_type' in item;
+    }
+
+    const isHintOtherArray = (item: any): item is SupportCardHintOther[] => {
+      return Array.isArray(item) && item.every(isHintOther);
+    }
+
+    const normalizedHintsOthers: SupportCardHintOtherAdvanced[] = [];
+    const accumulatedSingles: SupportCardHintOther[] = [];
+
+    for (const item of hints.hint_others) {
+      if (!item) continue;
+
+      // 1. SupportCardHintOtherAdvanced (Very simple) -> Оставляем как есть
+      if (typeof item === 'object' && 'level' in item && 'stats' in item) {
+        normalizedHintsOthers.push(item);
+      }
+      // 2. SupportCardHintOther[] (Simple) -> Подмассив превращаем в один stats
+      else if (isHintOtherArray(item)) {
+        normalizedHintsOthers.push({
+          stats: [...item] // Все элементы этого подмассива формируют один stats
+        });
+      }
+      // 3. SupportCardHintOther (Hard) -> Собираем одиночек в общий пул
+      else if (typeof item === 'object' && 'hint_type' in item) {
+        accumulatedSingles.push(item);
+      }
+    }
+
+    // Если были найдены одиночные хинты, схлопываем их в ОДИН объект stats
+    if (accumulatedSingles.length > 0) {
+      normalizedHintsOthers.push({
+        stats: accumulatedSingles
+      });
+    }
+    return cleanNestedArrays({ ...rest, effects: effectsAsObjects, hints: { ...hints, hint_others: normalizedHintsOthers } }, this.supportCardService.POTENTIALLY_NESTED_ARRAY_KEYS);
   }
 
   private prepareTraineeForUpload(trainee: Trainee): any {
