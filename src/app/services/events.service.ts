@@ -553,7 +553,7 @@ export class EventsService {
                 // console.warn('Unresolved Bond Reward', reward, event.n);
                 return {
                   type: EventRewardType.simpleString,
-                  value: `${rewardMap[reward.t]} ${reward.v}`   // (ID: ${reward.d})
+                  value: `Bond ${reward.v}`   // (ID: ${reward.d})
                 };
               case 'bo_ch':
                 return {
