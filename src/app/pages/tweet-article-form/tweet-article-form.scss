@@ -1,0 +1,137 @@
+.page-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+.form-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+  width: 100%;
+  max-width: 1400px;
+  border: 1px solid #e0e0e0;
+  box-sizing: border-box;
+  text-align: left;
+  margin: 0 auto;
+}
+
+.form-title {
+  margin: 0 0 30px 0;
+  font-size: 36px;
+  font-weight: 600;
+  color: #2D3748;
+  text-align: center;
+}
+
+.form-container {
+  margin-top: 0;
+}
+
+.form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-width ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  margin-top: 8px;
+}
+
+.full-width textarea {
+  min-height: 300px;
+  font-size: 16px;
+  line-height: 1.6;
+  padding: 8px;
+}
+
+.full-width input {
+  font-size: 16px;
+  padding: 8px;
+}
+
+.image-preview {
+  margin-top: 4px;
+  padding: 12px;
+  background: linear-gradient(135deg, #FFF5F7 0%, #FFE4E8 100%);
+  border-radius: 12px;
+  border: 1px solid #FFD6DC;
+}
+
+.preview-title {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #2D3748;
+  font-weight: 600;
+}
+
+.preview-container {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.preview-item {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.preview-label {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #718096;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.preview-small {
+  max-width: 150px;
+  max-height: 150px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 2px solid #FFD6DC;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-large {
+  max-width: 250px;
+  max-height: 250px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 2px solid #FFD6DC;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  justify-content: center;
+}
+
+.save-button {
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.cancel-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+}

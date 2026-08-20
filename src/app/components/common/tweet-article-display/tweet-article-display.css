@@ -1,0 +1,130 @@
+.tweet-article-card {
+  background: linear-gradient(135deg, #FFF5F7 0%, #FFE4E8 100%);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: #333;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #FFD6DC;
+}
+
+.tweet-article-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,182,193,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.tweet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.author-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 16px;
+  color: #2D3748;
+}
+
+.tweet-date {
+  margin: 0;
+  font-size: 12px;
+  color: #718096;
+}
+
+.tweet-link {
+  color: #D53F8C;
+  text-decoration: none;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.tweet-link:hover {
+  background-color: rgba(213, 63, 140, 0.1);
+}
+
+.tweet-content {
+  margin-bottom: 15px;
+}
+
+.tweet-text {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #2D3748;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.tweet-image-container {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.tweet-image-container:hover {
+  transform: scale(1.02);
+}
+
+.tweet-image {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: cover;
+  display: block;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tweet-image-container:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-overlay mat-icon {
+  color: white;
+  font-size: 48px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}

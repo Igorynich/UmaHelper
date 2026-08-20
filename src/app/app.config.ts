@@ -9,6 +9,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 
 import { routes } from './app.routes';
 import { FIREBASE_CONFIG } from './firebase.config';
@@ -32,6 +33,7 @@ export const appConfig: ApplicationConfig = {
       MatButtonModule,
       MatDialogModule,
       MatSnackBarModule,
+      MatIconModule,
       ImagekitioAngularModule.forRoot(IMAGEKIT_CONFIG)
     )
   ]

@@ -1,0 +1,35 @@
+<div class="tweet-article-card">
+  <div class="tweet-header">
+    <div class="author-info">
+      @if (tweetArticle().author.photoURL) {
+        <img [src]="tweetArticle().author.photoURL" alt="Avatar" class="author-avatar">
+      }
+      <div class="author-details">
+        <p class="author-name">{{ tweetArticle().author.displayName }}</p>
+        <p class="tweet-date">{{ tweetArticle().created.toDate() | date:'medium' }}</p>
+      </div>
+    </div>
+    <a [href]="tweetArticle().tweetUrl" target="_blank" rel="noopener noreferrer" class="tweet-link">
+      <mat-icon>open_in_new</mat-icon>
+    </a>
+  </div>
+
+  <div class="tweet-content">
+    <p class="tweet-text">{{ tweetArticle().text }}</p>
+  </div>
+
+  <app-lightbox [imageUrl]="tweetArticle().imageLargeUrl">
+    <div class="tweet-image-container">
+      <img
+        [src]="tweetArticle().imageSmallUrl"
+        [attr.srcset]="tweetArticle().imageSmallUrl + ' 1x, ' + tweetArticle().imageLargeUrl + ' 2x'"
+        alt="Tweet image"
+        class="tweet-image"
+        loading="lazy"
+      >
+      <div class="image-overlay">
+        <mat-icon>zoom_in</mat-icon>
+      </div>
+    </div>
+  </app-lightbox>
+</div>

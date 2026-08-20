@@ -18,6 +18,28 @@ export const routes: Routes = [
           title: 'Create Article'
         }
       },
+      {
+        path: 'tweet/new',
+        loadComponent: () => import('./pages/tweet-article-form/tweet-article-form').then(m => m.TweetArticleForm),
+        canActivate: [abilityGuard],
+        data: {
+          mode: 'create',
+          action: AbilityAction.Create,
+          subject: AbilitySubject.Article,
+          title: 'Create Tweet Article'
+        }
+      },
+      {
+        path: 'tweet/:id/edit',
+        loadComponent: () => import('./pages/tweet-article-form/tweet-article-form').then(m => m.TweetArticleForm),
+        canActivate: [abilityGuard],
+        data: {
+          mode: 'edit',
+          action: AbilityAction.Update,
+          subject: AbilitySubject.Article,
+          title: 'Edit Tweet Article'
+        }
+      },
       { path: ':id', loadComponent: () => import('./pages/article-detail/article-detail').then(m => m.ArticleDetailComponent), data: { title: 'Article' } },
       {
         path: ':id/edit',

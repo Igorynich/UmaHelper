@@ -3,33 +3,48 @@
     <div class="header-actions">
       @if (abilityService.ability().can(abilityService.AbilityAction.Create, abilityService.AbilitySubject.Article)) {
         <a mat-raised-button color="primary" routerLink="/news/new">Create Article</a>
+        <a mat-raised-button color="accent" routerLink="/news/tweet/new">Create From a Tweet</a>
       }
     </div>
-    @for (article of paginatedArticles(); track article.id) {
-      <mat-card class="news-article">
-        <mat-card-header>
-          <mat-card-title>{{ article.title }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="article-body" [innerHTML]="article.text"></div>
-        </mat-card-content>
-        <mat-card-footer>
-          <p>Created: {{ article.created.toDate() | date }} | Edited: {{ article.edited.toDate() | date }} | Author: {{ article.author.displayName }}</p>
-          <div>
-            <a mat-button [routerLink]="['/news', article.id]">More...</a>
+    @for (item of paginatedArticles(); track item.id) {
+      @if (item.type === 'article') {
+        <mat-card class="news-article">
+          <mat-card-header>
+            <mat-card-title>{{ asArticle(item.data).title }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="article-body" [innerHTML]="item.data.text"></div>
+          </mat-card-content>
+          <mat-card-footer>
+            <p>Created: {{ item.data.created.toDate() | date }} | Edited: {{ item.data.edited.toDate() | date }} | Author: {{ item.data.author.displayName }}</p>
+            <div>
+              <a mat-button [routerLink]="['/news', item.data.id]">More...</a>
+              @if (abilityService.ability().can(abilityService.AbilityAction.Update, abilityService.AbilitySubject.Article)) {
+                <button mat-button color="primary" [routerLink]="['/news', item.data.id, 'edit']">Edit</button>
+              }
+              @if (abilityService.ability().can(abilityService.AbilityAction.Delete, abilityService.AbilitySubject.Article)) {
+                <button mat-button color="warn" (click)="deleteArticle(item.data.id)">Delete</button>
+              }
+            </div>
+          </mat-card-footer>
+        </mat-card>
+      } @else if (item.type === 'tweet') {
+        <div class="tweet-article-wrapper">
+          <app-tweet-article-display [tweetArticle]="asTweet(item.data)"></app-tweet-article-display>
+          <div class="tweet-actions">
             @if (abilityService.ability().can(abilityService.AbilityAction.Update, abilityService.AbilitySubject.Article)) {
-              <button mat-button color="primary" [routerLink]="['/news', article.id, 'edit']">Edit</button>
+              <button mat-button color="primary" (click)="editTweetArticle(asTweet(item.data).id)">Edit</button>
             }
             @if (abilityService.ability().can(abilityService.AbilityAction.Delete, abilityService.AbilitySubject.Article)) {
-              <button mat-button color="warn" (click)="deleteArticle(article.id)">Delete</button>
+              <button mat-button color="warn" (click)="deleteTweetArticle(asTweet(item.data).id)">Delete</button>
             }
           </div>
-        </mat-card-footer>
-      </mat-card>
+        </div>
+      }
     }
   </div>
 
-  <mat-paginator [length]="articles().length"
+  <mat-paginator [length]="mergedArticles().length"
                  [pageSize]="pageSize()"
                  [pageSizeOptions]="[5, 10, 25]"
                  (page)="handlePageEvent($event)"

@@ -1,0 +1,46 @@
+<div class="page-container">
+  <div class="form-card">
+    <h1 class="form-title">{{ title() }}</h1>
+
+    <form class="form-container" [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-content">
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Tweet Text</mat-label>
+          <textarea matInput formControlName="text" rows="6"></textarea>
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Image URL</mat-label>
+          <input matInput formControlName="imageUrl" placeholder="https://pbs.twimg.com/media/...">
+          <mat-hint>Twitter image URLs will be automatically parsed for small/large versions</mat-hint>
+        </mat-form-field>
+
+        @if (imageSmallUrl()) {
+          <div class="image-preview">
+            <h3 class="preview-title">Image Preview</h3>
+            <div class="preview-container">
+              <div class="preview-item">
+                <p class="preview-label">Small:</p>
+                <img [src]="imageSmallUrl()" alt="Small preview" class="preview-small">
+              </div>
+              <div class="preview-item">
+                <p class="preview-label">Large:</p>
+                <img [src]="imageLargeUrl()" alt="Large preview" class="preview-large">
+              </div>
+            </div>
+          </div>
+        }
+
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Tweet URL</mat-label>
+          <input matInput formControlName="tweetUrl" placeholder="https://twitter.com/..." type="url">
+        </mat-form-field>
+      </div>
+
+      <div class="actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid" class="save-button">Save Tweet Article</button>
+        <a mat-button [routerLink]="'/news'" class="cancel-button">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
