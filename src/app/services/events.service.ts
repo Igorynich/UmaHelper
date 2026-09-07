@@ -432,6 +432,20 @@ export class EventsService {
               }
               return `Win ${amountOfRaces} ${raceTypeString} races`;
             }
+            case EventConditionType.win_n_of: {
+              const [conditionType, amountOfRaces, racesArr] = decoded;
+              console.log('racesArr', racesArr);
+              const racesIdsWithYearId: (number | string)[] = JSON.parse(racesArr);
+              console.log('racesIdsWithYearId', racesIdsWithYearId);
+              const parsedRaces = racesIdsWithYearId.map(racesIdsWithYearId => {
+                const [raceId, yearId] = racesIdsWithYearId.toString().indexOf('|') > -1 ? racesIdsWithYearId.toString().split('|') : [racesIdsWithYearId, ''];
+                return {
+                  raceId: Number(raceId),
+                  yearId: yearId ? Number(yearId) : undefined
+                };
+              });
+              return {conditionType: EventConditionType.win_n_of, amountOfRaces: Number(amountOfRaces), races: parsedRaces};
+            }
           }
           return resultString;   // placeholder
         }),
@@ -850,6 +864,12 @@ export class EventsService {
                   type: EventRewardType.supportString,
                   prefix: '※',
                   value: resStr
+                };
+              }
+              case 'co': {
+                return {
+                  type: EventRewardType.supportString,
+                  value: `In ${reward.d}`
                 };
               }
               default:

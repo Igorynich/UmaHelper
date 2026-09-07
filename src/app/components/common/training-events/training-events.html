@@ -101,6 +101,11 @@
                 @case (EventConditionType.race_pn) {
                   <li>Place {{condition.position}}(or better) in <app-entity-display [raceId]="condition.raceId" [yearId]="condition.yearId"></app-entity-display></li>
                 }
+                @case (EventConditionType.win_n_of) {
+                  <li>Win at least {{ condition.amountOfRaces }} of the following races: @for (race of condition.races; track race) {
+                    <app-entity-display [raceId]="race.raceId" [yearId]="race.yearId"></app-entity-display>@if (!$last) {, }}
+                  </li>
+                }
               }
 
             } @else {

@@ -135,7 +135,8 @@ export enum EventConditionType {
   'win_on_streak' = 'win_on_streak',
   'race_w2' = 'race_w2',
   'ct' = 'ct',
-  'win_g1_length' = 'win_g1_length'
+  'win_g1_length' = 'win_g1_length',
+  'win_n_of' = 'win_n_of'
 }
 
 export interface EventConditionDataType {
@@ -162,6 +163,7 @@ export interface EventConditionDataType {
   [EventConditionType.fan]: {conditionType: EventConditionType.fan, fanAmount: number},
   [EventConditionType.fans_before_finals]: {conditionType: EventConditionType.fans_before_finals, fanAmount: number},
   [EventConditionType.y_dt_gn_race_no_w]: {conditionType: EventConditionType.y_dt_gn_race_no_w, yearId: number, criteriaName: string, criteriaValue: number, criteriaBranch: number, numberOfRaces: number},     // y_dt_gn_race_no_w",3,"dist",0,"g",2 - bamboo memory
+  [EventConditionType.win_n_of]: {conditionType: EventConditionType.win_n_of, amountOfRaces: number, races: {raceId: number, yearId?: number}[]},
   // add more if needed
 }
 
