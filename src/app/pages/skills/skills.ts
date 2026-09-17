@@ -4,7 +4,7 @@ import {Component, computed, effect, inject, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {MatCardModule} from '@angular/material/card';
 import {SkillsService} from '../../services/skills.service';
-import {Skill} from '../../interfaces/skill';
+import {Skill, SkillEffect} from '../../interfaces/skill';
 import {debounceTime, distinctUntilChanged, map} from 'rxjs';
 import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {MatIconModule} from '@angular/material/icon';
@@ -228,9 +228,19 @@ export class SkillsComponent {
       if (skills) {
         console.log('Skills', skills);
         const types = new Set<string>();
+        const specialScalingSkills = new Set<string>();
         skills.forEach(skill => {
           skill.type.forEach(t => types.add(t));
+          const oo5s = skill.condition_groups.find(g => g.effects.find(e => e.type === SkillEffect.TargetSpeed && e.value === 500));
+          const specScaling = skill.condition_groups.find(g => g.effects.find(e => e.value_scale !== undefined));
+          if (specScaling) {
+            specialScalingSkills.add(`${skill.name_en}`);
+          }
+          if (oo5s) {
+            console.log('005 skill', skill);
+          }
         });
+        console.warn('Special Scaling skills', specialScalingSkills);
         const sortedArray = [...types].sort((a, b) => a.localeCompare(b));
         console.log('Uniq Types', sortedArray);
         const knownTypes = this.typeFilters.map(t => t.values.map(v => v.value)).flat();

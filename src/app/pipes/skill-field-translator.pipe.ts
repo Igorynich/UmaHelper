@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Activation, Effect, Rarity, SkillEffect } from '../interfaces/skill';
+import {Activation, Effect, Rarity, Skill, SkillEffect} from '../interfaces/skill';
 import { effectTypeMap } from '../maps/skill-effect.map';
 
 @Pipe({
@@ -236,7 +236,8 @@ export class SkillFieldTranslatorPipe implements PipeTransform {
 
   toTranslate = new Set();
 
-  transform(value: any, field: string): string {
+  transform(value: any, field: string, skill?: Skill): string {
+    console.log('Tranfrom Skill', field, skill);
     switch (field) {
       case 'activation':
         switch (value) {
@@ -292,7 +293,11 @@ export class SkillFieldTranslatorPipe implements PipeTransform {
             return `${effectName} (${displayedEffValue}${effectScale})`;
           }).join('<br>');
         }
-        return String(value);
+        const effect = value as Effect;
+        const effectName = this.effectTypeMap[effect.type] || `Unknown Effect (${effect.type})`;
+        const effectValue = effect.value / 10000; // Assuming division by 10000
+        const displayedEffValue = effectValue > 0 ? `+${effectValue}` : `${effectValue}`;
+        return `${effectName} (${displayedEffValue})`;
       case 'condition':
       case 'precondition':
         if (typeof value === 'string') {

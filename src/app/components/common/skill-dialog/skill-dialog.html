@@ -70,11 +70,87 @@
             <h3 class="skill-trigger-header">Trigger {{ $index + 1 }}</h3>
           }
           @for (item of conditionGroup; track item.key) {
-            <li><strong>{{ item.key | skillKeyTranslator | titlecase }}: </strong> <span
-              [innerHTML]="item.value | skillFieldTranslator:item.key"></span></li>
+            @if (item.key === 'effects') {
+              <li><strong>{{ item.key | skillKeyTranslator | titlecase }}: </strong>
+                @for (effect of asEffects(item.value); track effect) {
+                  <span [innerHTML]="effect | skillFieldTranslator:item.key:data.skill"></span>
+                  @let hasSpecialScaling = !!effect.value_scale;
+                  @let scalingEffect = SPECIAL_CONDITIONS_SKILLS.scalingEffects[data.skill.id]?.[effect.type];
+                  @let isBaseValuesMatch =  scalingEffect?.baseValue ? scalingEffect?.baseValue === effect.value : true;
+                  @if (scalingEffect && isBaseValuesMatch) {
+                    <span class="hover"
+                          [ngpTooltipTrigger]="specialScalingTooltip"
+                          [ngpTooltipTriggerContext]="{effect}"
+                          ngpTooltipTriggerPlacement="bottom">(scales)</span>
+                  } @else if (hasSpecialScaling) {
+                    <span>(scales)</span>
+                  }
+                  @if (!$last) {
+                    <span>, </span><br>
+                  }
+                }
+              </li>
+            } @else {
+              <li><strong>{{ item.key | skillKeyTranslator | titlecase }}: </strong> <span
+                [innerHTML]="item.value | skillFieldTranslator:item.key:data.skill"></span></li>
+            }
           }
         }
       }
     </ul>
   }
 </mat-dialog-content>
+
+
+<ng-template #specialScalingTooltip let-context>
+  @let effect = context().effect;
+  @let baseValue = effect.value / 10000;
+  @let specialData = SPECIAL_CONDITIONS_SKILLS.scalingEffects[data.skill.id][effect.type];
+  <div ngpTooltip>
+    <div class="tooltip-card">
+      <div class="tooltip-description">
+        <p>Base: {{baseValue}}</p>
+        <p>{{specialData.scalesWith}}</p>
+      </div>
+
+      @if (specialData.thresholds && specialData.multipliers) {
+        <div class="tooltip-table-container">
+          <table>
+            <thead>
+            <tr>
+              @let columnNames = specialData.columnNames;
+              <th>{{columnNames?.[0] ?? 'Stat'}}</th>
+              <th>{{columnNames?.[1] ?? 'Multi'}}</th>
+              <th>{{columnNames?.[2] ?? 'Total'}}</th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (threshold of specialData.thresholds; track threshold) {
+                <tr>
+                  @if (specialData.thresholdMode === 'percentage') {
+                    <td>{{ threshold }}%</td>
+                  } @else {
+                    @if ($first) {
+                      <td>x &lt; {{ specialData.thresholds[$index + 1] }}</td>
+                    } @else if ($last) {
+                      <td>{{ threshold }} &lt;= x</td>
+                    } @else {
+                      @if (specialData.thresholds[$index + 1] - threshold <= 1) {
+                        <td>x = {{threshold}}</td>
+                      } @else {
+                        <td>{{ threshold }} &lt;= x &lt; {{ specialData.thresholds[$index + 1] }}</td>
+                      }
+                    }
+                  }
+                  @let multi = specialData.multipliers[$index];
+                  <td>{{multi}}x</td>
+                  <td>{{(multi * baseValue) | number: '1.1-3'}}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</ng-template>

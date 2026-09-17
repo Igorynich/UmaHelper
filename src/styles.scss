@@ -1,6 +1,6 @@
 /*@import '@angular/material/prebuilt-themes/pink-bluegrey.css';*/
+@import 'ng-primitives/example-theme/index.css';
 
-/* You can add global styles to this file, and also import other style files */
 html, body {
   margin: 0;
   padding: 0;
@@ -73,4 +73,58 @@ mat-icon {
   align-items: center;
   justify-content: center;
   vertical-align: middle;
+}
+
+// Angular primitives tooltips styles
+[ngpTooltip] {
+  z-index: 9999;      // needed!
+  position: absolute;
+  max-width: 16rem;
+  border-radius: 0.5rem;
+  background-color: var(--ngp-background-inverse);
+  padding: 0.5rem 0.75rem;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 510;
+  color: var(--ngp-text-inverse);
+  animation: tooltip-show 200ms ease-in-out;
+  transform-origin: var(--ngp-tooltip-transform-origin);
+}
+[ngpTooltip][data-exit] {
+  animation: tooltip-hide 200ms ease-in-out;
+}
+[ngpTooltipArrow] {
+  position: absolute;
+  pointer-events: none;
+  background-color: var(--ngp-background-inverse);
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+[ngpTooltipArrow][data-placement="top"] {
+  top: calc(100% - 5px);
+}
+[ngpTooltipArrow][data-placement="bottom"] {
+  bottom: calc(100% - 5px);
+}
+@keyframes tooltip-show {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes tooltip-hide {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
 }
