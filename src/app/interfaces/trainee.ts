@@ -113,7 +113,7 @@ export interface TraineeCharData {
   playable: boolean; // Example: true
   playable_ko: boolean; // Example: true
   playable_zh_tw: boolean; // Example: true
-  playable_en: boolean; // Example: true
+  playable_en?: boolean; // Example: true
   active: boolean; // Example: true
   active_ko: boolean; // Example: true
   active_zh_tw: boolean; // Example: true

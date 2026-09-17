@@ -83,7 +83,7 @@ const TraineeCharDataSchema = z.object({
   playable: z.boolean(),
   playable_ko: z.boolean(),
   playable_zh_tw: z.boolean(),
-  playable_en: z.boolean(),
+  playable_en: z.boolean().optional(),
   active: z.boolean(),
   active_ko: z.boolean(),
   active_zh_tw: z.boolean(),

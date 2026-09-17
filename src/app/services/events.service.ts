@@ -446,6 +446,20 @@ export class EventsService {
               });
               return {conditionType: EventConditionType.win_n_of, amountOfRaces: Number(amountOfRaces), races: parsedRaces};
             }
+            case EventConditionType.win_all: {
+              const [conditionType, racesArr] = decoded;
+              console.log('racesArr', racesArr);
+              const racesIdsWithYearId: (number | string)[] = JSON.parse(racesArr);
+              console.log('racesIdsWithYearId', racesIdsWithYearId);
+              const parsedRaces = racesIdsWithYearId.map(racesIdsWithYearId => {
+                const [raceId, yearId] = racesIdsWithYearId.toString().indexOf('|') > -1 ? racesIdsWithYearId.toString().split('|') : [racesIdsWithYearId, ''];
+                return {
+                  raceId: Number(raceId),
+                  yearId: yearId ? Number(yearId) : undefined
+                };
+              });
+              return {conditionType: EventConditionType.win_all, races: parsedRaces};
+            }
           }
           return resultString;   // placeholder
         }),
