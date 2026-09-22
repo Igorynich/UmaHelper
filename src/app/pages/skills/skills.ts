@@ -22,6 +22,7 @@ import {SkillDialogComponent} from '../../components/common/skill-dialog/skill-d
 import {TraineeInfo} from '../../components/dialogs/trainee-info/trainee-info';
 import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
 import {MatTooltip} from '@angular/material/tooltip';
+import {ActivatedRoute, Router, Params} from '@angular/router';
 
 @Component({
   selector: 'app-skills',
@@ -48,6 +49,8 @@ export class SkillsComponent {
   private skillsService = inject(SkillsService);
   private spinnerService = inject(SpinnerService);
   private modalControlService = inject(ModalControlService);
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
 
   readonly typeFilters = [
     {
@@ -213,6 +216,23 @@ export class SkillsComponent {
 
 
   constructor() {
+    // Initialize filters from query params
+    const queryParams = toSignal(this.activatedRoute.queryParams, {initialValue: {} as Params});
+
+    effect(() => {
+      const params = queryParams();
+      const nameParam = params['name'] || '';
+      const descParam = params['description'] || '';
+      const typeParam = params['type'];
+
+      if (nameParam) this.filterControl.setValue(nameParam, {emitEvent: false});
+      if (descParam) this.descFilterControl.setValue(descParam, {emitEvent: false});
+      if (typeParam) {
+        const types = Array.isArray(typeParam) ? typeParam : [typeParam];
+        this.typeFilterControl.setValue(types, {emitEvent: false});
+      }
+    });
+
     effect(() => {
       const isLoading = this.skillsResource.isLoading();
       if (isLoading) {
@@ -220,6 +240,24 @@ export class SkillsComponent {
       } else {
         this.spinnerService.hide();
       }
+    });
+
+    // Sync filter changes to query params
+    effect(() => {
+      const nameFilter = this.filter$() || '';
+      const descFilter = this.descFilter$() || '';
+      const typeFilter = this.typeFilter$() || [];
+
+      this.router.navigate([], {
+        relativeTo: this.activatedRoute,
+        queryParams: {
+          name: nameFilter || null,
+          description: descFilter || null,
+          type: typeFilter.length > 0 ? typeFilter : null
+        },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
     });
 
     // uniq types checker
