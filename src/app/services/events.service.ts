@@ -166,7 +166,7 @@ export class EventsService {
       mo: 'Mood',
       me: 'Maximum Energy',
       brf: 'Branching Result Future',
-      brp: 'Branching Result Past',
+      // brp: 'Branching Result Past',
       ds: 'Can Start Dating',
       ha: 'Heal all negative status effects',
       he: 'Heal a negative status effect',
@@ -860,6 +860,13 @@ export class EventsService {
                   value: `Picked option ${reward.v} in previous two chain events`
                 };
               }
+              case 'brp': {
+                return {
+                  type: EventRewardType.supportString,
+                  prefix: '※',
+                  value: `Picked option ${reward.v} in previous event`  // Might be event №${reward.d}
+                };
+              }
               case 'other_cases': {
                 return {
                   type: EventRewardType.supportString,
@@ -884,6 +891,12 @@ export class EventsService {
                 return {
                   type: EventRewardType.supportString,
                   value: `In ${reward.d}`
+                };
+              }
+              case 'di_s': {
+                return {
+                  type: EventRewardType.supportString,
+                  value: `--- OR ---`
                 };
               }
               default:

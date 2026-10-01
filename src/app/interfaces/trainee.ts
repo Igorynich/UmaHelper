@@ -4,14 +4,22 @@ export interface TraineeSkillEvo {
 }
 
 export interface TraineeItemData {
-  // Example: "101502-tm-opera-o"
-  url_name: string;
-  // Example: "Z"
-  tid: string;
-  // main ID!! Example: 101502
+  // Example: ["A", "E", "G", "E", "A", "A", "C", "A", "A", "G"]
+  aptitude: string[];
+  // Example: [87, 102, 74, 88, 99]
+  base_stats: number[];
+  // Example: 101502
   card_id: number;
   // Char ID(means all Maruzensky variations start with 1004) Example: 1004
   char_id: number;
+  // Example: 101510
+  costume: number;
+  // Example: [7]
+  event_statuses: number[];
+  // Example: [106, 124, 91, 107, 122]
+  five_star_stats: number[];
+  // Example: [96, 113, 83, 98, 110]
+  four_star_stats: number[];
   // Example: "TM Opera O"
   name_en: string;
   // Example: "テイエムオペラオー"
@@ -20,129 +28,155 @@ export interface TraineeItemData {
   name_ko: string;
   // Example: "好歌劇"
   name_tw: string;
-  // Example: "new_year"
-  version?: string;
+  // Example: "gacha"
+  obtained: string;
+  // Example: 30004
+  preview_id: number;
+  // Example: 3
+  rarity: number;
+  // Example: "2021-12-31"
+  release: string;
+  // Example: "2026-01-29"
+  release_en?: string;
+  // Example: "2023-04-21"
+  release_ko?: string;
+  // Example: "2023-05-05"
+  release_zh_tw?: string;
+  // Example: [200252, 200351, 200202, 202011]
+  skills_awakening: number[];
+  // Example: [200142, 200582, 201152]
+  skills_event: number[];
+  // Example: [{old: 200351, new: 101502111}, ...]
+  skills_evo: TraineeSkillEvo[];
+  // Example: [201312, 202012, 200352]
+  skills_innate: number[];
+  // Example: [110151]
+  skills_unique: number[];
+  // Example: [14, 8, 0, 0, 8]
+  stat_bonus: number[];
+  // Example: 101502
+  talent_group: number;
+  // Example: "Z"
+  tid: string;
   // Example: "Blue Dazzle"
   title: string;
+  // Example: "[New Year, Same Radiance!]"
+  title_en_gl: string;
   // Example: "[初晴・青き絢爛]"
   title_jp: string;
   // Example: "[새해 창천・푸르른 현란]"
   title_ko: string;
   // Example: "[初晴．湛藍絢爛]"
   title_tw: string;
-  // Example: "[New Year, Same Radiance!]"
-  title_en_gl: string;
-  // Example: 3
-  rarity: number;
-  // Example: 101510
-  costume: number;
-  // Example: "2021-12-31"
-  release: string;
-  // Example: "2023-04-21"
-  release_ko?: string;
-  // Example: "2023-05-05"
-  release_zh_tw?: string;
-  // Example: "2026-01-29"
-  release_en?: string;
-  // Example: "gacha"
-  obtained: string;
-  // Example: [110151]
-  skills_unique: number[];
-  // Example: [201312, 202012, 200352]
-  skills_innate: number[];
-  // Example: [{old: 200351, new: 101502111}, ...]
-  skills_evo: TraineeSkillEvo[];
-  // Example: [200252, 200351, 200202, 202011]
-  skills_awakening: number[];
-  // Example: [200142, 200582, 201152]
-  skills_event: number[];
-  // Example: [14, 8, 0, 0, 8]
-  stat_bonus: number[];
-  // Example: 101502
-  talent_group: number;
-  // Example: [87, 102, 74, 88, 99]
-  base_stats: number[];
-  // Example: ["A", "E", "G", "E", "A", "A", "C", "A", "A", "G"]
-  aptitude: string[];
-  // Example: [96, 113, 83, 98, 110]
-  four_star_stats: number[];
-  // Example: [106, 124, 91, 107, 122]
-  five_star_stats: number[];
+  // Example: "101502-tm-opera-o"
+  url_name: string;
+  // Example: "new_year"
+  version?: string;
 }
 
+
 export interface TraineeRace {
-  id: number; // Example: 9391
-  name_en: string; // Example: "Junior Make Debut"
-  name_jp: string; // Example: "ジュニア級メイクデビュー"
-  name_ko: string; // Example: "주니어급 데뷔전"
-  name_tw: string; // Example: "新手級閃耀出道戰"
-  url_name?: string; // Example: "satsuki-sho"
-  group: number; // Example: 7
-  grade: number; // Example: 900
-  track: number; // Example: 10008
-  distance: number; // Example: 2000
-  terrain: number; // Example: 1
-  fans_needed: number; // Example: 0
-  fans_gained: number; // Example: 700
-  icon_id: number; // Example: 9002
+  // Example: 2000
+  distance: number;
+  // Example: 700
+  fans_gained: number;
+  // Example: 0
+  fans_needed: number;
+  // Example: 900
+  grade: number;
+  // Example: 7
+  group: number;
+  // Example: 9002
+  icon_id: number;
+  // Example: 9391
+  id: number;
+  // Example: "Junior Make Debut"
+  name_en: string;
+  // Example: "ジュニア級メイクデビュー"
+  name_ja: string;
+  // Example: "주니어급 데뷔전"
+  name_ko: string;
+  // Example: "新手級閃耀出道戰"
+  name_zh_tw: string;
+  // Example: 1
+  terrain: number;
+  // Example: 10008
+  track: number;
+  // Example: "satsuki-sho"
+  url_name?: string;
 }
 
 export interface TraineeObjective {
-  order: number; // Example: 1
-  turn: number; // Example: 12
-  cond_type: number; // Example: 1
-  cond_id: number; // Example: 1067
-  cond_value: number; // Example: 0
-  cond_value_2: number; // Example: 0
-  race_type: number; // Example: 0
-  target_type: number; // Example: 1
-  race_choice: number; // Example: 0
-  race_choice_details: number; // Example: 0
-  races?: TraineeRace[]; // Example: [{id: 9391, ...}]
-  turns_break?: number; // Example: 15
+  // Example: 1067
+  cond_id: number;
+  // Example: 1
+  cond_type: number;
+  // Example: 0
+  cond_value: number;
+  // Example: 0
+  cond_value_2: number;
+  // Example: 1
+  order: number;
+  // Example: 0
+  race_choice: number;
+  // Example: 0
+  race_choice_details: number;
+  // Example: 0
+  race_type: number;
+  // Example: [{id: 9391, ...}]
+  races?: TraineeRace[];
+  // Example: 1
+  target_type: number;
+  // Example: 12
+  turn: number;
+  // Example: 15
+  turns_break?: number;
 }
 
 export interface TraineeCharData {
-  url_name: string; // Example: "tm-opera-o"
-  tid: string; // Example: "e"
-  char_id: number; // Example: 1015
-  jp_name: string; // Example: "テイエムオペラオー"
-  en_name: string; // Example: "TM Opera O"
+  active: boolean; // Example: "tm-opera-o"
+  active_en: boolean; // Example: "e"
+  active_ko: boolean; // Example: 1015
+  active_zh_tw: boolean; // Example: "テイエムオペラオー"
+  birth_day: number; // Example: "TM Opera O"
+  birth_month: number; // Example: "티엠 오페라 오"
+  birth_year: number; // Example: "好歌劇"
+  char_id: number; // Example: true
+  color_main: string; // Example: "F271C4"
+  color_sub: string; // Example: "FBE415"
+  height: number; // Example: 156
+  name_en: string; // Example: "TM Opera O"
+  name_ja: string; // Example: "テイエムオペラオー"
   name_ko: string; // Example: "티엠 오페라 오"
-  name_tw: string; // Example: "好歌劇"
+  name_zh_tw: string; // Example: "好歌劇"
   playable: boolean; // Example: true
+  playable_en: boolean; // Example: true
   playable_ko: boolean; // Example: true
   playable_zh_tw: boolean; // Example: true
-  playable_en?: boolean; // Example: true
-  active: boolean; // Example: true
-  active_ko: boolean; // Example: true
-  active_zh_tw: boolean; // Example: true
-  active_en: boolean; // Example: true
-  va_en: string; // Example: "Sora Tokui"
-  va_ja: string; // Example: "徳井青空"
-  va_ko: string; // Example: "토쿠이 소라"
-  va_zh_tw: string; // Example: "徳井青空"
-  va_link: string; // Example: "https://myanimelist.net/people/11361/Sora_Tokui"
+  race: string; // Example: "uma"
+  rl: {
+    active: string; // Example: "1998-2002"
+    country: string;  // Example: "jp"
+    death?: string | null;  // Example: "2018-05-17"
+    earnings: number;   // Example: 1835189000
+    races: number;    // Example: 26
+    record: string;   // Example: "14-6-3-3"
+    win_stats: number[]; // Example: [7, 1, 12, 8]
+    wins: number;   // Example: 14
+  }; // Example: "徳井青空"
+  sex: number; // Example: 1
   three_sizes: { // Example: {b: 76, w: 55, h: 80}
     b: number;
     w: number;
     h: number;
   };
-  birth_day: number; // Example: 13
-  birth_month: number; // Example: 3
-  birth_year: number; // Example: 1996
-  height: number; // Example: 156
-  sex: number; // Example: 1
-  race: string; // Example: "uma"
-  rl: { // Example: {country: "jp", death: "2018-05-17", ...}
-    country: string;
-    death?: string | null;
-    races: number;
-    wins: number;
-    record: string;
-    earnings: number;
-    active: string;
-  };
+  tid: string; // Example: "e"
+  url_name: string; // Example: "tm-opera-o"
+  va_en: string; // Voice Actor: Example: "Sora Tokui"
+  va_ja: string; // Example: "徳井青空"
+  va_ko: string; // Example: "토쿠이 소라"
+  va_link: string; // Example: "https://myanimelist.net/people/11361/Sora_Tokui"
+  va_zh_tw: string; // Example: "徳井青空"
 }
 
 export interface TraineeProfileLocaleData {

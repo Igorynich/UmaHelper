@@ -354,7 +354,7 @@ export class AdminComponent {
     this.dialog
       .open(ConfirmationDialog, {
         data: {
-          title: `Upload "${trainee.charData.en_name}" Data`,
+          title: `Upload "${trainee.charData.name_en}" Data`,
           message:
             'Are you sure you want to perform an upload? This will overwrite the data in Firebase.',
         },

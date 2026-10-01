@@ -49,6 +49,7 @@
             [isActive]="selectedTabValue() === 'all-cards'"
             [pageIndex]="currentPage()"
             [pageSize]="currentPageSize()"
+            (filterChanged)="onFilterChanged(ALL_CARDS_TAB_INDEX, $event)"
             (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
             (pageChanged)="currentPage.set($event)"
             (pageSizeChanged)="currentPageSize.set($event)"
