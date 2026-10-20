@@ -1,9 +1,10 @@
 import {Injectable} from '@angular/core';
 import { ActiveSort, CheckboxSelection } from '../components/common/data-grid/data-grid.types';
 import { SupportCardFilter } from '../interfaces/user-support-cards-data';
+import { TraineeFilter } from '../interfaces/user-trainees-data';
 
 export interface TabState {
-  filter?: SupportCardFilter;
+  filter?: SupportCardFilter | TraineeFilter;
   sort?: ActiveSort[];
   page?: number;
   pageSize?: number;
@@ -21,7 +22,7 @@ export class DataGridStateService {
     return this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
   }
 
-  updateTabFilter(tabIndex: number, filter: SupportCardFilter): void {
+  updateTabFilter(tabIndex: number, filter: SupportCardFilter | TraineeFilter): void {
     const currentState = this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
     this.tabStates.set(tabIndex, { ...currentState, filter });
   }

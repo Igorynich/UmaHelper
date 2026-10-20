@@ -177,12 +177,13 @@
   [pageSize]="pageSize()"
   [isFirstTab]="isFirstTab()"
   [addMenu]="addMenu()"
-  [tabIndex]="tabIndex()"
   [isActive]="isActive()"
   [showColumnSelector]="false"
   [pageIndex]="adjustedPageIndex()"
+  [activeSorts]="sort()"
+  (sortChanged)="onSortChanged($event)"
   (imageClick)="openImageModal($event)"
   (addClicked)="onAdd($event)"
   (removeClicked)="onRemove($event)"
-  (pageChanged)="pageChanged.emit($event)">
+  (pageChanged)="onPageChanged($event)">
 </app-data-grid>

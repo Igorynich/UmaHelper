@@ -8,7 +8,7 @@ import {
   input,
   output,
   signal,
-  contentChild, untracked
+  contentChild
 } from '@angular/core';
 import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -22,7 +22,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenu } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import {MatPaginator, PageEvent} from '@angular/material/paginator';
-import {debounceTime, delay, map, tap} from 'rxjs/operators';
+import {debounceTime, map, tap} from 'rxjs/operators';
 import { DataGrid } from '../../../components/common/data-grid/data-grid';
 import { DataGridColumn, SortType, ActiveSort } from '../../../components/common/data-grid/data-grid.types';
 import { SkillDialogComponent } from '../../../components/common/skill-dialog/skill-dialog';
@@ -77,7 +77,6 @@ export class SupportCardListViewComponent {
   cards = input<DisplaySupportCard[]>([]);
   isFirstTab = input<boolean>(false);
   addMenu = input<MatMenu>();
-  tabIndex = input<number>(-1);
   isActive = input<boolean>(false);
   pageIndex = input<number>(0);
   pageSize = input<number>(20);
@@ -88,7 +87,6 @@ export class SupportCardListViewComponent {
   add = output<SupportCardEffectData>();
   remove = output<SupportCardEffectData>();
   filterChanged = output<SupportCardFilter>();
-  levelsChangedInFirstTab = output<DisplaySupportCard[]>();
   pageChanged = output<PageEvent>();
   selectionChanged = output<SupportCardEffectData[]>();
   sortChanged = output<ActiveSort[]>();
@@ -171,7 +169,7 @@ export class SupportCardListViewComponent {
     this.filterForm.valueChanges.pipe(
       debounceTime(300),
       tap(filterValue => {
-        console.log('Filter Form value changed:', filterValue, this.tabIndex(), this.isActive());
+        console.log('Filter Form value changed:', filterValue, this.isActive());
         if (filterValue) {
           const completeFilter: SupportCardFilter = {
             name: filterValue.name || '',
@@ -186,8 +184,7 @@ export class SupportCardListViewComponent {
             skillTypes: filterValue.skillTypes || [],
           };
 
-            this.filterChanged.emit(completeFilter);
-
+          this.filterChanged.emit(completeFilter);
         }
       }),
       takeUntilDestroyed(this.destroyRef)
@@ -198,12 +195,6 @@ export class SupportCardListViewComponent {
   protected readonly selectedCards = computed(() => {
     const dataGridRef = this.dataGrid();
     return dataGridRef ? dataGridRef.getSelectedRows() : [];
-  });
-  protected readonly hasSelectedCards = computed(() => {
-    return this.selectedCards().length > 0;
-  });
-  protected readonly selectedCardsCount = computed(() => {
-    return this.selectedCards().length;
   });
 
   protected readonly filteredCards = computed(() => {
@@ -363,12 +354,6 @@ export class SupportCardListViewComponent {
 
   constructor() {
     effect(() => {
-      if (this.isFirstTab()) {
-        this.levelsChangedInFirstTab.emit(this.supportCardsWithLevels());
-      }
-    });
-
-    effect(() => {
       const newCards = this.cards();
       const initialLevels = new Map<number, number>();
       for (const card of newCards) {
@@ -384,9 +369,12 @@ export class SupportCardListViewComponent {
       if (this.isActive()) {
         const filter = this.filter();
         console.log('Filter changed:', filter, filter?.type);
-        // if (filter) {
-        this.filterForm.patchValue(filter!, { emitEvent: true });
-        // }
+        if (filter) {
+          if (filter.skillName || filter.skillDesc || (filter.skillTypes && filter.skillTypes.length > 0)) {
+            this.showSkillFilters.set(true);
+          }
+          this.filterForm.patchValue(filter, { emitEvent: true });
+        }
       }
     });
 

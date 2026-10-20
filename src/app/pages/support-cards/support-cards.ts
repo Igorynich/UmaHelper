@@ -89,7 +89,6 @@ export class SupportCards {
   readonly ALL_CARDS_TAB_INDEX: number = -1;
   readonly ALL_CARDS_TAB_VALUE: string = 'all-cards';
   protected selectedCard = signal<SupportCardEffectData | null>(null);
-  protected firstTabSupportCardsWithLevels = signal<DisplaySupportCard[]>([]);
   protected currentSelectedCards = signal<SupportCardEffectData[]>([]);
 
   // Query params as the single source of truth
@@ -122,8 +121,8 @@ export class SupportCards {
       type: queries['type']?.split(',') || [],
       effectId: queries['effectId'] || '',
       operator: queries['operator'] || '>=',
-      value: queries['value'] || null,
-      showUpcomingCards: queries['showUpcomingCards'] || false,
+      value: queries['value'] != null && queries['value'] !== '' ? Number(queries['value']) : null,
+      showUpcomingCards: queries['showUpcomingCards'] === 'true' || queries['showUpcomingCards'] === true,
       skillName: queries['skillName'] || '',
       skillDesc: queries['skillDesc'] || '',
       skillTypes: queries['skillTypes']?.split(',') || []
@@ -235,7 +234,7 @@ export class SupportCards {
     const tabIndex = targetTabIndex;
     // Check if this is a bulk operation (no single card selected)
     if (!card && this.hasSelectedCards()) {
-      const selectedCards = this.getSelectedCardsFromCurrentGrid();
+      const selectedCards = this.currentSelectedCards();
       this.addMultipleCardsToTab(selectedCards, tabIndex);
       return;
     }
@@ -292,21 +291,24 @@ export class SupportCards {
     });
   }
 
-  protected onFilterChanged(tabIndex: number, filter: SupportCardFilter): void {
-    console.log('On Filter changed:', filter, tabIndex);
-    this.dataGridStateService.updateTabFilter(tabIndex, filter);
-    this.updateFilterQueryParams(tabIndex, filter);
+  protected onFilterChanged(filter: SupportCardFilter): void {
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
+    console.log('On Filter changed:', filter, currentTabIndex);
+    this.dataGridStateService.updateTabFilter(currentTabIndex, filter);
+    this.updateFilterQueryParams(filter);
   }
 
-  protected onSortChanged(tabIndex: number, sort: ActiveSort[]): void {
-    console.log('On Sort changed:', sort, tabIndex);
-    this.dataGridStateService.updateTabSort(tabIndex, sort);
-    this.updateSortQueryParams(tabIndex, sort);
+  protected onSortChanged(sort: ActiveSort[]): void {
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
+    console.log('On Sort changed:', sort, currentTabIndex);
+    this.dataGridStateService.updateTabSort(currentTabIndex, sort);
+    this.updateSortQueryParams(sort);
   }
 
-  protected onPageChanged(tabIndex: number, event: PageEvent): void {
+  protected onPageChanged(event: PageEvent): void {
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
     console.log('On Page changed', event);
-    this.dataGridStateService.updateTabPageData(tabIndex, event.pageIndex, event.pageSize);
+    this.dataGridStateService.updateTabPageData(currentTabIndex, event.pageIndex, event.pageSize);
     this.updateQueryParams({
       page: event.pageIndex !== 0 ? event.pageIndex + 1 : null,
       pageSize: event.pageSize !== 20 ? event.pageSize : null
@@ -319,7 +321,7 @@ export class SupportCards {
 
     this.updateQueryParams({
       tabValue: tabValue === this.ALL_CARDS_TAB_VALUE ? undefined : tabValue,
-      ...this.getFilterQueryParams(tabData.filter),
+      ...this.getFilterQueryParams(tabData.filter as SupportCardFilter),
       ...this.getSortQueryParams(tabData.sort || []),
       page: tabData.page ? tabData.page + 1 : undefined,
       pageSize: tabData.pageSize !== 20 ? tabData.pageSize : undefined
@@ -373,16 +375,14 @@ export class SupportCards {
     return {sort: sortData || undefined};
   }
 
-  private updateFilterQueryParams(tabIndex: number, filter: SupportCardFilter): void {    // TODO remove tab index
-    console.log('Updating filter query params', tabIndex, filter);
+  private updateFilterQueryParams(filter: SupportCardFilter): void {
     const filterData = this.getFilterQueryParams(filter);
-
     this.updateQueryParams({
       ...filterData
     });
   }
 
-  private updateSortQueryParams(tabIndex: number, sort: ActiveSort[]): void {    // TODO remove tab index
+  private updateSortQueryParams(sort: ActiveSort[]): void {
     this.updateQueryParams(this.getSortQueryParams(sort));
   }
 
@@ -390,9 +390,8 @@ export class SupportCards {
     return this.currentSelectedCards().length > 0;
   }
 
-
   protected onBulkRemove(tabIndex: number): void {
-    const selectedCards = this.getSelectedCardsFromCurrentGrid();
+    const selectedCards = this.currentSelectedCards();
     if (selectedCards.length === 0) return;
 
     const dialogRef = this.dialog.open(ConfirmationDialog, {
@@ -457,16 +456,7 @@ export class SupportCards {
     });
   }
 
-  private getSelectedCardsFromCurrentGrid(): SupportCardEffectData[] {
-    return this.currentSelectedCards();
-  }
-
-  async saveData(manualTrigger: boolean = false): Promise<void> {
-    // enable save only on manual trigger
-    if (!manualTrigger) {
-      return;
-    }
-
+  async saveData(): Promise<void> {
     if (this.savedDataResource.isLoading()) return;
 
     try {
@@ -484,10 +474,6 @@ export class SupportCards {
         duration: 3000
       });
     }
-  }
-
-  protected onSupportCardsWithLevelsChanged(cards: DisplaySupportCard[]) {
-    this.firstTabSupportCardsWithLevels.set(cards);
   }
 
   protected getTabValueFromIndex(index: number): string {

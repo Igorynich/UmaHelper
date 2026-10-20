@@ -9,7 +9,7 @@
     <div class="tab-container">
       <div ngpTabset class="tab-group" [ngpTabsetValue]="selectedTabValue()" (ngpTabsetValueChange)="onTabChanged($event)">
         <div ngpTabList class="tab-list">
-          <button ngpTabButton [ngpTabButtonValue]="'all-cards'" class="tab-button">All Cards</button>
+          <button ngpTabButton [ngpTabButtonValue]="ALL_CARDS_TAB_VALUE" class="tab-button">All Cards</button>
           @for (tab of hydratedTabsData(); track $index) {
             <button ngpTabButton [ngpTabButtonValue]="getTabValueFromIndex($index)" class="tab-button">
               <div class="tab-label">
@@ -25,7 +25,7 @@
             </button>
           }
         </div>
-        <div ngpTabPanel [ngpTabPanelValue]="'all-cards'" class="tab-content">
+        <div ngpTabPanel [ngpTabPanelValue]="ALL_CARDS_TAB_VALUE" class="tab-content">
           <div class="bulk-actions-container">
             <div class="left-buttons">
               <button
@@ -38,23 +38,21 @@
                 Add Selected
               </button>
             </div>
-            <button mat-button="filled" (click)="saveData(true)">Save Data</button>
+            <button mat-button="filled" (click)="saveData()">Save Data</button>
           </div>
           <app-support-card-list-view
             [cards]="allCardsWithDefaults()"
             (add)="onAddCard($event)"
             [isFirstTab]="true"
             [addMenu]="addMenu"
-            [tabIndex]="ALL_CARDS_TAB_INDEX"
-            [isActive]="selectedTabValue() === 'all-cards'"
+            [isActive]="selectedTabValue() === ALL_CARDS_TAB_VALUE"
             [pageIndex]="currentPage()"
             [pageSize]="currentPageSize()"
             [filter]="filterParams()"
             [sort]="sortParams()"
-            (filterChanged)="onFilterChanged(ALL_CARDS_TAB_INDEX, $event)"
-            (sortChanged)="onSortChanged(ALL_CARDS_TAB_INDEX, $event)"
-            (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
-            (pageChanged)="onPageChanged(ALL_CARDS_TAB_INDEX, $event)"
+            (filterChanged)="onFilterChanged($event)"
+            (sortChanged)="onSortChanged($event)"
+            (pageChanged)="onPageChanged($event)"
             (selectionChanged)="currentSelectedCards.set($event)"
           >
           </app-support-card-list-view>
@@ -85,7 +83,6 @@
             </div>
             <app-support-card-list-view
               [cards]="tab.cards"
-              [tabIndex]="$index"
               [isActive]="selectedTabValue() === getTabValueFromIndex($index)"
               [pageIndex]="currentPage()"
               [pageSize]="currentPageSize()"
@@ -94,10 +91,9 @@
               (levelChangedInTab)="onLevelChangedInDynamicTab($index, $event)"
               (add)="onAddCard($event)"
               (remove)="onRemoveCard($index, $event)"
-              (filterChanged)="onFilterChanged($index, $event)"
-              (sortChanged)="onSortChanged($index, $event)"
-              (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
-              (pageChanged)="onPageChanged($index, $event)"
+              (filterChanged)="onFilterChanged($event)"
+              (sortChanged)="onSortChanged($event)"
+              (pageChanged)="onPageChanged($event)"
               (selectionChanged)="currentSelectedCards.set($event)"
               [addMenu]="addMenu">
             </app-support-card-list-view>

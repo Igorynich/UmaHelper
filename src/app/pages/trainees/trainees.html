@@ -7,9 +7,9 @@
     <h2>Trainees</h2>
 
     <div class="tab-container">
-      <div ngpTabset class="tab-group" [(ngpTabsetValue)]="selectedTabValue">
+      <div ngpTabset class="tab-group" [ngpTabsetValue]="selectedTabValue()" (ngpTabsetValueChange)="onTabChanged($event)">
         <div ngpTabList class="tab-list">
-          <button ngpTabButton [ngpTabButtonValue]="'all-trainees'" class="tab-button">All Trainees</button>
+          <button ngpTabButton [ngpTabButtonValue]="ALL_TAB_VALUE" class="tab-button">All Trainees</button>
           @for (tab of hydratedTabsData(); track $index) {
             <button ngpTabButton [ngpTabButtonValue]="getTabValueFromIndex($index)" class="tab-button">
               <div class="tab-label">
@@ -25,7 +25,7 @@
             </button>
           }
         </div>
-        <div ngpTabPanel [ngpTabPanelValue]="'all-trainees'" class="tab-content">
+        <div ngpTabPanel [ngpTabPanelValue]="ALL_TAB_VALUE" class="tab-content">
           <div class="bulk-actions-container">
             <div class="left-buttons">
               <button
@@ -38,18 +38,23 @@
                 Add Selected
               </button>
             </div>
-            <button mat-button="filled" (click)="saveData(true)">Save Data</button>
+            <button mat-button="filled" (click)="saveData()">Save Data</button>
           </div>
           <app-trainee-list-view
             [trainees]="allTrainees()"
+            (add)="onAddTrainee($event)"
             [isFirstTab]="true"
             [addMenu]="addMenu"
-            [tabIndex]="ALL_TAB_INDEX"
-            [isActive]="selectedTabValue() === 'all-trainees'"
+            [isActive]="selectedTabValue() === ALL_TAB_VALUE"
             [pageIndex]="currentPage()"
             [pageSize]="currentPageSize()"
-            (add)="onAddTrainee($event)"
-            (pageChanged)="onPageChanged($event)">
+            [filter]="filterParams()"
+            [sort]="sortParams()"
+            (filterChanged)="onFilterChanged($event)"
+            (sortChanged)="onSortChanged($event)"
+            (pageChanged)="onPageChanged($event)"
+            (selectionChanged)="currentSelectedTrainees.set($event)"
+          >
           </app-trainee-list-view>
         </div>
         @for (tab of hydratedTabsData(); track $index) {
@@ -74,18 +79,22 @@
                   Remove Selected
                 </button>
               </div>
-              <button mat-button="filled" color="warn" (click)="saveData(true)">Save Data</button>
+              <button mat-button="filled" color="warn" (click)="saveData()">Save Data</button>
             </div>
             <app-trainee-list-view
               [trainees]="tab.cards"
-              [tabIndex]="$index"
               [isActive]="selectedTabValue() === getTabValueFromIndex($index)"
               [pageIndex]="currentPage()"
               [pageSize]="currentPageSize()"
+              [filter]="filterParams()"
+              [sort]="sortParams()"
               (add)="onAddTrainee($event)"
               (remove)="onRemoveTrainee($index, $event)"
-              [addMenu]="addMenu"
-              (pageChanged)="onPageChanged($event)">
+              (filterChanged)="onFilterChanged($event)"
+              (sortChanged)="onSortChanged($event)"
+              (pageChanged)="onPageChanged($event)"
+              (selectionChanged)="currentSelectedTrainees.set($event)"
+              [addMenu]="addMenu">
             </app-trainee-list-view>
           </div>
         }

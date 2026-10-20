@@ -7,27 +7,28 @@ import {
   signal
 } from '@angular/core';
 import {rxResource, toSignal} from '@angular/core/rxjs-interop';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute, Params, Router} from '@angular/router';
+import {PageEvent} from '@angular/material/paginator';
 import {TraineeService} from '../../services/trainee.service';
 import {TraineesDataService} from '../../services/trainees-data.service';
 import {DisplayTrainee} from '../../interfaces/display-trainee';
 import {Trainee} from '../../interfaces/trainee';
-import {TraineeTab} from '../../interfaces/user-trainees-data';
+import {TraineeFilter, TraineeTab} from '../../interfaces/user-trainees-data';
 import {NgpTabset, NgpTabList, NgpTabButton, NgpTabPanel} from 'ng-primitives/tabs';
+import {TraineeListViewComponent, TraineeRow} from './trainee-list-view/trainee-list-view';
 import {MatIcon} from '@angular/material/icon';
-import {MatButton, MatButtonModule, MatIconButton} from '@angular/material/button';
+import {MatButton, MatButtonModule} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
+import {NewTabDialogComponent} from '../support-cards/new-tab-dialog/new-tab-dialog';
+import {filter} from 'rxjs';
+import {ConfirmationDialog} from '../../components/common/confirmation-dialog/confirmation-dialog';
+import {tap, map} from 'rxjs/operators';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
+import {DataGridStateService} from '../../services/data-grid-state.service';
 import {MatTooltip} from '@angular/material/tooltip';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
-import {filter, map} from 'rxjs';
-import {NewTabDialogComponent} from '../support-cards/new-tab-dialog/new-tab-dialog';
-import {ConfirmationDialog} from '../../components/common/confirmation-dialog/confirmation-dialog';
-import {DataGridStateService, TabState} from '../../services/data-grid-state.service';
-import {TraineeListViewComponent} from './trainee-list-view/trainee-list-view';
-import {tap} from 'rxjs/operators';
-import {PageEvent} from '@angular/material/paginator';
+import {ActiveSort} from '../../components/common/data-grid/data-grid.types';
 
 @Component({
   selector: 'app-trainees',
@@ -84,29 +85,64 @@ export class Trainees {
     }));
   });
 
-  readonly ALL_TAB_INDEX = -1;
-  readonly ALL_TAB_VALUE = 'all-trainees';
-  protected selectedTabValue = signal(this.ALL_TAB_VALUE);
+  readonly ALL_TAB_INDEX: number = -1;
+  readonly ALL_TAB_VALUE: string = 'all-trainees';
   protected selectedTrainee = signal<DisplayTrainee | null>(null);
-  protected currentPage = signal(0);
-  protected currentPageSize = signal(20);
+  protected currentSelectedTrainees = signal<TraineeRow[]>([]);
 
-  private readonly queryParams = toSignal(
-    this.route.queryParamMap.pipe(
-      map(params => {
-        console.log('queryParams toSignal', params);
-        const tabValue = params.get('tabValue');
-        const page = params.get('page') ? Number(params.get('page')) - 1 : null;
-        const pageSize = params.get('pageSize') ? Number(params.get('pageSize')) : null;
-        return {
-          tabValue,
-          page,
-          pageSize
-        };
-      })
-    ),
-    {initialValue: {tabValue: null, page: null, pageSize: null}}
-  );
+  // Query params as the single source of truth
+  private queryParams = toSignal(this.route.queryParams.pipe(tap(params => {
+    console.warn('Query params changed', params);
+  })), {initialValue: {} as Params});
+
+  // State computed from queryParams
+  protected selectedTabValue = computed(() => {
+    const tabValue = this.queryParams()['tabValue'] as string | undefined;
+    return tabValue || this.ALL_TAB_VALUE;
+  });
+
+  protected currentPage = computed(() => {
+    const page = this.queryParams()['page'] as string | undefined;
+    return page ? Number(page) - 1 : 0;
+  });
+
+  protected currentPageSize = computed(() => {
+    const pageSize = this.queryParams()['pageSize'] as string | undefined;
+    return pageSize ? Number(pageSize) : 20;
+  });
+
+  protected filterParams = computed(() => {
+    const queries = this.queryParams();
+    console.log('queries filter', queries);
+    return {
+      name: queries['name'] || '',
+      rarity: queries['rarity']?.split(',').map(Number) || [],
+      statBonus: {
+        stat: queries['statBonusStat'] || '',
+        operator: queries['statBonusOperator'] || '>=',
+        value: queries['statBonusValue'] != null && queries['statBonusValue'] !== '' ? Number(queries['statBonusValue']) : null,
+      },
+      aptitude: {
+        stat: queries['aptitudeStat'] || '',
+        operator: queries['aptitudeOperator'] || '>=',
+        value: queries['aptitudeValue'] || '',
+      },
+      uniqName: queries['uniqName'] || '',
+      skillName: queries['skillName'] || '',
+      skillDesc: queries['skillDesc'] || '',
+      skillTypes: queries['skillTypes']?.split(',') || []
+    };
+  });
+
+  protected sortParams = computed(() => {
+    const sort = this.queryParams()['sort'] as any;
+    console.log('queries sort', sort);
+    if (!sort) return [];
+    return sort.split(',').map((s: string) => {
+      const [key, direction] = s.split(':');
+      return { key, direction };
+    });
+  });
 
   protected savedDataResource = rxResource({
     stream: () => {
@@ -123,70 +159,10 @@ export class Trainees {
       if (savedData) {
         console.log('savedData', savedData);
         this.dynamicTabs.set(savedData.tabs);
-        const tabValue = savedData.selectedTabIndex !== undefined ? this.getTabValueFromIndex(savedData.selectedTabIndex) : this.ALL_TAB_VALUE;
-        this.selectedTabValue.set(tabValue);
-
-        const tabStates = new Map<number, TabState>();
-        const existing = this.dataGridStateService.getAllTabStates();
-
-        tabStates.set(this.ALL_TAB_INDEX, {sort: [], selection: existing.get(this.ALL_TAB_INDEX)?.selection || {}});
-
-        savedData.tabs.forEach((tab, index) => {
-          const existingState = existing.get(index);
-          const state: TabState = {
-            sort: tab.sort || [],
-            selection: existingState?.selection || {}
-          };
-          if (tab.filter) state.filter = tab.filter as any;
-          tabStates.set(index, state);
-        });
-
-        this.dataGridStateService.loadTabStates(tabStates);
       } else {
         console.log('NO savedData');
         this.dynamicTabs.set([]);
-        const tabValue = this.ALL_TAB_VALUE;
-        this.selectedTabValue.set(tabValue);
-        const tabStates = new Map<number, TabState>();
-        tabStates.set(this.ALL_TAB_INDEX, {sort: [], selection: {}});
-        this.dataGridStateService.loadTabStates(tabStates);
       }
-    });
-
-    effect(() => {
-      if (this.savedDataResource.isLoading()) {
-        return;
-      }
-      if (this.queryParams().page) {
-        this.currentPage.set(this.queryParams().page || 0);
-      }
-      if (this.queryParams().pageSize) {
-        this.currentPageSize.set(this.queryParams().pageSize || 20);
-      }
-      if (this.queryParams().tabValue) {
-        this.selectedTabValue.set(this.queryParams().tabValue || this.ALL_TAB_VALUE);
-      }
-    });
-
-    effect(() => {
-      if (this.savedDataResource.isLoading()) {
-        return;
-      }
-      const currentTabValue = this.selectedTabValue();
-      const currentPageNum = this.currentPage();
-      const currentPageSizeNum = this.currentPageSize();
-
-      const queryParams: Record<string, string | null> = {
-        tabValue: currentTabValue !== this.ALL_TAB_VALUE ? currentTabValue : null,
-        page: currentPageNum !== 0 ? (currentPageNum + 1).toString() : null,
-        pageSize: currentPageSizeNum !== 20 ? currentPageSizeNum.toString() : null
-      };
-
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams,
-        queryParamsHandling: 'merge'
-      });
     });
   }
 
@@ -198,40 +174,144 @@ export class Trainees {
 
   protected onTabChange(newValue: string): void {
     console.log('onTabChange', newValue);
-    this.selectedTabValue.set(newValue);
+    this.updateQueryParams({ tabValue: newValue === this.ALL_TAB_VALUE ? null : newValue });
     this.saveData();
   }
 
   protected addTab(): void {
-    this.dialog.open(NewTabDialogComponent).afterClosed()
-      .pipe(filter(name => !!name))
-      .subscribe(name => {
-        this.dynamicTabs.update(tabs => [...tabs, {name, cards: []}]);
-        const newIndex = this.hydratedTabsData().length;
-        this.onTabChange(this.getTabValueFromIndex(newIndex));
-        this.saveData();
-      });
+    this.dialog.open(NewTabDialogComponent).afterClosed().pipe(filter(name => !!name)).subscribe(name => {
+      this.dynamicTabs.update(tabs => [...tabs, {name, cards: []}]);
+      const newIndex = this.hydratedTabsData().length;
+      this.onTabChange(this.getTabValueFromIndex(newIndex));
+      this.saveData();
+    });
   }
 
   protected removeTab(event: MouseEvent, index: number): void {
     event.stopPropagation();
-    const tab = this.dynamicTabs()[index];
-    this.dialog.open(ConfirmationDialog, {
-      data: {title: 'Confirm Deletion', message: `Are you sure you want to delete the tab "${tab.name}"?`}
-    }).afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
+    const tabToRemove = this.dynamicTabs()[index];
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Confirm Deletion',
+        message: `Are you sure you want to delete the tab "${tabToRemove.name}"?`
+      }
+    });
+
+    dialogRef.afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
+      console.log('Removing tab', index);
       const removedTabValue = this.getTabValueFromIndex(index);
       if (this.selectedTabValue() === removedTabValue) {
-        this.selectedTabValue.set(this.ALL_TAB_VALUE);
+        this.onTabChange(this.ALL_TAB_VALUE);
       }
       this.dynamicTabs.update(tabs => tabs.filter((_, i) => i !== index));
+
       this.dataGridStateService.removeTabState(index);
       this.saveData();
     });
   }
 
-  protected hasSelectedCards(): boolean {
+  protected onFilterChanged(filter: TraineeFilter): void {
     const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
-    return this.dataGridStateService.getTabSelectedCount(currentTabIndex) > 0;
+    console.log('On Filter changed:', filter, currentTabIndex);
+    this.dataGridStateService.updateTabFilter(currentTabIndex, filter);
+    this.updateFilterQueryParams(filter);
+  }
+
+  protected onSortChanged(sort: ActiveSort[]): void {
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
+    console.log('On Sort changed:', sort, currentTabIndex);
+    this.dataGridStateService.updateTabSort(currentTabIndex, sort);
+    this.updateSortQueryParams(sort);
+  }
+
+  protected onPageChanged(event: PageEvent): void {
+    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
+    console.log('On Page changed', event);
+    this.dataGridStateService.updateTabPageData(currentTabIndex, event.pageIndex, event.pageSize);
+    this.updateQueryParams({
+      page: event.pageIndex !== 0 ? event.pageIndex + 1 : null,
+      pageSize: event.pageSize !== 20 ? event.pageSize : null
+    });
+  }
+
+  protected onTabChanged(tabValue: string | undefined): void {
+    console.warn('Tab changed full map', this.dataGridStateService.getAllTabStates(), tabValue);
+    const tabData = this.dataGridStateService.getTabData(this.getTabIndexFromValue(tabValue!));
+
+    this.updateQueryParams({
+      tabValue: tabValue === this.ALL_TAB_VALUE ? undefined : tabValue,
+      ...this.getFilterQueryParams(tabData.filter as TraineeFilter),
+      ...this.getSortQueryParams(tabData.sort || []),
+      page: tabData.page ? tabData.page + 1 : undefined,
+      pageSize: tabData.pageSize !== 20 ? tabData.pageSize : undefined
+    });
+  }
+
+  private updateQueryParams(params: Record<string, any>): void {
+    console.log('Updating queries', params);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: params,
+      queryParamsHandling: 'merge'
+    }).then(value => console.log('Queries updated', value));
+  }
+
+  private getFilterQueryParams(filter: TraineeFilter | undefined): Params {
+    if (!filter) return {
+      name: undefined,
+      rarity: undefined,
+      statBonusStat: undefined,
+      statBonusOperator: undefined,
+      statBonusValue: undefined,
+      aptitudeStat: undefined,
+      aptitudeOperator: undefined,
+      aptitudeValue: undefined,
+      uniqName: undefined,
+      skillName: undefined,
+      skillDesc: undefined,
+      skillTypes: undefined
+    };
+    const hasStatBonusFilter = filter.statBonus?.stat && filter.statBonus.value != null;
+    const hasAptitudeFilter = filter.aptitude?.stat && filter.aptitude.value;
+    return {
+      name: filter.name || undefined,
+      rarity: filter.rarity.length > 0 ? filter.rarity.join(',') : undefined,
+      statBonusStat: hasStatBonusFilter ? filter.statBonus.stat : undefined,
+      statBonusOperator: hasStatBonusFilter ? filter.statBonus.operator : undefined,
+      statBonusValue: hasStatBonusFilter ? filter.statBonus.value : undefined,
+      aptitudeStat: hasAptitudeFilter ? filter.aptitude.stat : undefined,
+      aptitudeOperator: hasAptitudeFilter ? filter.aptitude.operator : undefined,
+      aptitudeValue: hasAptitudeFilter ? filter.aptitude.value : undefined,
+      uniqName: filter.uniqName || undefined,
+      skillName: filter.skillName || undefined,
+      skillDesc: filter.skillDesc || undefined,
+      skillTypes: filter.skillTypes.length > 0 ? filter.skillTypes.join(',') : undefined
+    };
+  }
+
+  private getSortQueryParams(sort: ActiveSort[]): Params {
+    const sortData = sort.map(s => {
+      if (s.key && s.direction) {
+        return `${s.key}:${s.direction}`;
+      }
+      return '';
+    }).join(',');
+    return {sort: sortData || undefined};
+  }
+
+  private updateFilterQueryParams(filter: TraineeFilter): void {
+    const filterData = this.getFilterQueryParams(filter);
+    this.updateQueryParams({
+      ...filterData
+    });
+  }
+
+  private updateSortQueryParams(sort: ActiveSort[]): void {
+    this.updateQueryParams(this.getSortQueryParams(sort));
+  }
+
+  protected hasSelectedCards(): boolean {
+    return this.currentSelectedTrainees().length > 0;
   }
 
   protected onAddTrainee(trainee: DisplayTrainee): void {
@@ -239,19 +319,20 @@ export class Trainees {
   }
 
   protected addTraineeToTab(trainee: DisplayTrainee | null, targetTabIndex: number): void {
+    const tabIndex = targetTabIndex;
     if (!trainee && this.hasSelectedCards()) {
       const selected = this.getSelectedFromCurrentGrid();
-      this.addMultipleToTab(selected, targetTabIndex);
+      this.addMultipleToTab(selected, tabIndex);
       return;
     }
     if (!trainee) return;
 
     this.dynamicTabs.update(tabs => {
       const newTabs = [...tabs];
-      const tab = {...newTabs[targetTabIndex]};
+      const tab = {...newTabs[tabIndex]};
       if (!tab.cards.some(c => c.id === trainee.traineeId)) {
         tab.cards = [...tab.cards, {id: trainee.traineeId}];
-        newTabs[targetTabIndex] = tab;
+        newTabs[tabIndex] = tab;
         this.snackBar.open(`Added "${trainee.itemData.name_en}" to tab "${tab.name}"`, 'Dismiss', {duration: 3000});
       } else {
         this.snackBar.open(`"${trainee.itemData.name_en}" is already in tab "${tab.name}"`, 'Dismiss', {duration: 3000});
@@ -262,12 +343,13 @@ export class Trainees {
   }
 
   protected onRemoveTrainee(tabIndex: number, trainee: DisplayTrainee): void {
-    this.dialog.open(ConfirmationDialog, {
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
         title: 'Confirm Removal',
         message: `Are you sure you want to remove "${trainee.itemData.name_en}" from this tab?`
       }
-    }).afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
+    });
+    dialogRef.afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
       this.dynamicTabs.update(tabs => {
         const newTabs = [...tabs];
         const tab = {...newTabs[tabIndex]};
@@ -284,24 +366,15 @@ export class Trainees {
     const selected = this.getSelectedFromCurrentGrid();
     if (!selected.length) return;
 
-    this.dialog.open(ConfirmationDialog, {
-      data: {title: 'Confirm Bulk Removal', message: `Remove ${selected.length} selected trainees from this tab?`}
-    }).afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
-      const ids = new Set(selected.map(t => t.traineeId));
-      this.dynamicTabs.update(tabs => {
-        const newTabs = [...tabs];
-        const tab = {...newTabs[tabIndex]};
-        tab.cards = tab.cards.filter(c => !ids.has(c.id));
-        newTabs[tabIndex] = tab;
-        return newTabs;
-      });
-      this.saveData();
-      this.snackBar.open(`Removed ${selected.length} trainees from tab.`, 'Dismiss', {duration: 3000});
-      this.dataGridStateService.clearTabSelection(tabIndex);
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {title: 'Confirm Bulk Removal', message: `Are you sure you want to remove ${selected.length} selected trainees from this tab?`}
+    });
+    dialogRef.afterClosed().pipe(filter(confirmed => confirmed)).subscribe(() => {
+      this.removeMultipleTraineesFromTab(tabIndex, selected);
     });
   }
 
-  private addMultipleToTab(trainees: DisplayTrainee[], targetTabIndex: number): void {
+  private addMultipleToTab(trainees: TraineeRow[], targetTabIndex: number): void {
     this.dynamicTabs.update(tabs => {
       const newTabs = [...tabs];
       const tab = {...newTabs[targetTabIndex]};
@@ -313,25 +386,31 @@ export class Trainees {
         }
       });
       newTabs[targetTabIndex] = tab;
-      this.snackBar.open(
-        added > 0 ? `Added ${added} trainees to tab "${tab.name}"` : 'All selected trainees are already in the tab',
-        'Dismiss', {duration: 3000}
-      );
+      if (added > 0) {
+        this.snackBar.open(`Added ${added} trainees to tab "${tab.name}"`, 'Dismiss', {duration: 3000});
+      } else {
+        this.snackBar.open('All selected trainees are already in the target tab', 'Dismiss', {duration: 3000});
+      }
       return newTabs;
     });
     this.saveData();
-    this.dataGridStateService.clearTabSelection(this.getTabIndexFromValue(this.selectedTabValue()));
   }
 
-  private getSelectedFromCurrentGrid(): DisplayTrainee[] {
-    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
-    const selection = this.dataGridStateService.getTabSelection(currentTabIndex);
+  private removeMultipleTraineesFromTab(tabIndex: number, trainees: TraineeRow[]): void {
+    this.dynamicTabs.update(tabs => {
+      const newTabs = [...tabs];
+      const tab = {...newTabs[tabIndex]};
+      const traineeIdsToRemove = trainees.map(t => t.traineeId);
+      tab.cards = tab.cards.filter(c => !traineeIdsToRemove.includes(c.id));
+      newTabs[tabIndex] = tab;
+      return newTabs;
+    });
+    this.saveData();
+    this.snackBar.open(`Removed ${trainees.length} trainees from tab.`, 'Dismiss', {duration: 3000});
+  }
 
-    const pool = currentTabIndex === this.ALL_TAB_INDEX
-      ? this.allTrainees()
-      : this.hydratedTabsData()[currentTabIndex]?.cards ?? [];
-
-    return pool.filter(t => selection[t.traineeId.toString()]);
+  private getSelectedFromCurrentGrid(): TraineeRow[] {
+    return this.currentSelectedTrainees();
   }
 
   private toDisplayTrainee(t: Trainee): DisplayTrainee {
@@ -342,16 +421,20 @@ export class Trainees {
     };
   }
 
-  async saveData(manualTrigger: boolean = false): Promise<void> {
-    if (!manualTrigger) return;
+  async saveData(): Promise<void> {
     if (this.savedDataResource.isLoading()) return;
 
     try {
+      const tabsWithOnlyCards = this.dynamicTabs().map(tab => ({
+        ...tab
+      }));
+
       await this.traineesDataService.saveUserTraineesData({
-        tabs: this.dynamicTabs(),
+        tabs: tabsWithOnlyCards,
         selectedTabIndex: this.getTabIndexFromValue(this.selectedTabValue())
       });
-    } catch {
+    } catch (error) {
+      console.error('Failed to save trainees data:', error);
       this.snackBar.open('Failed to save your changes', 'Dismiss', {duration: 3000});
     }
   }
@@ -365,13 +448,5 @@ export class Trainees {
     if (value === this.ALL_TAB_VALUE) return this.ALL_TAB_INDEX;
     const match = value.match(/^tab-(\d+)$/);
     return match ? parseInt(match[1], 10) : this.ALL_TAB_INDEX;
-  }
-
-  protected onPageChanged(event: PageEvent): void {
-    console.log('Page changed', event);
-    /*this.updateQueryParams({
-      page: event.pageIndex !== 0 ? event.pageIndex + 1 : null,
-      pageSize: event.pageSize !== 20 ? event.pageSize : null
-    });*/
   }
 }

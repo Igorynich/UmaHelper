@@ -1,6 +1,6 @@
 // src/app/pages/trainees/trainee-list-view/trainee-list-view.ts
 import {
-  ChangeDetectionStrategy, Component, computed, DestroyRef,
+  ChangeDetectionStrategy, Component, computed, contentChild, DestroyRef,
   effect, inject, input, output, signal
 } from '@angular/core';
 import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -18,8 +18,7 @@ import { MatMenu } from '@angular/material/menu';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 import { DataGrid } from '../../../components/common/data-grid/data-grid';
-import { DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
-import { DataGridStateService } from '../../../services/data-grid-state.service';
+import { ActiveSort, DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
 import { DisplayTrainee } from '../../../interfaces/display-trainee';
 import { TraineeRarity } from '../../../interfaces/trainee-rarity.enum';
 import { TrainingType } from '../../../interfaces/training-type.enum';
@@ -91,22 +90,26 @@ export interface TraineeRow {
 })
 export class TraineeListViewComponent {
   private destroyRef = inject(DestroyRef);
-  private dataGridStateService = inject(DataGridStateService);
   private modalControlService = inject(ModalControlService);
   private skillsService = inject(SkillsService);
 
   trainees = input<DisplayTrainee[]>([]);
   isFirstTab = input<boolean>(false);
   addMenu = input<MatMenu>();
-  tabIndex = input<number>(-1);
   isActive = input<boolean>(false);
   pageIndex = input<number>(0);
   pageSize = input<number>(20);
+  filter = input<TraineeFilter>();
+  sort = input<ActiveSort[]>([]);
 
   add = output<DisplayTrainee>();
   remove = output<DisplayTrainee>();
   filterChanged = output<TraineeFilter>();
   pageChanged = output<PageEvent>();
+  selectionChanged = output<TraineeRow[]>();
+  sortChanged = output<ActiveSort[]>();
+
+  dataGrid = contentChild(DataGrid<TraineeRow>);
 
   protected readonly TraineeRarity = TraineeRarity;
   protected readonly TrainingType = TrainingType;
@@ -218,27 +221,43 @@ export class TraineeListViewComponent {
     return this.pageIndex();
   });
 
+  protected readonly selectedTrainees = computed(() => {
+    const dataGridRef = this.dataGrid();
+    return dataGridRef ? dataGridRef.getSelectedRows() : [];
+  });
+
   constructor() {
+    // Sync filter input to filterForm
     effect(() => {
-      const tabIndex = this.tabIndex();
-      const tabState = this.dataGridStateService.getTabState(tabIndex);
-      if (tabState.filter) {
-        const f = tabState.filter as unknown as TraineeFilter;
-        this.filterForm.patchValue({
-          name: f.name || '',
-          rarity: f.rarity || [],
-          statBonusStat: f.statBonus?.stat || '',
-          statBonusOperator: f.statBonus?.operator || '>=',
-          statBonusValue: f.statBonus?.value ?? null,
-          aptitudeStat: f.aptitude?.stat || '',
-          aptitudeOperator: f.aptitude?.operator || '>=',
-          aptitudeValue: f.aptitude?.value || '',
-          uniqName: f.uniqName || '',
-          skillName: f.skillName || '',
-          skillDesc: f.skillDesc || '',
-          skillTypes: f.skillTypes || [],
-        }, { emitEvent: false });
+      if (this.isActive()) {
+        const filter = this.filter();
+        console.log('Filter changed:', filter);
+        if (filter) {
+          if (filter.skillName || filter.skillDesc || (filter.skillTypes && filter.skillTypes.length > 0)) {
+            this.showSkillFilters.set(true);
+          }
+          this.filterForm.patchValue({
+            name: filter.name || '',
+            rarity: filter.rarity || [],
+            statBonusStat: filter.statBonus?.stat || '',
+            statBonusOperator: filter.statBonus?.operator || '>=',
+            statBonusValue: filter.statBonus?.value ?? null,
+            aptitudeStat: filter.aptitude?.stat || '',
+            aptitudeOperator: filter.aptitude?.operator || '>=',
+            aptitudeValue: filter.aptitude?.value || '',
+            uniqName: filter.uniqName || '',
+            skillName: filter.skillName || '',
+            skillDesc: filter.skillDesc || '',
+            skillTypes: filter.skillTypes || [],
+          }, { emitEvent: true });
+        }
       }
+    });
+
+    // Emit selection changes to parent
+    effect(() => {
+      const selected = this.selectedTrainees();
+      this.selectionChanged.emit(selected);
     });
 
     // register dialogs
@@ -418,37 +437,76 @@ export class TraineeListViewComponent {
     return this.filterForm.get('rarity')!.value.includes(r);
   }
 
+  private getCompleteFilter(): TraineeFilter {
+    const v = this.filterForm.value;
+    return {
+      name: v.name || '',
+      rarity: v.rarity || [],
+      statBonus: {
+        stat: v.statBonusStat || '',
+        operator: v.statBonusOperator || '>=',
+        value: v.statBonusValue ?? null,
+      },
+      aptitude: {
+        stat: v.aptitudeStat || '',
+        operator: v.aptitudeOperator || '>=',
+        value: v.aptitudeValue || '',
+      },
+      uniqName: v.uniqName || '',
+      skillName: v.skillName || '',
+      skillDesc: v.skillDesc || '',
+      skillTypes: v.skillTypes || [],
+    };
+  }
+
   protected resetFilters(): void {
-    this.filterForm.reset({
+    const emptyFilter: TraineeFilter = {
       name: '',
       rarity: [],
-      statBonusStat: '',
-      statBonusOperator: '>=',
-      statBonusValue: null,
-      aptitudeStat: '',
-      aptitudeOperator: '>=',
-      aptitudeValue: '',
+      statBonus: {
+        stat: '',
+        operator: '>=',
+        value: null,
+      },
+      aptitude: {
+        stat: '',
+        operator: '>=',
+        value: '',
+      },
       uniqName: '',
       skillName: '',
       skillDesc: '',
       skillTypes: [],
-    });
+    };
+    this.filterChanged.emit(emptyFilter);
   }
 
   protected clearNameFilter(): void {
-    this.filterForm.get('name')?.setValue('');
+    this.filterChanged.emit({
+      ...this.getCompleteFilter(),
+      name: ''
+    });
   }
 
   protected clearUniqFilter(): void {
-    this.filterForm.get('uniqName')?.setValue('');
+    this.filterChanged.emit({
+      ...this.getCompleteFilter(),
+      uniqName: ''
+    });
   }
 
   protected clearSkillNameFilter(): void {
-    this.filterForm.get('skillName')?.setValue('');
+    this.filterChanged.emit({
+      ...this.getCompleteFilter(),
+      skillName: ''
+    });
   }
 
   protected clearSkillDescFilter(): void {
-    this.filterForm.get('skillDesc')?.setValue('');
+    this.filterChanged.emit({
+      ...this.getCompleteFilter(),
+      skillDesc: ''
+    });
   }
 
   onOptionSelected(event: MatAutocompleteSelectedEvent): void {
@@ -463,7 +521,19 @@ export class TraineeListViewComponent {
       parts.push(selectedValue);
     }
 
-    this.filterForm.get('skillName')?.setValue(parts.join('+'));
+    this.filterChanged.emit({
+      ...this.getCompleteFilter(),
+      skillName: parts.join('+')
+    });
+  }
+
+  protected onSortChanged(sort: ActiveSort[]): void {
+    this.sortChanged.emit(sort);
+  }
+
+  onPageChanged(event: PageEvent): void {
+    console.log('Page changed', event);
+    this.pageChanged.emit(event);
   }
 
   protected onAdd(row: TraineeRow): void {
