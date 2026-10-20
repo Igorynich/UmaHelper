@@ -36,6 +36,7 @@ import {ModalControlService} from '../../../services/modal-control';
 import {SupportCardInfo} from '../../../components/dialogs/support-card-info/support-card-info';
 import {SkillDialogComponent} from '../../../components/common/skill-dialog/skill-dialog';
 import { SkillsService } from '../../../services/skills.service';
+import {PageEvent} from '@angular/material/paginator';
 
 type AptitudeStat = SurfaceAptitude | DistanceAptitude | StrategyAptitude;
 
@@ -105,8 +106,7 @@ export class TraineeListViewComponent {
   add = output<DisplayTrainee>();
   remove = output<DisplayTrainee>();
   filterChanged = output<TraineeFilter>();
-  pageChanged = output<number>();
-  pageSizeChanged = output<number>();
+  pageChanged = output<PageEvent>();
 
   protected readonly TraineeRarity = TraineeRarity;
   protected readonly TrainingType = TrainingType;

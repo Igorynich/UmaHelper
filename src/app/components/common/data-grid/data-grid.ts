@@ -3,7 +3,6 @@ import {
   Component,
   computed,
   effect,
-  inject,
   input,
   output, Signal,
   signal,
@@ -22,7 +21,6 @@ import { Level } from '../level/level';
 import {MatPaginator, MatPaginatorModule, PageEvent} from '@angular/material/paginator';
 import { RarityClassPipe } from '../../../pipes/rarity-class.pipe';
 import { RarityPipe } from '../../../pipes/rarity.pipe';
-import { DataGridStateService } from '../../../services/data-grid-state.service';
 import {
   SortType,
   DataGridColumn,
@@ -63,8 +61,6 @@ import {SnakeToTitlePipe} from '../../../pipes/snake-to-title.pipe';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataGrid<T> {
-  private dataGridStateService = inject(DataGridStateService);
-
   data = input<T[]>([]);
   columns = input<DataGridColumn[]>([]);
   multiSort = input(false, { transform: coerceBooleanProperty });
@@ -76,14 +72,15 @@ export class DataGrid<T> {
   isActive = input<boolean>(false); // Whether this tab is currently active
   showColumnSelector = input(true);
   pageIndex = input<number>(0);
+  activeSorts = input<ActiveSort[]>([]);
 
   levelChanged = output<{ row: T; level: number }>();
   imageClick = output<T>();
   setAllToMax = output();
   addClicked = output<T>();
   removeClicked = output<T>();
-  pageChanged = output<number>();
-  pageSizeChanged = output<number>();
+  pageChanged = output<PageEvent>();
+  sortChanged = output<ActiveSort[]>();
 
   protected SkillDisplayMode = SkillDisplayMode;
 
@@ -123,7 +120,7 @@ export class DataGrid<T> {
   readonly groupedColumns: Signal<string[]> = computed(() => {
     return this.columns().filter((c) => c.group).map((c) => c.key);
   });
-  protected readonly activeSorts = signal<ActiveSort[]>([]);
+  // protected readonly activeSorts = signal<ActiveSort[]>([]);
   protected readonly displayedData = computed(() => {
     const data = this.data();
     const sorts = this.activeSorts();
@@ -158,11 +155,7 @@ export class DataGrid<T> {
   private readonly currentTabIndex = signal<number>(-1);
 
   constructor() {
-    // Initialize selection state from service immediately
-    const initialTabIndex = this.tabIndex();
-    const initialTabState = this.dataGridStateService.getTabState(initialTabIndex);
-    this.selection.set(initialTabState.selection || {});
-    this.currentTabIndex.set(initialTabIndex);
+    this.currentTabIndex.set(this.tabIndex());
 
     // Initialize page size from input
     effect(() => {
@@ -190,94 +183,47 @@ export class DataGrid<T> {
       this.visibleColumns.set(this.allColumnKeys());
     });
 
-    // Effect for tab changes - load selection when grid becomes active
+    // Sync MatSort visual state from activeSorts input
     effect(() => {
-      if (this.isActive()) {
-        // Load selection from service when this grid becomes active
-        const tabState = this.dataGridStateService.getTabState(this.tabIndex());
-        this.selection.set(tabState.selection || {});
-        this.activeSorts.set(tabState.sort);
-        this.currentTabIndex.set(this.tabIndex());
-      }
-    });
-
-    // Effect for selection changes - only save to service
-    effect(() => {
-      const selection = this.selection();
-      const tabIndex = this.tabIndex();
-
-      // Only save if we're on the correct tab
-      if (this.currentTabIndex() === tabIndex) {
-        this.dataGridStateService.updateTabSelection(tabIndex, selection);
+      const sorts = this.activeSorts();
+      const sortRef = this.sort();
+      if (sortRef && sorts.length > 0) {
+        const primarySort = sorts[0];
+        sortRef.active = primarySort.key;
+        sortRef.direction = primarySort.direction;
       }
     });
   }
-
-  // Initialize sort state from service after view init
-  protected initializeSortFromService(): void {
-    const tabIndex = this.tabIndex();
-    const sortRef = this.sort();
-    if (sortRef) {
-      const tabState = this.dataGridStateService.getTabState(tabIndex);
-      if (tabState.sort && tabState.sort.length > 0) {
-        // Use setTimeout to ensure MatSort is fully initialized
-        setTimeout(() => {
-          const primarySort = tabState.sort[0];
-          const currentSortRef = this.sort();
-          if (primarySort && currentSortRef) {
-            // Initialize MatSort with the saved state
-            currentSortRef.active = primarySort.key;
-            currentSortRef.direction = primarySort.direction;
-            // Trigger the sort to update visual indicators
-            currentSortRef.sortChange.emit({
-              active: primarySort.key,
-              direction: primarySort.direction
-            });
-          }
-        });
-      }
-    }
-  }
-
-  // Use afterRenderEffect to initialize sort after template is rendered
-  protected afterViewInit = effect(() => {
-    const sortRef = this.sort();
-    if (sortRef) {
-      this.initializeSortFromService();
-    }
-  });
 
   protected handleSort(sort: Sort): void {
     const tabIndex = this.tabIndex();
     const sortRef = this.sort();
-
+    console.log('handleSort', sort, tabIndex);
+    let newSorts: ActiveSort[];
     if (this.multiSort()) {
+      console.log('handleSort MULTISORT');
       const newSort: ActiveSort = { key: sort.active, direction: sort.direction };
-      this.activeSorts.update(sorts => {
-        const index = sorts.findIndex(s => s.key === newSort.key);
-        if (newSort.direction === '') {
-          if (index > -1) {
-            sorts.splice(index, 1);
-          }
-        } else {
-          if (index > -1) {
-            sorts[index] = newSort;
-          }
-          else {
-            sorts.push(newSort);
-          }
+      newSorts = [...this.activeSorts()];
+      const index = newSorts.findIndex(s => s.key === newSort.key);
+      if (newSort.direction === '') {
+        if (index > -1) {
+          newSorts.splice(index, 1);
         }
-        const updatedSorts = [...sorts];
-        // Update service instead of emitting
-        this.dataGridStateService.updateTabSort(tabIndex, updatedSorts);
-        return updatedSorts;
-      });
+      } else {
+        if (index > -1) {
+          newSorts[index] = newSort;
+        }
+        else {
+          newSorts.push(newSort);
+        }
+      }
+      // this.activeSorts.set(newSorts);
     } else {
-      const singleSort: ActiveSort[] = sort.direction ? [{ key: sort.active, direction: sort.direction }] : [];
-      this.activeSorts.set(singleSort);
-      // Update service instead of emitting
-      this.dataGridStateService.updateTabSort(tabIndex, singleSort);
+      console.log('handleSort SingleORT');
+      newSorts = sort.direction ? [{ key: sort.active, direction: sort.direction }] : [];
+      // this.activeSorts.set(newSorts);
     }
+    this.sortChanged.emit(newSorts);
   }
 
   protected getSortDirection(key: string): SortDirection {
@@ -331,26 +277,11 @@ export class DataGrid<T> {
   }
 
   protected removeSort(key: string): void {
-    const tabIndex = this.tabIndex();
-
-    this.activeSorts.update(sorts => {
-      const index = sorts.findIndex(s => s.key === key);
-      if (index > -1) {
-        sorts.splice(index, 1);
-      }
-      const updatedSorts = [...sorts];
-      // Update service instead of emitting
-      this.dataGridStateService.updateTabSort(tabIndex, updatedSorts);
-      return updatedSorts;
-    });
+    this.sortChanged.emit(this.activeSorts().filter(s => s.key !== key));
   }
 
   protected clearSorts(): void {
-    const tabIndex = this.tabIndex();
-
-    this.activeSorts.set([]);
-    // Update service instead of emitting
-    this.dataGridStateService.updateTabSort(tabIndex, []);
+    this.sortChanged.emit([]);
   }
 
   protected getColumnHeader(key: string): string {
@@ -470,10 +401,10 @@ export class DataGrid<T> {
   protected readonly parseInt = parseInt;
 
   protected onPageChange(event: PageEvent): void {
+    console.log('Page changed', event);
     this.currentPageIndex.set(event.pageIndex);
     this.currentPageSize.set(event.pageSize);
-    this.pageChanged.emit(event.pageIndex);
-    this.pageSizeChanged.emit(event.pageSize);
+    this.pageChanged.emit(event);
   }
 }
 

@@ -27,6 +27,7 @@ import {ConfirmationDialog} from '../../components/common/confirmation-dialog/co
 import {DataGridStateService, TabState} from '../../services/data-grid-state.service';
 import {TraineeListViewComponent} from './trainee-list-view/trainee-list-view';
 import {tap} from 'rxjs/operators';
+import {PageEvent} from '@angular/material/paginator';
 
 @Component({
   selector: 'app-trainees',
@@ -364,5 +365,13 @@ export class Trainees {
     if (value === this.ALL_TAB_VALUE) return this.ALL_TAB_INDEX;
     const match = value.match(/^tab-(\d+)$/);
     return match ? parseInt(match[1], 10) : this.ALL_TAB_INDEX;
+  }
+
+  protected onPageChanged(event: PageEvent): void {
+    console.log('Page changed', event);
+    /*this.updateQueryParams({
+      page: event.pageIndex !== 0 ? event.pageIndex + 1 : null,
+      pageSize: event.pageSize !== 20 ? event.pageSize : null
+    });*/
   }
 }

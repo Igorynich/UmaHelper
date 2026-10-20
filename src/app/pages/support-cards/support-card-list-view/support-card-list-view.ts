@@ -8,7 +8,7 @@ import {
   input,
   output,
   signal,
-  contentChild
+  contentChild, untracked
 } from '@angular/core';
 import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -21,9 +21,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenu } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
+import {MatPaginator, PageEvent} from '@angular/material/paginator';
 import {debounceTime, delay, map, tap} from 'rxjs/operators';
 import { DataGrid } from '../../../components/common/data-grid/data-grid';
-import { DataGridColumn, SortType } from '../../../components/common/data-grid/data-grid.types';
+import { DataGridColumn, SortType, ActiveSort } from '../../../components/common/data-grid/data-grid.types';
 import { SkillDialogComponent } from '../../../components/common/skill-dialog/skill-dialog';
 import { SupportCardInfo } from '../../../components/dialogs/support-card-info/support-card-info';
 import { SupportCardRatings } from '../../../components/dialogs/support-card-ratings/support-card-ratings';
@@ -34,7 +35,6 @@ import { SupportCardEffectData } from '../../../interfaces/support-card';
 import { SupportCardType } from '../../../interfaces/support-card-type.enum';
 import { SupportCardFilter } from '../../../interfaces/user-support-cards-data';
 import { effectMap } from '../../../maps/effect.map';
-import { DataGridStateService } from '../../../services/data-grid-state.service';
 import { ModalControlService } from '../../../services/modal-control';
 import { SkillsService } from '../../../services/skills.service';
 import { rarityLevelMap, SupportCardService } from '../../../services/support-card.service';
@@ -71,7 +71,6 @@ export class SupportCardListViewComponent {
   private destroyRef = inject(DestroyRef);
   private dialog = inject(MatDialog);
   private modalControlService = inject(ModalControlService);
-  private dataGridStateService = inject(DataGridStateService);
   private supportCardService = inject(SupportCardService);
   private skillsService = inject(SkillsService);
 
@@ -82,14 +81,17 @@ export class SupportCardListViewComponent {
   isActive = input<boolean>(false);
   pageIndex = input<number>(0);
   pageSize = input<number>(20);
+  filter = input<SupportCardFilter>();
+  sort = input<ActiveSort[]>([]);
 
   levelChangedInTab = output<{ id: number; level: number }>();
   add = output<SupportCardEffectData>();
   remove = output<SupportCardEffectData>();
   filterChanged = output<SupportCardFilter>();
   levelsChangedInFirstTab = output<DisplaySupportCard[]>();
-  pageChanged = output<number>();
-  pageSizeChanged = output<number>();
+  pageChanged = output<PageEvent>();
+  selectionChanged = output<SupportCardEffectData[]>();
+  sortChanged = output<ActiveSort[]>();
 
   dataGrid = contentChild(DataGrid<SupportCardEffectData>);
 
@@ -169,6 +171,7 @@ export class SupportCardListViewComponent {
     this.filterForm.valueChanges.pipe(
       debounceTime(300),
       tap(filterValue => {
+        console.log('Filter Form value changed:', filterValue, this.tabIndex(), this.isActive());
         if (filterValue) {
           const completeFilter: SupportCardFilter = {
             name: filterValue.name || '',
@@ -182,7 +185,9 @@ export class SupportCardListViewComponent {
             skillDesc: filterValue.skillDesc || '',
             skillTypes: filterValue.skillTypes || [],
           };
-          this.filterChanged.emit(completeFilter);
+
+            this.filterChanged.emit(completeFilter);
+
         }
       }),
       takeUntilDestroyed(this.destroyRef)
@@ -374,12 +379,21 @@ export class SupportCardListViewComponent {
       this.levelChanges.set(initialLevels);
     });
 
+    // Sync filter input to filterForm
     effect(() => {
-      const tabIndex = this.tabIndex();
-      const tabState = this.dataGridStateService.getTabState(tabIndex);
-      if (tabState.filter) {
-        this.filterForm.patchValue(tabState.filter, { emitEvent: false });
+      if (this.isActive()) {
+        const filter = this.filter();
+        console.log('Filter changed:', filter, filter?.type);
+        // if (filter) {
+        this.filterForm.patchValue(filter!, { emitEvent: true });
+        // }
       }
+    });
+
+    // Emit selection changes to parent
+    effect(() => {
+      const selectedCards = this.selectedCards();
+      this.selectionChanged.emit(selectedCards);
     });
 
     this.modalControlService.register('supportCardInfo', SupportCardInfo);
@@ -397,19 +411,43 @@ export class SupportCardListViewComponent {
   }
 
   protected resetFilters(): void {
-    this.filterForm.reset();
+    const emptyFilter: SupportCardFilter = {
+      name: '',
+      rarity: [],
+      type: [],
+      effectId: '',
+      operator: '>=',
+      value: null,
+      showUpcomingCards: false,
+      skillName: '',
+      skillDesc: '',
+      skillTypes: []
+    };
+    this.filterChanged.emit(emptyFilter);
   }
 
   protected clearNameFilter(): void {
-    this.filterForm.get('name')?.setValue('');
+    const currentFilter = this.filterForm.value as SupportCardFilter;
+    this.filterChanged.emit({
+      ...currentFilter,
+      name: ''
+    });
   }
 
   protected clearSkillNameFilter(): void {
-    this.filterForm.get('skillName')?.setValue('');
+    const currentFilter = this.filterForm.value as SupportCardFilter;
+    this.filterChanged.emit({
+      ...currentFilter,
+      skillName: ''
+    });
   }
 
   protected clearSkillDescFilter(): void {
-    this.filterForm.get('skillDesc')?.setValue('');
+    const currentFilter = this.filterForm.value as SupportCardFilter;
+    this.filterChanged.emit({
+      ...currentFilter,
+      skillDesc: ''
+    });
   }
 
   protected openImageModal(cardData: SupportCardEffectData): void {
@@ -500,6 +538,15 @@ export class SupportCardListViewComponent {
       parts.push(selectedValue);
     }
 
-    this.filterForm.get('skillName')?.setValue(parts.join('+'));
+    const currentFilter = this.filterForm.value as SupportCardFilter;
+    this.filterChanged.emit({
+      ...currentFilter,
+      skillName: parts.join('+')
+    });
+  }
+
+  onPageChanged(event: PageEvent): void {
+    console.log('Page changed', event);
+    this.pageChanged.emit(event);
   }
 }

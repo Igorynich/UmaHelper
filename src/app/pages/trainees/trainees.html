@@ -49,8 +49,7 @@
             [pageIndex]="currentPage()"
             [pageSize]="currentPageSize()"
             (add)="onAddTrainee($event)"
-            (pageChanged)="currentPage.set($event)"
-            (pageSizeChanged)="currentPageSize.set($event)">
+            (pageChanged)="onPageChanged($event)">
           </app-trainee-list-view>
         </div>
         @for (tab of hydratedTabsData(); track $index) {
@@ -86,8 +85,7 @@
               (add)="onAddTrainee($event)"
               (remove)="onRemoveTrainee($index, $event)"
               [addMenu]="addMenu"
-              (pageChanged)="currentPage.set($event)"
-              (pageSizeChanged)="currentPageSize.set($event)">
+              (pageChanged)="onPageChanged($event)">
             </app-trainee-list-view>
           </div>
         }

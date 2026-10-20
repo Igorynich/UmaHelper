@@ -4,7 +4,9 @@ import { SupportCardFilter } from '../interfaces/user-support-cards-data';
 
 export interface TabState {
   filter?: SupportCardFilter;
-  sort: ActiveSort[];
+  sort?: ActiveSort[];
+  page?: number;
+  pageSize?: number;
   selection?: CheckboxSelection;
 }
 
@@ -12,80 +14,73 @@ export interface TabState {
   providedIn: 'root'
 })
 export class DataGridStateService {
-  // Per-tab state management
-  private tabStates: Map<number, TabState> = new Map();
+  private tabStates = new Map<number, TabState>();
   private readonly DEFAULT_STATE: TabState = { sort: [] };
 
-  // Get state for specific tab
   getTabState(tabIndex: number): TabState {
-    // console.log(`tabStates for tab ${tabIndex}`, this.tabStates.get(tabIndex) || this.DEFAULT_STATE);
     return this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
   }
 
-  // Update filter for specific tab
   updateTabFilter(tabIndex: number, filter: SupportCardFilter): void {
     const currentState = this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
     this.tabStates.set(tabIndex, { ...currentState, filter });
-    // console.log(`tabStates after FILTER tab ${tabIndex} update`, new Map(this.tabStates));
   }
 
-  // Update sort for specific tab
   updateTabSort(tabIndex: number, sort: ActiveSort[]): void {
     const currentState = this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
     this.tabStates.set(tabIndex, { ...currentState, sort });
-    // console.log(`tabStates after SORT tab ${tabIndex} update`, new Map(this.tabStates));
   }
 
-  // Update selection for specific tab
+  updateTabPageData(tabIndex: number, page?: number, pageSize?: number): void {
+    const currentState = this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
+    this.tabStates.set(tabIndex, { ...currentState, page, pageSize });
+  }
+
   updateTabSelection(tabIndex: number, selection: CheckboxSelection): void {
     const currentState = this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
     this.tabStates.set(tabIndex, { ...currentState, selection });
-    // console.log(`tabStates after SELECTION tab ${tabIndex} update`, new Map(this.tabStates));
   }
 
-  // Get selection for specific tab
+  getTabData(tabIndex: number): TabState {
+    return this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
+  }
+
   getTabSelection(tabIndex: number): CheckboxSelection {
     return this.tabStates.get(tabIndex)?.selection || {};
   }
 
-  // Clear selection for specific tab
   clearTabSelection(tabIndex: number): void {
     const currentState = this.tabStates.get(tabIndex) || this.DEFAULT_STATE;
     this.tabStates.set(tabIndex, { ...currentState, selection: {} });
-    // console.log(`tabStates after CLEAR SELECTION tab ${tabIndex}`, new Map(this.tabStates));
   }
 
-  // Get selected count for specific tab
   getTabSelectedCount(tabIndex: number): number {
     const selection = this.getTabSelection(tabIndex);
     return Object.values(selection).filter(selected => selected).length;
   }
 
-
-  // Check if tab has any selections
   hasTabSelections(tabIndex: number): boolean {
     return this.getTabSelectedCount(tabIndex) > 0;
   }
 
-  // Load all tab states (for persistence)
   loadTabStates(states: Map<number, TabState>): void {
     this.tabStates = new Map(states);
-    // console.log('tabStates after LOAD', new Map(this.tabStates));
   }
 
-  // Get all tab states (for persistence)
   getAllTabStates(): Map<number, TabState> {
     return this.tabStates;
   }
 
   removeTabState(tabIndex: number): void {
     this.tabStates.delete(tabIndex);
+    const newStates = new Map<number, TabState>();
     this.tabStates.forEach((tabState, key) => {
       if (key > tabIndex) {
-        this.tabStates.set(key - 1, tabState);
-        this.tabStates.delete(key);
+        newStates.set(key - 1, tabState);
+      } else {
+        newStates.set(key, tabState);
       }
     });
-    // console.log(`tabStates after REMOVE tab ${tabIndex}`, new Map(this.tabStates));
+    this.tabStates = newStates;
   }
 }

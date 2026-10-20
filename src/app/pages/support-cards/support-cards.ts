@@ -1,27 +1,27 @@
 import {Component, computed, effect, inject, signal} from '@angular/core';
 import {rxResource, toSignal} from '@angular/core/rxjs-interop';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute, Params, Router} from '@angular/router';
+import {PageEvent} from '@angular/material/paginator';
 import {rarityLevelMap, SupportCardService} from '../../services/support-card.service';
 import {SupportCardsDataService} from '../../services/support-cards-data.service';
 import {DisplaySupportCard} from '../../interfaces/display-support-card';
 import {SupportCard, SupportCardEffectData} from '../../interfaces/support-card';
 import {SupportCardFilter} from '../../interfaces/user-support-cards-data';
-import {NgpTabset, NgpTabList, NgpTabButton, NgpTabPanel} from 'ng-primitives/tabs';
-import {
-  SupportCardListViewComponent
-} from './support-card-list-view/support-card-list-view';
+import {NgpTabButton, NgpTabList, NgpTabPanel, NgpTabset} from 'ng-primitives/tabs';
+import {SupportCardListViewComponent} from './support-card-list-view/support-card-list-view';
 import {MatIcon} from '@angular/material/icon';
 import {MatButton, MatButtonModule} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
 import {NewTabDialogComponent} from './new-tab-dialog/new-tab-dialog';
 import {filter} from 'rxjs';
 import {ConfirmationDialog} from '../../components/common/confirmation-dialog/confirmation-dialog';
-import {map} from 'rxjs/operators';
+import {tap} from 'rxjs/operators';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
-import {DataGridStateService, TabState} from '../../services/data-grid-state.service';
+import {DataGridStateService} from '../../services/data-grid-state.service';
 import {MatTooltip} from '@angular/material/tooltip';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
+import {ActiveSort} from '../../components/common/data-grid/data-grid.types';
 
 @Component({
   selector: 'app-support-cards',
@@ -39,7 +39,7 @@ import {MatProgressSpinner} from '@angular/material/progress-spinner';
     MatMenu,
     MatMenuItem,
     MatMenuTrigger,
-    MatProgressSpinner,
+    MatProgressSpinner
   ],
   templateUrl: './support-cards.html',
   styleUrl: './support-cards.css'
@@ -88,31 +88,57 @@ export class SupportCards {
 
   readonly ALL_CARDS_TAB_INDEX: number = -1;
   readonly ALL_CARDS_TAB_VALUE: string = 'all-cards';
-  protected selectedTabValue = signal(this.ALL_CARDS_TAB_VALUE);
   protected selectedCard = signal<SupportCardEffectData | null>(null);
   protected firstTabSupportCardsWithLevels = signal<DisplaySupportCard[]>([]);
-  protected currentPage = signal(0);
-  protected currentPageSize = signal(20);
+  protected currentSelectedCards = signal<SupportCardEffectData[]>([]);
 
-  private readonly queryParams = toSignal(
-    this.route.queryParamMap.pipe(
-      map(params => {
-        console.log('queryParams toSignal', params);
-        const tabValue = params.get('tabValue');
-        // if (tabValue) this.selectedTabValue.set(tabValue);
-        const page = params.get('page') ? Number(params.get('page')) - 1 : null;
-        // if (page !== null) this.currentPage.set(page - 1);
-        const pageSize = params.get('pageSize') ? Number(params.get('pageSize')) : null;
-        // if (pageSize !== null) this.currentPageSize.set(pageSize);
-        return {
-          tabValue,
-          page,
-          pageSize
-        };
-      })
-    ),
-    {initialValue: {tabValue: null, page: null, pageSize: null}}
-  );
+  // Query params as the single source of truth
+  private queryParams = toSignal(this.route.queryParams.pipe(tap(params => {
+    console.warn('Query params changed', params);
+  })), {initialValue: {} as Params});
+
+  // State computed from queryParams
+  protected selectedTabValue = computed(() => {
+    const tabValue = this.queryParams()['tabValue'] as string | undefined;
+    return tabValue || this.ALL_CARDS_TAB_VALUE;
+  });
+
+  protected currentPage = computed(() => {
+    const page = this.queryParams()['page'] as string | undefined;
+    return page ? Number(page) - 1 : 0;
+  });
+
+  protected currentPageSize = computed(() => {
+    const pageSize = this.queryParams()['pageSize'] as string | undefined;
+    return pageSize ? Number(pageSize) : 20;
+  });
+
+  protected filterParams = computed(() => {
+    const queries = this.queryParams();
+    console.log('queries filter', queries);
+    return {
+      name: queries['name'] || '',
+      rarity: queries['rarity']?.split(',').map(Number) || [],
+      type: queries['type']?.split(',') || [],
+      effectId: queries['effectId'] || '',
+      operator: queries['operator'] || '>=',
+      value: queries['value'] || null,
+      showUpcomingCards: queries['showUpcomingCards'] || false,
+      skillName: queries['skillName'] || '',
+      skillDesc: queries['skillDesc'] || '',
+      skillTypes: queries['skillTypes']?.split(',') || []
+    };
+  });
+
+  protected sortParams = computed(() => {
+    const sort = this.queryParams()['sort'] as any;
+    console.log('queries sort', sort);
+    if (!sort) return [];
+    return sort.split(',').map((s: string) => {
+      const [key, direction] = s.split(':');
+      return { key, direction };
+    });
+  });
 
   protected savedDataResource = rxResource({
     stream: () => {
@@ -121,15 +147,6 @@ export class SupportCards {
   });
 
   constructor() {
-    effect(onCleanup => {
-      console.log('selectedTabValue', this.selectedTabValue());
-    });
-    effect(onCleanup => {
-      console.log('hydratedTabsData', this.hydratedTabsData());
-    });
-    effect(onCleanup => {
-      console.log('savedDataResource', this.savedDataResource.isLoading(), this.savedDataResource.value());
-    });
 
     effect(() => {
       if (this.savedDataResource.isLoading()) {
@@ -139,87 +156,10 @@ export class SupportCards {
       if (savedData) {
         console.log('savedData', savedData);
         this.dynamicTabs.set(savedData.tabs);
-        const tabValue = savedData.selectedTabIndex !== undefined ? this.getTabValueFromIndex(savedData.selectedTabIndex) : this.ALL_CARDS_TAB_VALUE;
-        this.selectedTabValue.set(tabValue);
-
-        // Load filter and sort states into the service
-        const tabStates = new Map<number, TabState>();
-
-        // Preserve existing selection states from service
-        const existingStates = this.dataGridStateService.getAllTabStates();   // TODO rewrite to use single(current) tab state
-
-        // Add state for "All Cards" tab (this.ALL_CARDS_TAB_VALUE) - preserve existing selection or use empty
-        const existingAllCardsState = existingStates.get(this.ALL_CARDS_TAB_INDEX);
-        const allCardsTabState: TabState = {
-          sort: [],
-          selection: existingAllCardsState?.selection || {}
-        };
-        // Ignore stale allCardsSelection from Firebase - we don't persist selection anymore
-        tabStates.set(this.ALL_CARDS_TAB_INDEX, allCardsTabState);
-
-        savedData.tabs.forEach((tab, index) => {
-          const existingTabState = existingStates.get(index);
-          const tabState: TabState = {
-            sort: tab.sort || [],
-            selection: existingTabState?.selection || {} // Preserve existing selection
-          };
-          if (tab.filter) {
-            tabState.filter = tab.filter;
-          }
-          // Ignore stale tab.selection from Firebase - we don't persist selection anymore
-          tabStates.set(index, tabState);
-        });
-        this.dataGridStateService.loadTabStates(tabStates);
-
       } else {
         console.log('NO savedData');
         this.dynamicTabs.set([]);
-        const tabValue = this.ALL_CARDS_TAB_VALUE;
-        this.selectedTabValue.set(tabValue);
-
-        // Initialize service with empty states
-        const tabStates = new Map<number, TabState>();
-        // Add empty state for "All Cards" tab (this.ALL_CARDS_TAB_INDEX)
-        tabStates.set(this.ALL_CARDS_TAB_INDEX, {sort: [], selection: {}});
-        this.dataGridStateService.loadTabStates(tabStates);
-
       }
-    });
-
-    effect(() => {
-      if (this.savedDataResource.isLoading()) {
-        return;
-      }
-      if (this.queryParams().page) {
-        this.currentPage.set(this.queryParams().page || 0);
-      }
-      if (this.queryParams().pageSize) {
-        this.currentPageSize.set(this.queryParams().pageSize || 20);
-      }
-      if (this.queryParams().tabValue) {
-        this.selectedTabValue.set(this.queryParams().tabValue || this.ALL_CARDS_TAB_VALUE);
-      }
-    });
-
-    effect(() => {
-      if (this.savedDataResource.isLoading()) {
-        return;
-      }
-      const currentTabValue = this.selectedTabValue();
-      const currentPageNum = this.currentPage();
-      const currentPageSizeNum = this.currentPageSize();
-
-      const queryParams: Record<string, string | null> = {
-        tabValue: currentTabValue !== this.ALL_CARDS_TAB_VALUE ? currentTabValue : null,
-        page: currentPageNum !== 0 ? (currentPageNum + 1).toString() : null,
-        pageSize: currentPageSizeNum !== 20 ? currentPageSizeNum.toString() : null
-      };
-
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams,
-        queryParamsHandling: 'merge'
-      });
     });
   }
 
@@ -231,7 +171,7 @@ export class SupportCards {
 
   protected onTabChange(newValue: string): void {
     console.log('onTabChange', newValue);
-    this.selectedTabValue.set(newValue);
+    this.updateQueryParams({ tabValue: newValue === this.ALL_CARDS_TAB_VALUE ? null : newValue });
     this.saveData();
   }
 
@@ -258,7 +198,7 @@ export class SupportCards {
       console.log('Removing tab', index);
       const removedTabValue = this.getTabValueFromIndex(index);
       if (this.selectedTabValue() === removedTabValue) {
-        this.selectedTabValue.set(this.ALL_CARDS_TAB_VALUE);
+        this.onTabChange(this.ALL_CARDS_TAB_VALUE);
       }
       this.dynamicTabs.update(tabs => tabs.filter((_, i) => i !== index));
 
@@ -353,14 +293,101 @@ export class SupportCards {
   }
 
   protected onFilterChanged(tabIndex: number, filter: SupportCardFilter): void {
-    // Update service with filter state
+    console.log('On Filter changed:', filter, tabIndex);
     this.dataGridStateService.updateTabFilter(tabIndex, filter);
-    this.saveData();
+    this.updateFilterQueryParams(tabIndex, filter);
+  }
+
+  protected onSortChanged(tabIndex: number, sort: ActiveSort[]): void {
+    console.log('On Sort changed:', sort, tabIndex);
+    this.dataGridStateService.updateTabSort(tabIndex, sort);
+    this.updateSortQueryParams(tabIndex, sort);
+  }
+
+  protected onPageChanged(tabIndex: number, event: PageEvent): void {
+    console.log('On Page changed', event);
+    this.dataGridStateService.updateTabPageData(tabIndex, event.pageIndex, event.pageSize);
+    this.updateQueryParams({
+      page: event.pageIndex !== 0 ? event.pageIndex + 1 : null,
+      pageSize: event.pageSize !== 20 ? event.pageSize : null
+    });
+  }
+
+  protected onTabChanged(tabValue: string | undefined): void {
+    console.warn('Tab changed full map', this.dataGridStateService.getAllTabStates(), tabValue);
+    const tabData = this.dataGridStateService.getTabData(this.getTabIndexFromValue(tabValue!));
+
+    this.updateQueryParams({
+      tabValue: tabValue === this.ALL_CARDS_TAB_VALUE ? undefined : tabValue,
+      ...this.getFilterQueryParams(tabData.filter),
+      ...this.getSortQueryParams(tabData.sort || []),
+      page: tabData.page ? tabData.page + 1 : undefined,
+      pageSize: tabData.pageSize !== 20 ? tabData.pageSize : undefined
+    });
+  }
+
+  private updateQueryParams(params: Record<string, any>): void {
+    console.log('Updating queries', params);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: params,
+      queryParamsHandling: 'merge'
+    }).then(value => console.log('Queries updated', value));
+  }
+
+  private getFilterQueryParams(filter: SupportCardFilter | undefined): Params {
+    if (!filter) return {
+      name: undefined,
+      rarity: undefined,
+      type: undefined,
+      effectId: undefined,
+      operator: undefined,
+      value: undefined,
+      showUpcomingCards: undefined,
+      skillName: undefined,
+      skillDesc: undefined,
+      skillTypes: undefined
+    };
+    const hasEffectFilter = filter?.effectId && filter.value;
+    return {
+      name: filter.name || undefined,
+      rarity: filter.rarity.length > 0 ? filter.rarity.join(',') : undefined,
+      type: filter.type.length > 0 ? filter.type.join(',') : undefined,
+      showUpcomingCards: filter.showUpcomingCards || undefined,
+      effectId: hasEffectFilter ? filter.effectId : undefined,
+      operator: hasEffectFilter ? filter.operator : undefined,
+      value: hasEffectFilter ? filter.value : undefined,
+      skillName: filter.skillName || undefined,
+      skillDesc: filter.skillDesc || undefined,
+      skillTypes: filter.skillTypes.length > 0 ? filter.skillTypes.join(',') : undefined
+    };
+  }
+
+  private getSortQueryParams(sort: ActiveSort[]): Params {
+    const sortData = sort.map(s => {
+      if (s.key && s.direction) {
+        return `${s.key}:${s.direction}`;
+      }
+      return '';
+    }).join(',');
+    return {sort: sortData || undefined};
+  }
+
+  private updateFilterQueryParams(tabIndex: number, filter: SupportCardFilter): void {    // TODO remove tab index
+    console.log('Updating filter query params', tabIndex, filter);
+    const filterData = this.getFilterQueryParams(filter);
+
+    this.updateQueryParams({
+      ...filterData
+    });
+  }
+
+  private updateSortQueryParams(tabIndex: number, sort: ActiveSort[]): void {    // TODO remove tab index
+    this.updateQueryParams(this.getSortQueryParams(sort));
   }
 
   protected hasSelectedCards(): boolean {
-    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
-    return this.dataGridStateService.getTabSelectedCount(currentTabIndex) > 0;
+    return this.currentSelectedCards().length > 0;
   }
 
 
@@ -412,9 +439,6 @@ export class SupportCards {
       return newTabs;
     });
     this.saveData();
-    // Clear selection?
-    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
-    this.dataGridStateService.clearTabSelection(currentTabIndex);
   }
 
   private removeMultipleCardsFromTab(tabIndex: number, cards: SupportCardEffectData[]): void {
@@ -431,48 +455,10 @@ export class SupportCards {
     this.snackBar.open(`Removed ${cards.length} cards from tab.`, 'Dismiss', {
       duration: 3000
     });
-
-    // Clear selection after successful bulk remove
-    this.dataGridStateService.clearTabSelection(tabIndex);
   }
 
   private getSelectedCardsFromCurrentGrid(): SupportCardEffectData[] {
-    const currentTabIndex = this.getTabIndexFromValue(this.selectedTabValue());
-    const currentSelection = this.dataGridStateService.getTabSelection(currentTabIndex);
-
-    if (currentTabIndex === this.ALL_CARDS_TAB_INDEX) {
-      // All Cards tab
-      return this.firstTabSupportCardsWithLevels().filter(card =>
-        currentSelection[card.support_id.toString()]
-      ).map(card => ({
-        support_id: card.support_id,
-        char_name: card.char_name,
-        level: card.level,
-        rarity: card.rarity,
-        type: card.type,
-        characterImageUrl: this.supportCardService.getSupportCardImageUrl(card.support_id),   // TODO some sus duplicated mapping going on
-        event_skills: card.event_skills,
-        hints: card.hints,
-      } as SupportCardEffectData));
-    } else {
-      // Dynamic tab
-      const tabData = this.hydratedTabsData()[currentTabIndex];
-      if (tabData) {
-        return tabData.cards.filter(card =>
-          currentSelection[card.support_id.toString()]
-        ).map(card => ({
-          support_id: card.support_id,
-          char_name: card.char_name,
-          level: card.level,
-          rarity: card.rarity,
-          type: card.type,
-          characterImageUrl: this.supportCardService.getSupportCardImageUrl(card.support_id),      // TODO some sus duplicated mapping going on
-          event_skills: card.event_skills,
-          hints: card.hints,
-        } as SupportCardEffectData));
-      }
-    }
-    return [];
+    return this.currentSelectedCards();
   }
 
   async saveData(manualTrigger: boolean = false): Promise<void> {
@@ -484,20 +470,13 @@ export class SupportCards {
     if (this.savedDataResource.isLoading()) return;
 
     try {
-      const tabsWithFiltersAndSorts = this.dynamicTabs().map((tab, index) => {
-        // const filter = this.tabFilters().get(index);
-        const tabState = this.dataGridStateService.getTabState(index);
-        const result: any = {...tab};
-        if (tabState.filter) result.filter = tabState.filter;
-        if (tabState.sort && tabState.sort.length > 0) result.sort = tabState.sort;
-        // Intentionally exclude selection from being saved to Firebase
-        return result;
-      });
+      const tabsWithOnlyCards = this.dynamicTabs().map(tab => ({
+        ...tab
+      }));
 
       await this.supportCardsDataService.saveUserSupportCardsData({
-        tabs: tabsWithFiltersAndSorts,
+        tabs: tabsWithOnlyCards,
         selectedTabIndex: this.getTabIndexFromValue(this.selectedTabValue())
-        // Intentionally exclude allCardsSelection from being saved to Firebase
       });
     } catch (error) {
       console.error('Failed to save support cards data:', error);
@@ -520,9 +499,5 @@ export class SupportCards {
     if (value === this.ALL_CARDS_TAB_VALUE) return this.ALL_CARDS_TAB_INDEX;
     const match = value.match(/^tab-(\d+)$/);
     return match ? parseInt(match[1], 10) : this.ALL_CARDS_TAB_INDEX;
-  }
-
-  protected setSelectedTabValue(value: string | undefined) {
-    this.selectedTabValue.set(value ?? this.ALL_CARDS_TAB_VALUE);
   }
 }

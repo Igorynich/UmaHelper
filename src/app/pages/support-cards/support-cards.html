@@ -7,7 +7,7 @@
     <h2>Support Cards</h2>
 
     <div class="tab-container">
-      <div ngpTabset class="tab-group" [(ngpTabsetValue)]="selectedTabValue">
+      <div ngpTabset class="tab-group" [ngpTabsetValue]="selectedTabValue()" (ngpTabsetValueChange)="onTabChanged($event)">
         <div ngpTabList class="tab-list">
           <button ngpTabButton [ngpTabButtonValue]="'all-cards'" class="tab-button">All Cards</button>
           @for (tab of hydratedTabsData(); track $index) {
@@ -49,10 +49,13 @@
             [isActive]="selectedTabValue() === 'all-cards'"
             [pageIndex]="currentPage()"
             [pageSize]="currentPageSize()"
+            [filter]="filterParams()"
+            [sort]="sortParams()"
             (filterChanged)="onFilterChanged(ALL_CARDS_TAB_INDEX, $event)"
+            (sortChanged)="onSortChanged(ALL_CARDS_TAB_INDEX, $event)"
             (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
-            (pageChanged)="currentPage.set($event)"
-            (pageSizeChanged)="currentPageSize.set($event)"
+            (pageChanged)="onPageChanged(ALL_CARDS_TAB_INDEX, $event)"
+            (selectionChanged)="currentSelectedCards.set($event)"
           >
           </app-support-card-list-view>
         </div>
@@ -86,13 +89,16 @@
               [isActive]="selectedTabValue() === getTabValueFromIndex($index)"
               [pageIndex]="currentPage()"
               [pageSize]="currentPageSize()"
+              [filter]="filterParams()"
+              [sort]="sortParams()"
               (levelChangedInTab)="onLevelChangedInDynamicTab($index, $event)"
               (add)="onAddCard($event)"
               (remove)="onRemoveCard($index, $event)"
               (filterChanged)="onFilterChanged($index, $event)"
+              (sortChanged)="onSortChanged($index, $event)"
               (levelsChangedInFirstTab)="onSupportCardsWithLevelsChanged($event)"
-              (pageChanged)="currentPage.set($event)"
-              (pageSizeChanged)="currentPageSize.set($event)"
+              (pageChanged)="onPageChanged($index, $event)"
+              (selectionChanged)="currentSelectedCards.set($event)"
               [addMenu]="addMenu">
             </app-support-card-list-view>
           </div>
