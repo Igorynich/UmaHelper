@@ -84,6 +84,11 @@ export const STATUS_EFFECTS: Record<number, StatusEffect> = {
     name: 'Idol\'s Promise (Kawasaki)',
     desc: 'Win a race held at the Kawasaki racetrack to gain 10 Power and Wisdom, 1 Mood level, 10 Skill Points, and a level 5 hint for the respective racetrack green skill'
   },
+  // Zenno Rob Roy
+  23: {
+    name: 'Hero\'s Brilliance',
+    desc: 'Head into the race for the final crown exuding the unmistakable determination of a true hero Temporarily raises all stats by ~350 for the duration of the Senior year Arima Kinen only.'
+  },
   100: {
     name: 'Pure Passion: Team Sirius',
     desc: 'Able to do Friendship Training with Team Sirius, and immune to Night Owl and Slacker'
