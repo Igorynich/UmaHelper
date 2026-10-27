@@ -1,4 +1,4 @@
-import {Component, inject, computed, signal, WritableSignal} from '@angular/core';
+import {Component, inject, computed, signal, WritableSignal, ChangeDetectionStrategy} from '@angular/core';
 
 import {MatCardModule} from '@angular/material/card';
 import {MatButtonModule} from '@angular/material/button';
@@ -33,6 +33,7 @@ import {MatTooltip} from '@angular/material/tooltip';
   standalone: true,
   imports: [MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, MatProgressSpinner, MatTooltip],
   templateUrl: './admin.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./admin.css']
 })
 export class AdminComponent {

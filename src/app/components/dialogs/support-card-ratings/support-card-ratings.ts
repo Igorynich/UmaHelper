@@ -1,4 +1,4 @@
-import {Component, computed, effect, inject, Signal, signal} from '@angular/core';
+import {Component, computed, effect, inject, Signal, signal, ChangeDetectionStrategy} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {MatButtonModule} from '@angular/material/button';
 import {DataGrid} from '../../common/data-grid/data-grid';
@@ -31,6 +31,7 @@ interface RatingsDialogData {
     MatOption,
   ],
   templateUrl: './support-card-ratings.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './support-card-ratings.css'
 })
 export class SupportCardRatings {

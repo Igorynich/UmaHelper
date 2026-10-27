@@ -1,4 +1,4 @@
-import {Component, computed, effect, inject, signal, Signal, WritableSignal} from '@angular/core';
+import {Component, computed, effect, inject, signal, Signal, WritableSignal, ChangeDetectionStrategy} from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import {DisplaySupportCard, Rarity} from '../../../interfaces/display-support-card';
@@ -38,6 +38,7 @@ export interface SupportCardInfoDialogData {
   standalone: true,
   imports: [MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule, TrainingEventsComponent, IKImageDirective],
   templateUrl: './support-card-info.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './support-card-info.css'
 })
 export class SupportCardInfo {

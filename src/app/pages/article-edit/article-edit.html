@@ -20,7 +20,7 @@
 
     <div class="actions">
       <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
-      <a mat-button [routerLink]="article() ? ['/news', article()?.id] : '/news'">Cancel</a>
+      <a mat-button [routerLink]="article() ? ['/news', $safeNavigationMigration(article()?.id)] : '/news'">Cancel</a>
     </div>
   </form>
 </div>

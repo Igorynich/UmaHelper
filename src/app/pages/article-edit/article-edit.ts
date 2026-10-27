@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NewsService } from '../../services/news.service';
 import { Article } from '../../interfaces/article';
@@ -25,6 +25,7 @@ import {Editor, NgxEditorComponent, NgxEditorMenuComponent, Toolbar} from '@feat
     NgxEditorComponent
 ],
   templateUrl: './article-edit.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./article-edit.css']
 })
 export class ArticleEditComponent implements OnDestroy {

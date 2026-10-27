@@ -75,7 +75,7 @@
                 @for (effect of asEffects(item.value); track effect) {
                   <span [innerHTML]="effect | skillFieldTranslator:item.key:data.skill"></span>
                   @let hasSpecialScaling = !!effect.value_scale;
-                  @let scalingEffect = SPECIAL_CONDITIONS_SKILLS.scalingEffects[data.skill.id]?.[effect.type];
+                  @let scalingEffect = $safeNavigationMigration(SPECIAL_CONDITIONS_SKILLS.scalingEffects[data.skill.id]?.[effect.type]);
                   @let isBaseValuesMatch =  scalingEffect?.baseValue ? scalingEffect?.baseValue === effect.value : true;
                   @if (scalingEffect && isBaseValuesMatch) {
                     <span class="hover"

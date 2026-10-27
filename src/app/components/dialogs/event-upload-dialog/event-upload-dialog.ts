@@ -1,4 +1,4 @@
-import {Component, computed, inject, signal, WritableSignal} from '@angular/core';
+import {Component, computed, inject, signal, WritableSignal, ChangeDetectionStrategy} from '@angular/core';
 
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -29,6 +29,7 @@ import {cleanNestedArrays} from '../../../utils/helpers';
     MatProgressSpinnerModule
 ],
   templateUrl: './event-upload-dialog.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./event-upload-dialog.css'],
 })
 export class EventUploadDialog {

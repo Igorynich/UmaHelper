@@ -1,6 +1,6 @@
 import {MatSelectModule} from '@angular/material/select';
 import {MatOptionModule} from '@angular/material/core';
-import {Component, computed, effect, inject, signal} from '@angular/core';
+import {Component, computed, effect, inject, signal, ChangeDetectionStrategy} from '@angular/core';
 import {MatCardModule} from '@angular/material/card';
 import {SkillsService} from '../../services/skills.service';
 import {Skill, SkillEffect} from '../../interfaces/skill';
@@ -39,6 +39,7 @@ import {ActivatedRoute, Router, Params} from '@angular/router';
     MatTooltip
 ],
   templateUrl: './skills.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './skills.css',
 })
 export class SkillsComponent {

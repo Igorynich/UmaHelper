@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 
@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
   standalone: true,
   imports: [MatCardModule],
   templateUrl: './conditions.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './conditions.css',
 })
 export class ConditionsComponent {}

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 
 import { RouterModule } from '@angular/router';
@@ -7,6 +7,7 @@ import { RouterModule } from '@angular/router';
   selector: 'app-useful-info',
   imports: [MatCardModule, RouterModule],
   templateUrl: './useful-info.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './useful-info.css'
 })
 export class UsefulInfo {

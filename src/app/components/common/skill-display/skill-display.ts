@@ -1,4 +1,4 @@
-import { Component, inject, computed, input, booleanAttribute } from '@angular/core';
+import { Component, inject, computed, input, booleanAttribute, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +25,7 @@ export enum SkillDisplayMode {
   standalone: true,
   imports: [MatCardModule, MatIconModule, MatIconButton, MatTooltip, IKImageDirective],
   templateUrl: './skill-display.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./skill-display.css']
 })
 export class SkillDisplay {

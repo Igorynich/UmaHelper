@@ -1,4 +1,4 @@
-import {Component, inject, computed, input, ResourceRef} from '@angular/core';
+import {Component, inject, computed, input, ResourceRef, ChangeDetectionStrategy} from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -22,6 +22,7 @@ export type EntityType = 'trainee' | 'support-card' | 'race' | 'status-effect';
   standalone: true,
   imports: [MatCardModule, MatTooltip, IKImageDirective],
   templateUrl: './entity-display.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './entity-display.css'
 })
 export class EntityDisplay {

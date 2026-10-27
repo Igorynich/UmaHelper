@@ -1,4 +1,4 @@
-import {Component, computed, effect, inject, signal} from '@angular/core';
+import {Component, computed, effect, inject, signal, ChangeDetectionStrategy} from '@angular/core';
 import {rxResource, toSignal} from '@angular/core/rxjs-interop';
 import {ActivatedRoute, Params, Router} from '@angular/router';
 import {PageEvent} from '@angular/material/paginator';
@@ -42,6 +42,7 @@ import {ActiveSort} from '../../components/common/data-grid/data-grid.types';
     MatProgressSpinner
   ],
   templateUrl: './support-cards.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './support-cards.css'
 })
 export class SupportCards {

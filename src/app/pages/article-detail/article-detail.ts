@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NewsService } from '../../services/news.service';
 import { MatCardModule } from '@angular/material/card';
@@ -15,6 +15,7 @@ import {of} from 'rxjs';
   standalone: true,
   imports: [RouterLink, MatCardModule, MatButtonModule, CommonModule],
   templateUrl: './article-detail.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./article-detail.css']
 })
 export class ArticleDetailComponent {

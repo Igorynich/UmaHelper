@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {Component, computed, inject} from '@angular/core';
+import {Component, computed, inject, ChangeDetectionStrategy} from '@angular/core';
 import {
   MAT_DIALOG_DATA,
   MatDialogContent, MatDialogRef,
@@ -61,6 +61,7 @@ export interface SpecialConditionSkills {
     IKImageDirective
   ],
   templateUrl: './skill-dialog.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './skill-dialog.css',
 })
 export class SkillDialogComponent {
