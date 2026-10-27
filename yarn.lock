@@ -1612,19 +1612,6 @@
   resolved "https://registry.yarnpkg.com/@hono/node-server/-/node-server-2.1.5.tgz#273db93e8bfb44ef361e55f3d00048013668aa09"
   integrity sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q==
 
-"@imagekit/angular@^6.0.1":
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/@imagekit/angular/-/angular-6.0.1.tgz#34eff82f8f026558cd0cc9ce767763fd53e2d86f"
-  integrity sha512-uOHuaLlFOn+9oSAbViRJguBTtwah+lizbKMXLBLaNeEbnTpiU3rOTlNCON+VK7k7ANoX+0bdCOzJw249cIlfXQ==
-  dependencies:
-    "@imagekit/javascript" "^5.5.0"
-    tslib "^2.3.0"
-
-"@imagekit/javascript@^5.5.0":
-  version "5.5.1"
-  resolved "https://registry.yarnpkg.com/@imagekit/javascript/-/javascript-5.5.1.tgz#47703888b28d208543b3a75efdba7babe1a7b57a"
-  integrity sha512-eGEbZGKCqX/rC1iwceb1pLg5oHJhGkH68+i6JhFFSDktrdCMC/475a5R0Obtnk6IbIc4eV+1vynkK4WZFeLWEQ==
-
 "@inquirer/ansi@^1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@inquirer/ansi/-/ansi-1.0.2.tgz#674a4c4d81ad460695cb2a1fc69d78cd187f337e"

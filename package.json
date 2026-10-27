@@ -38,7 +38,6 @@
     "@casl/angular": "^9.0.4",
     "@feature23/ngx-editor": "20.0.0",
     "@floating-ui/dom": "^1.6.0",
-    "@imagekit/angular": "^6.0.1",
     "firebase": "^11.10.0",
     "ng-primitives": "^0.120.5",
     "rxjs": "~7.8.0",
