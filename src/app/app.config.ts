@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, isDevMode } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
@@ -14,8 +14,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { routes } from './app.routes';
 import { FIREBASE_CONFIG } from './firebase.config';
 import { IMAGEKIT_CONFIG } from './imagekit.config';
-import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
+import { provideServiceWorker } from '@angular/service-worker';
+import {provideImageKit} from '@imagekit/angular';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -34,7 +35,11 @@ export const appConfig: ApplicationConfig = {
       MatDialogModule,
       MatSnackBarModule,
       MatIconModule,
-      ImagekitioAngularModule.forRoot(IMAGEKIT_CONFIG)
-    )
+    ),
+    provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          }),
+    provideImageKit(IMAGEKIT_CONFIG)
   ]
 };

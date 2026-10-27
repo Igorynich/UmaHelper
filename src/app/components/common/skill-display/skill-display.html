@@ -4,8 +4,7 @@
     @case (SkillDisplayMode.Full) {
       <mat-card [class]="rarityClass()">
         <div class="skill-icon-wrapper">
-          <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
-          </ik-image>
+          <img [ikSrc]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
         </div>
         <div class="skill-info">
           <div class="skill-name">{{ skill.name_en }}</div>
@@ -23,8 +22,7 @@
     }
     @case (SkillDisplayMode.Icon) {
       <div class="skill-icon-wrapper__icon-mode" (click)="openSkillDialog(skill, skillMap)" [matTooltip]="skill.name_en">
-        <ik-image [path]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
-        </ik-image>
+        <img [ikSrc]="'/skills/' + skill.iconid + '.png'" [transformation]="[{'height': '40', 'width': '40'}]">
       </div>
     }
   }

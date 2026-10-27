@@ -401,7 +401,7 @@
   top: 0;
 }
 
-.mini-left ik-image {
+.mini-left img {
   width: 100%;
   border-radius: 8px;
   overflow: hidden;
@@ -450,7 +450,7 @@
   text-align: right;
 }
 
-::ng-deep .mini-left ik-image img {
+::ng-deep .mini-left img {
   width: 100% !important;
   height: auto !important;
   max-height: 220px !important; /* Увеличили лимит высоты */

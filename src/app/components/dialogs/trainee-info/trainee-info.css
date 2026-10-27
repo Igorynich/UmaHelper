@@ -197,7 +197,7 @@
   gap: 0.75rem;
 }
 
-::ng-deep .mini-left ik-image img {
+::ng-deep .mini-left img {
   width: 100% !important;
   height: auto !important;
   border-radius: 12px;

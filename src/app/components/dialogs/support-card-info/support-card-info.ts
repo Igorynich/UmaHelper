@@ -8,7 +8,6 @@ import { take } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import {SkillDisplay, SkillDisplayMode} from '../../common/skill-display/skill-display';
 import {MatCard} from '@angular/material/card';
-import {EventsService} from '../../../services/events.service';
 import {TrainingEventsComponent} from '../../common/training-events/training-events';
 import {
   SupportCardEffectData,
@@ -23,11 +22,11 @@ import {MatIconButton} from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
-import {effectTypeMap} from '../../../maps/skill-effect.map'; // New import
+import {effectTypeMap} from '../../../maps/skill-effect.map';
 import { EffectValuePipe } from '../../../pipes/effect-value.pipe';
 import {RatingsService} from '../../../services/ratings.service';
 import { getEffectValueFn } from '../../../utils/effect-data-utils';
-import {ImagekitioAngularModule} from 'imagekitio-angular';
+import {IKImageDirective} from '@imagekit/angular';
 
 export interface SupportCardInfoDialogData {
   mode?: 'full' | 'mini';
@@ -37,7 +36,7 @@ export interface SupportCardInfoDialogData {
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule, ImagekitioAngularModule, TrainingEventsComponent],
+  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule, TrainingEventsComponent, IKImageDirective],
   templateUrl: './support-card-info.html',
   styleUrl: './support-card-info.css'
 })

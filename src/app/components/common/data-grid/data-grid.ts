@@ -29,11 +29,8 @@ import {
 } from './data-grid.types';
 import {EffectValuePipe} from '../../../pipes/effect-value.pipe';
 import { SkillDisplay, SkillDisplayMode } from '../skill-display/skill-display';
-import { RarityStarsPipe } from '../../../pipes/rarity-stars.pipe';
-import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {SnakeToTitlePipe} from '../../../pipes/snake-to-title.pipe';
-
-
+import {IKImageDirective} from '@imagekit/angular';
 
 @Component({
   selector: 'app-data-grid',
@@ -53,8 +50,8 @@ import {SnakeToTitlePipe} from '../../../pipes/snake-to-title.pipe';
     RarityClassPipe,
     EffectValuePipe,
     SkillDisplay,
-    ImagekitioAngularModule,
-    SnakeToTitlePipe
+    SnakeToTitlePipe,
+    IKImageDirective
   ],
   templateUrl: './data-grid.html',
   styleUrl: './data-grid.css',

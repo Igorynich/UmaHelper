@@ -6,7 +6,6 @@ import {MatCardModule} from '@angular/material/card';
 import {SkillsService} from '../../services/skills.service';
 import {Skill, SkillEffect} from '../../interfaces/skill';
 import {debounceTime, distinctUntilChanged, map} from 'rxjs';
-import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {MatIconModule} from '@angular/material/icon';
 import {MatIconButton} from '@angular/material/button';
 import {SpinnerService} from '../../services/spinner';
@@ -30,7 +29,6 @@ import {ActivatedRoute, Router, Params} from '@angular/router';
   imports: [
     CommonModule,
     MatCardModule,
-    ImagekitioAngularModule,
     MatIconModule,
     MatIconButton,
     ReactiveFormsModule,

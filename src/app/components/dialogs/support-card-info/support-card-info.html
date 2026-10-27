@@ -11,7 +11,7 @@
   </div>
   <mat-dialog-content class="dialog-content-wrapper">
     <div class="image-section">
-      <ik-image [path]=processedCardData().characterImageUrl [attr.alt]="rawCardData().char_name"></ik-image>
+      <img [ikSrc]=processedCardData().characterImageUrl [attr.alt]="rawCardData().char_name">
 
       <app-level
         [minLevel]="1"
@@ -116,7 +116,7 @@
   <mat-dialog-content class="dialog-content-wrapper dialog-content-wrapper-mini">
     <div class="mini-layout">
       <div class="mini-left">
-        <ik-image [path]=processedCardData().characterImageUrl [attr.alt]="rawCardData().char_name" [transformation]="[{height: 250, width: 180}]"></ik-image>
+        <img [ikSrc]=processedCardData().characterImageUrl [attr.alt]="rawCardData().char_name" [transformation]="[{height: 250, width: 180}]">
 
         @if (processedCardData().uniqueDisplayData; as uniqueData) {
           <div class="unique-effects-section mini-unique-section" [class.locked-unique-effect]="uniqueData.isCardUniqueLocked">

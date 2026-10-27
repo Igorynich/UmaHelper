@@ -5,7 +5,6 @@ import {
   MatDialogContent, MatDialogRef,
   MatDialogTitle
 } from '@angular/material/dialog';
-import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {Effect, Skill, SkillEffect} from '../../../interfaces/skill';
 import {SkillFieldTranslatorPipe} from '../../../pipes/skill-field-translator.pipe';
 import {SkillKeyTranslatorPipe} from '../../../pipes/skill-key-translator.pipe';
@@ -22,6 +21,7 @@ import {ModalControlService} from '../../../services/modal-control';
 import {MatIcon} from '@angular/material/icon';
 import {MatIconButton} from '@angular/material/button';
 import {NgpTooltip, NgpTooltipTrigger} from 'ng-primitives/tooltip';
+import {IKImageDirective} from '@imagekit/angular';
 
 export interface SkillDialogData {
   skill: Skill;
@@ -49,7 +49,6 @@ export interface SpecialConditionSkills {
   standalone: true,
   imports: [
     CommonModule,
-    ImagekitioAngularModule,
     MatDialogContent,
     MatDialogTitle,
     SkillFieldTranslatorPipe,
@@ -58,7 +57,8 @@ export interface SpecialConditionSkills {
     MatIcon,
     MatIconButton,
     NgpTooltipTrigger,
-    NgpTooltip
+    NgpTooltip,
+    IKImageDirective
   ],
   templateUrl: './skill-dialog.html',
   styleUrl: './skill-dialog.css',

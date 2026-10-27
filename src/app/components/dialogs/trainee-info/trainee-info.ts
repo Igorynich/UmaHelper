@@ -10,7 +10,6 @@ import {of} from 'rxjs';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
-import { ImagekitioAngularModule } from 'imagekitio-angular';
 import {Rarity} from '../../../interfaces/display-support-card';
 import {MatTableModule} from '@angular/material/table';
 import {MatTooltip} from '@angular/material/tooltip';
@@ -21,6 +20,7 @@ import { TrainingEventsComponent } from '../../common/training-events/training-e
 import {Trainee} from '../../../interfaces/trainee';
 import {TraineeService} from '../../../services/trainee.service';
 import {SnakeToTitlePipe} from '../../../pipes/snake-to-title.pipe';
+import {IKImageDirective} from '@imagekit/angular';
 
 export interface TraineeInfoDialogData {
   mode?: 'full' | 'mini';
@@ -30,7 +30,7 @@ export interface TraineeInfoDialogData {
 @Component({
   selector: 'app-trainee-info',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ImagekitioAngularModule, MatDialogModule, MatIconButton, MatIconModule, MatTableModule, MatTooltip, SkillDisplay, TrainingEventsComponent, DatePipe, SnakeToTitlePipe],
+  imports: [MatDialogModule, MatIconButton, MatIconModule, MatTableModule, MatTooltip, SkillDisplay, TrainingEventsComponent, DatePipe, SnakeToTitlePipe, IKImageDirective],
   templateUrl: './trainee-info.html',
   styleUrl: './trainee-info.css'
 })

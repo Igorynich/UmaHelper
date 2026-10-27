@@ -4,12 +4,11 @@
   } @else {
     <div class="entity-image-container">
       @if (displayImage()) {
-        <ik-image
-          [path]="displayImage()!"
+        <img
+          [ikSrc]="displayImage()!"
           [transformation]="[{'height': '40'}]"
           [attr.alt]="displayName()"
           [matTooltip]="displayName()">
-        </ik-image>
       }
     </div>
   }
@@ -19,12 +18,11 @@
   } @else {
     <div class="entity-image-container">
       @if (displayImage()) {
-        <ik-image
-          [path]="displayImage()!"
+        <img
+          [ikSrc]="displayImage()!"
           [transformation]="[{'height': '40'}]"
           [attr.alt]="displayName()"
           [matTooltip]="displayName()">
-        </ik-image>
       }
     </div>
   }

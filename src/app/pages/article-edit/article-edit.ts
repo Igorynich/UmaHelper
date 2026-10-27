@@ -1,17 +1,16 @@
 import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Editor, Toolbar } from 'ngx-editor';
 import { NewsService } from '../../services/news.service';
 import { Article } from '../../interfaces/article';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
-import { NgxEditorModule } from 'ngx-editor';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../../services/auth.service';
 import { AbilityService } from '../../services/ability.service';
+import {Editor, NgxEditorComponent, NgxEditorMenuComponent, Toolbar} from '@feature23/ngx-editor';
 
 @Component({
   selector: 'app-article-edit',
@@ -21,10 +20,11 @@ import { AbilityService } from '../../services/ability.service';
     MatCardModule,
     MatButtonModule,
     CommonModule,
-    NgxEditorModule,
     ReactiveFormsModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    NgxEditorMenuComponent,
+    NgxEditorComponent
   ],
   templateUrl: './article-edit.html',
   styleUrls: ['./article-edit.css']

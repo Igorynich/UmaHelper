@@ -12,7 +12,6 @@ import {Skill} from '../../interfaces/skill';
 import {SupportCard} from '../../interfaces/support-card';
 import {SkillSchema} from '../../interfaces/skill.schema';
 import {SupportCardSchema} from '../../interfaces/support-card.schema';
-import {ImagekitioAngularModule} from 'imagekitio-angular';
 import {EventUploadDialog} from '../../components/dialogs/event-upload-dialog/event-upload-dialog';
 import {TraineeSchema} from '../../interfaces/trainee.schema';
 import {Trainee} from '../../interfaces/trainee';
@@ -32,7 +31,7 @@ import {MatTooltip} from '@angular/material/tooltip';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, ImagekitioAngularModule, MatProgressSpinner, MatTooltip],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, MatProgressSpinner, MatTooltip],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })

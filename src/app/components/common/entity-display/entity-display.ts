@@ -1,7 +1,6 @@
 import {Component, inject, computed, input, ResourceRef} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { ImagekitioAngularModule } from 'imagekitio-angular';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Trainee } from '../../../interfaces/trainee';
 import { SupportCard } from '../../../interfaces/support-card';
@@ -13,6 +12,7 @@ import {RACES} from '../../../interfaces/races';
 import {Race} from '../../../interfaces/race';
 import {YEAR} from '../../../interfaces/year';
 import {STATUS_EFFECTS, StatusEffect} from '../../../interfaces/status-effects';
+import {IKImageDirective} from '@imagekit/angular';
 
 export type DisplayMode = 'text' | 'img';
 export type EntityType = 'trainee' | 'support-card' | 'race' | 'status-effect';
@@ -20,7 +20,7 @@ export type EntityType = 'trainee' | 'support-card' | 'race' | 'status-effect';
 @Component({
   selector: 'app-entity-display',
   standalone: true,
-  imports: [CommonModule, MatCardModule, ImagekitioAngularModule, MatTooltip],
+  imports: [CommonModule, MatCardModule, MatTooltip, IKImageDirective],
   templateUrl: './entity-display.html',
   styleUrl: './entity-display.css'
 })

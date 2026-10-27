@@ -16,7 +16,7 @@
   <mat-dialog-content class="dialog-content-wrapper">
     <div class="left-section">
       <div class="image-section">
-        <ik-image [path]="imageUrl()" [attr.alt]="title()" [transformation]="[{'width': '400'}]"></ik-image>
+        <img [ikSrc]="imageUrl()" [alt]="title()" [transformation]="[{'width': '400'}]">
       </div>
 
       @if (trainee().itemData.release_en) {
@@ -163,7 +163,7 @@
   <mat-dialog-content class="dialog-content-wrapper dialog-content-wrapper-mini">
     <div class="mini-layout">
       <div class="mini-left">
-        <ik-image [path]="imageUrl()" [attr.alt]="title()" [transformation]="[{'width': '180', 'height': '250'}]"></ik-image>
+        <img [ikSrc]="imageUrl()" [attr.alt]="title()" [transformation]="[{'width': '180', 'height': '250'}]">
 
         <div class="mini-skills-section unique-skills-bottom">
           <h4>Unique</h4>

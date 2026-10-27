@@ -1,6 +1,6 @@
 <div mat-dialog-title class="skill-dialog-header">
-  <ik-image [path]="'/skills/' + data.skill.iconid + '.png'"
-            [transformation]="[{'height': '40', 'width': '40'}]"></ik-image>
+  <img [ikSrc]="'/skills/' + data.skill.iconid + '.png'"
+            [transformation]="[{'height': '40', 'width': '40'}]">
   <h2>{{ data.skill.name_en }}</h2>
   <button mat-icon-button (click)="close()" class="close-button" tabindex="-1">
     <mat-icon>close</mat-icon>

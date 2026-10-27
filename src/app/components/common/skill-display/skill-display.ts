@@ -2,7 +2,6 @@ import { Component, inject, computed, input, booleanAttribute } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { ImagekitioAngularModule } from 'imagekitio-angular';
 import { Skill, Rarity } from '../../../interfaces/skill';
 import { MatDialog } from '@angular/material/dialog';
 import { SkillDialogComponent } from '../skill-dialog/skill-dialog';
@@ -13,6 +12,7 @@ import {forkJoin, of} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {SkillMap} from '../../../interfaces/skill-map';
 import {MatTooltip} from '@angular/material/tooltip';
+import {IKImageDirective} from '@imagekit/angular';
 
 export enum SkillDisplayMode {
   Full = 'full',
@@ -23,7 +23,7 @@ export enum SkillDisplayMode {
 @Component({
   selector: 'app-skill-display',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, ImagekitioAngularModule, MatIconButton, MatTooltip],
+  imports: [CommonModule, MatCardModule, MatIconModule, MatIconButton, MatTooltip, IKImageDirective],
   templateUrl: './skill-display.html',
   styleUrls: ['./skill-display.css']
 })
