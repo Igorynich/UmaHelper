@@ -4,7 +4,7 @@ import { NewsService } from '../../services/news.service';
 import { TweetArticle } from '../../interfaces/tweet-article';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
+
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -22,11 +22,10 @@ const TWEET_AUTHOR_ID = 'umamusume_eng';
     RouterLink,
     MatCardModule,
     MatButtonModule,
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule
-  ],
+],
   templateUrl: './tweet-article-form.html',
   styleUrls: ['./tweet-article-form.scss']
 })

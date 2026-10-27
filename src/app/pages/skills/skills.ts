@@ -1,7 +1,6 @@
 import {MatSelectModule} from '@angular/material/select';
 import {MatOptionModule} from '@angular/material/core';
 import {Component, computed, effect, inject, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {MatCardModule} from '@angular/material/card';
 import {SkillsService} from '../../services/skills.service';
 import {Skill, SkillEffect} from '../../interfaces/skill';
@@ -27,7 +26,6 @@ import {ActivatedRoute, Router, Params} from '@angular/router';
   selector: 'app-skills',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatIconModule,
     MatIconButton,
@@ -38,8 +36,8 @@ import {ActivatedRoute, Router, Params} from '@angular/router';
     MatSelectModule,
     MatOptionModule,
     SkillDisplay,
-    MatTooltip,
-  ],
+    MatTooltip
+],
   templateUrl: './skills.html',
   styleUrl: './skills.css',
 })

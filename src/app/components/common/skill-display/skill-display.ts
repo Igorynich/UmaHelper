@@ -1,5 +1,5 @@
 import { Component, inject, computed, input, booleanAttribute } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { Skill, Rarity } from '../../../interfaces/skill';
@@ -23,7 +23,7 @@ export enum SkillDisplayMode {
 @Component({
   selector: 'app-skill-display',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatIconButton, MatTooltip, IKImageDirective],
+  imports: [MatCardModule, MatIconModule, MatIconButton, MatTooltip, IKImageDirective],
   templateUrl: './skill-display.html',
   styleUrls: ['./skill-display.css']
 })

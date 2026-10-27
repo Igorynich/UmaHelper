@@ -1,5 +1,5 @@
 import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { NgpDialogManager, NgpDialogConfig } from 'ng-primitives/dialog';
 import { LightboxContent } from './lightbox-content';
 
@@ -7,9 +7,7 @@ import { LightboxContent } from './lightbox-content';
   selector: 'app-lightbox',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule
-  ],
+  imports: [],
   templateUrl: './lightbox.html',
   styleUrls: ['./lightbox.scss']
 })

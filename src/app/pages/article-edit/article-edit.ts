@@ -4,7 +4,6 @@ import { NewsService } from '../../services/news.service';
 import { Article } from '../../interfaces/article';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,13 +18,12 @@ import {Editor, NgxEditorComponent, NgxEditorMenuComponent, Toolbar} from '@feat
     RouterLink,
     MatCardModule,
     MatButtonModule,
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     NgxEditorMenuComponent,
     NgxEditorComponent
-  ],
+],
   templateUrl: './article-edit.html',
   styleUrls: ['./article-edit.css']
 })

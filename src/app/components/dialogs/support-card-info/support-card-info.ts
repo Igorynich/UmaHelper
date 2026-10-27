@@ -5,7 +5,7 @@ import {DisplaySupportCard, Rarity} from '../../../interfaces/display-support-ca
 import { SkillsService } from '../../../services/skills.service';
 import { Skill } from '../../../interfaces/skill';
 import { take } from 'rxjs';
-import { CommonModule } from '@angular/common';
+
 import {SkillDisplay, SkillDisplayMode} from '../../common/skill-display/skill-display';
 import {MatCard} from '@angular/material/card';
 import {TrainingEventsComponent} from '../../common/training-events/training-events';
@@ -36,7 +36,7 @@ export interface SupportCardInfoDialogData {
 @Component({
   selector: 'app-support-card-info',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule, TrainingEventsComponent, IKImageDirective],
+  imports: [MatDialogModule, MatIconModule, SkillDisplay, MatCard, Level, EffectIdTranslatorPipe, EffectValuePipe, MatIconButton, MatTooltipModule, MatExpansionModule, MatCheckboxModule, TrainingEventsComponent, IKImageDirective],
   templateUrl: './support-card-info.html',
   styleUrl: './support-card-info.css'
 })

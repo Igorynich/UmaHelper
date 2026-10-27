@@ -1,5 +1,5 @@
 import {Component, computed, inject, signal, WritableSignal} from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -21,14 +21,13 @@ import {cleanNestedArrays} from '../../../utils/helpers';
   selector: 'app-event-upload-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     FormsModule,
     MatProgressSpinnerModule
-  ],
+],
   templateUrl: './event-upload-dialog.html',
   styleUrls: ['./event-upload-dialog.css'],
 })

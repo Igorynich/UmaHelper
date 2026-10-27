@@ -9,7 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { filter, map, mergeMap } from 'rxjs';
 
 import { AbilityService } from '../../../services/ability.service';
-import { NgIf } from '@angular/common';
+
 
 interface Chibi {
   x: number;

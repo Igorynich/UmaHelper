@@ -1,5 +1,5 @@
 import {Component, inject, computed, input, ResourceRef} from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Trainee } from '../../../interfaces/trainee';
@@ -20,7 +20,7 @@ export type EntityType = 'trainee' | 'support-card' | 'race' | 'status-effect';
 @Component({
   selector: 'app-entity-display',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatTooltip, IKImageDirective],
+  imports: [MatCardModule, MatTooltip, IKImageDirective],
   templateUrl: './entity-display.html',
   styleUrl: './entity-display.css'
 })

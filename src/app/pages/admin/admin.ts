@@ -1,5 +1,5 @@
 import {Component, inject, computed, signal, WritableSignal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {MatCardModule} from '@angular/material/card';
 import {MatButtonModule} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
@@ -31,7 +31,7 @@ import {MatTooltip} from '@angular/material/tooltip';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, MatProgressSpinner, MatTooltip],
+  imports: [MatCardModule, MatButtonModule, MatProgressBarModule, MatIconModule, MatProgressSpinner, MatTooltip],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
