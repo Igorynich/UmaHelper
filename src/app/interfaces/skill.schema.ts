@@ -35,4 +35,5 @@ export const SkillSchema = z.object({
   rarity: z.enum(Rarity),
   type: z.array(z.string()),
   unreleased: z.array(z.string()).optional(),
+  versions: z.array(z.number()).optional(),
 });

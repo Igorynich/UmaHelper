@@ -22,6 +22,7 @@ import {MatIcon} from '@angular/material/icon';
 import {MatIconButton} from '@angular/material/button';
 import {NgpTooltip, NgpTooltipTrigger} from 'ng-primitives/tooltip';
 import {IKImageDirective} from '@imagekit/angular';
+import {SkillDisplay, SkillDisplayMode} from '../skill-display/skill-display';
 
 export interface SkillDialogData {
   skill: Skill;
@@ -58,7 +59,8 @@ export interface SpecialConditionSkills {
     MatIconButton,
     NgpTooltipTrigger,
     NgpTooltip,
-    IKImageDirective
+    IKImageDirective,
+    SkillDisplay
   ],
   templateUrl: './skill-dialog.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -72,7 +74,7 @@ export class SkillDialogComponent {
   data: SkillDialogData = inject(MAT_DIALOG_DATA);
   protected readonly dialogRef = inject(MatDialogRef<SkillDialogComponent>);
   // filteredProps: string[];
-  readonly displayedProps = ['desc_en', 'endesc', 'char', 'supCardEvents', 'supCardHints', 'rarity', 'activation', 'cost'];
+  readonly displayedProps = ['desc_en', 'endesc', 'char', 'supCardEvents', 'supCardHints', 'rarity', 'versions', 'activation', 'cost'];
 
   protected readonly SPECIAL_CONDITIONS_SKILLS: SpecialConditionSkills = {
     scalingEffects: {
@@ -439,5 +441,7 @@ export class SkillDialogComponent {
   protected asEffects(value: any): Effect[] {
     return value as Effect[];
   }
+
+  protected readonly SkillDisplayMode = SkillDisplayMode;
 }
 
