@@ -20,6 +20,7 @@ import {DISTANCE} from '../interfaces/distance';
 import {TRACK} from '../interfaces/track';
 import {STRATEGY} from '../interfaces/strategy';
 import {STATUS_EFFECTS} from '../interfaces/status-effects';
+import {SURFACE} from '../interfaces/surface';
 
 export const eventTypes: Record<string, { name: string }> = {
   random: {
@@ -411,6 +412,17 @@ export class EventsService {
                 str: STRATEGY
               };
               return `Win ${numberOfRaces} non-objective ${criteriaBranch.toLocaleUpperCase()} ${criterias[criteriaName][Number(criteriaValue)]} race(s) in ${YEAR[Number(yearId)]} year`;
+            }
+            case EventConditionType.dt_gn_race_w: {
+              const [conditionType, a, surfaceId, percentage, numberOfRaces] = decoded;   // a - unknown, surfaceId - possible, percentage - mb
+              const surfaceName = SURFACE[Number(surfaceId)];
+              const racesToWin = Number(numberOfRaces) * Number(percentage) / 100;
+              return `Win ${racesToWin} G1 ${surfaceName} races`;
+            }
+            case EventConditionType.gn_race_w: {
+              const [conditionType, percentage, numberOfRaces] = decoded;   // percentage - mb
+              const racesToWin = Number(numberOfRaces) * Number(percentage) / 100;
+              return `Win ${racesToWin} G1 races`;
             }
             case EventConditionType.win_streak_graded: {
               const [conditionType, numberOfRaces] = decoded;

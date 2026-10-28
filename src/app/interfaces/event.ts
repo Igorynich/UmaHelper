@@ -137,7 +137,9 @@ export enum EventConditionType {
   'ct' = 'ct',
   'win_g1_length' = 'win_g1_length',
   'win_n_of' = 'win_n_of',
-  'win_all' = 'win_all'
+  'win_all' = 'win_all',
+  'dt_gn_race_w' = 'dt_gn_race_w',
+  'gn_race_w' = 'gn_race_w'
 }
 
 export interface EventConditionDataType {
@@ -166,6 +168,8 @@ export interface EventConditionDataType {
   [EventConditionType.y_dt_gn_race_no_w]: {conditionType: EventConditionType.y_dt_gn_race_no_w, yearId: number, criteriaName: string, criteriaValue: number, criteriaBranch: number, numberOfRaces: number},     // y_dt_gn_race_no_w",3,"dist",0,"g",2 - bamboo memory
   [EventConditionType.win_n_of]: {conditionType: EventConditionType.win_n_of, amountOfRaces: number, races: {raceId: number, yearId?: number}[]},
   [EventConditionType.win_all]: {conditionType: EventConditionType.win_all, races: {raceId: number, yearId?: number}[]},
+  [EventConditionType.dt_gn_race_w]: {conditionType: EventConditionType.dt_gn_race_w, numberOfRaces: number},   // ['dt_gn_race_w', 'trn'?, 2?, 100?win percent, 10 - num of races] - Hokko Tarumae
+  [EventConditionType.gn_race_w]: {conditionType: EventConditionType.gn_race_w, numberOfRaces: number},   // ['gn_race_w', 100?percent, 9] Hokko Tarumae
   // add more if needed
 }
 
