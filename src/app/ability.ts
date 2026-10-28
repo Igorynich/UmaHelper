@@ -1,4 +1,4 @@
-import { AbilityBuilder, AbilityClass, PureAbility } from '@casl/ability';
+import { AbilityBuilder, AbilityClass, Ability } from '@casl/ability';
 import {
   AbilityAction,
   AbilitySubject,
@@ -7,7 +7,7 @@ import {
 
 import { Role } from './interfaces/role.enum';
 
-export const AppAbility = PureAbility as AbilityClass<AppAbilityType>;
+export const AppAbility = Ability as AbilityClass<AppAbilityType>;
 
 export function defineAbilitiesFor(role: Role) {
   const { can, cannot, build } = new AbilityBuilder(AppAbility);

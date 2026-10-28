@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../../services/auth.service';
 import { AbilityService } from '../../services/ability.service';
-import {Editor, NgxEditorComponent, NgxEditorMenuComponent, Toolbar} from '@feature23/ngx-editor';
+import {Editor, NgxEditorComponent, NgxEditorMenuComponent, Toolbar} from 'ngx-editor';
 
 @Component({
   selector: 'app-article-edit',

@@ -1,4 +1,4 @@
-import { InferSubjects, PureAbility } from '@casl/ability';
+import { InferSubjects, Ability } from '@casl/ability';
 
 export enum AbilityAction {
   Manage = 'manage',
@@ -15,4 +15,4 @@ export enum AbilitySubject {
 
 export type Subjects = InferSubjects<AbilitySubject> | 'all';
 
-export type AppAbility = PureAbility<[AbilityAction, Subjects]>;
+export type AppAbility = Ability<[AbilityAction, Subjects]>;
