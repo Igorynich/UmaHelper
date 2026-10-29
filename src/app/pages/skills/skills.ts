@@ -1,6 +1,6 @@
 import {MatSelectModule} from '@angular/material/select';
 import {MatOptionModule} from '@angular/material/core';
-import {Component, computed, effect, inject, signal, ChangeDetectionStrategy} from '@angular/core';
+import {Component, computed, effect, inject, ChangeDetectionStrategy} from '@angular/core';
 import {MatCardModule} from '@angular/material/card';
 import {SkillsService} from '../../services/skills.service';
 import {Skill, SkillEffect} from '../../interfaces/skill';
@@ -21,6 +21,7 @@ import {TraineeInfo} from '../../components/dialogs/trainee-info/trainee-info';
 import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
 import {MatTooltip} from '@angular/material/tooltip';
 import {ActivatedRoute, Router, Params} from '@angular/router';
+import {tap} from 'rxjs/operators';
 
 @Component({
   selector: 'app-skills',
@@ -166,18 +167,27 @@ export class SkillsComponent {
   private filter$ = toSignal(this.filterControl.valueChanges.pipe(
     debounceTime(200),
     distinctUntilChanged(),
+    tap(value => {
+      this.updateQueryParams({ name: value || null });
+    })
   ), {initialValue: ''});
 
   descFilterControl = new FormControl('');
   private descFilter$ = toSignal(this.descFilterControl.valueChanges.pipe(
     debounceTime(200),
     distinctUntilChanged(),
+    tap(value => {
+      this.updateQueryParams({ description: value || null });
+    })
   ), {initialValue: ''});
 
   typeFilterControl = new FormControl<string[]>([]);
   private typeFilter$ = toSignal(this.typeFilterControl.valueChanges.pipe(
     debounceTime(200),
     distinctUntilChanged(),
+    tap(value => {
+      this.updateQueryParams({ type: value?.length ? value.join(',') : null });
+    })
   ), {initialValue: [] as string[]});
 
   skillsResource = rxResource({
@@ -185,6 +195,10 @@ export class SkillsComponent {
       map(skills => skills.sort((a, b) => a.iconid - b.iconid)),
     ),
   });
+
+  private queryParams = toSignal(this.activatedRoute.queryParams.pipe(tap(params => {
+    console.warn('Query params changed', params);
+  })), {initialValue: {} as Params});
 
   readonly allSkillNames = computed(() => {
     const skills = this.skillsResource.value() ?? [];
@@ -213,20 +227,17 @@ export class SkillsComponent {
 
 
   constructor() {
-    // Initialize filters from query params
-    const queryParams = toSignal(this.activatedRoute.queryParams, {initialValue: {} as Params});
-
     effect(() => {
-      const params = queryParams();
+      const params = this.queryParams();
       const nameParam = params['name'] || '';
       const descParam = params['description'] || '';
       const typeParam = params['type'];
 
-      if (nameParam) this.filterControl.setValue(nameParam, {emitEvent: false});
-      if (descParam) this.descFilterControl.setValue(descParam, {emitEvent: false});
+      if (nameParam) this.filterControl.setValue(nameParam, {emitEvent: true});
+      if (descParam) this.descFilterControl.setValue(descParam, {emitEvent: true});
       if (typeParam) {
-        const types = Array.isArray(typeParam) ? typeParam : [typeParam];
-        this.typeFilterControl.setValue(types, {emitEvent: false});
+        const types = typeParam.split(',');
+        this.typeFilterControl.setValue(types, {emitEvent: true});
       }
     });
 
@@ -237,24 +248,6 @@ export class SkillsComponent {
       } else {
         this.spinnerService.hide();
       }
-    });
-
-    // Sync filter changes to query params
-    effect(() => {
-      const nameFilter = this.filter$() || '';
-      const descFilter = this.descFilter$() || '';
-      const typeFilter = this.typeFilter$() || [];
-
-      this.router.navigate([], {
-        relativeTo: this.activatedRoute,
-        queryParams: {
-          name: nameFilter || null,
-          description: descFilter || null,
-          type: typeFilter.length > 0 ? typeFilter : null
-        },
-        queryParamsHandling: 'merge',
-        replaceUrl: true
-      });
     });
 
     // uniq types checker
@@ -290,6 +283,15 @@ export class SkillsComponent {
     this.modalControlService.register('supportCardInfo', SupportCardInfo);
     this.modalControlService.register('skillInfo', SkillDialogComponent);
     this.modalControlService.register('traineeInfo', TraineeInfo);
+  }
+
+  private updateQueryParams(params: Record<string, any>): void {
+    console.log('Updating queries', params);
+    this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: params,
+      queryParamsHandling: 'merge'
+    }).then(value => console.log('Queries updated', value));
   }
 
   clearFilter() {
