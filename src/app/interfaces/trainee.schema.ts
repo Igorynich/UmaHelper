@@ -27,7 +27,7 @@ export const TraineeItemDataSchema = z.object({
   release_zh_tw: z.string().optional(), // Example: "2023-05-05"
   skills_awakening: z.array(z.number()), // Example: [200252, 200351, 200202, 202011]
   skills_event: z.array(z.number()), // Example: [200142, 200582, 201152]
-  skills_evo: z.array(TraineeSkillEvoSchema), // Example: [{old: 200351, new: 101502111}, ...]
+  skills_evo: z.array(TraineeSkillEvoSchema).optional(), // Example: [{old: 200351, new: 101502111}, ...]
   skills_innate: z.array(z.number()), // Example: [201312, 202012, 200352]
   skills_unique: z.array(z.number()), // Example: [110151]
   stat_bonus: z.array(z.number()), // Example: [14, 8, 0, 0, 8]

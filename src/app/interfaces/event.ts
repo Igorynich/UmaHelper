@@ -104,6 +104,7 @@ export enum EventConditionType {
   'beat_rival' = 'beat_rival',
   'win_g1_year' = 'win_g1_year',
   'participate' = 'participate',
+  'obj_participate' = 'obj_participate',
   'do_not_participate' = 'do_not_participate',
   'win_as_strat' = 'win_as_strat',
   'win_as_not_strat' = 'win_as_not_strat',
@@ -124,6 +125,7 @@ export enum EventConditionType {
   'autumn_triple_crown_same_year' = 'autumn_triple_crown_same_year',
   'ev' = 'ev',
   'rt_race_w' = 'rt_race_w',
+  'rival_wins' = 'rival_wins',
   'rival_draw' = 'rival_draw',
   'racetrack_wins_branch' = 'racetrack_wins_branch',
   'fan' = 'fan',
@@ -139,19 +141,30 @@ export enum EventConditionType {
   'win_n_of' = 'win_n_of',
   'win_all' = 'win_all',
   'dt_gn_race_w' = 'dt_gn_race_w',
-  'gn_race_w' = 'gn_race_w'
+  's_gn_race_w' = 's_gn_race_w',    // Strategy Gn wins
+  'gn_race_w' = 'gn_race_w',
+  'obj_win' = 'obj_win',
+  'obj_race_place' = 'obj_race_place',
+  'race_place' = 'race_place',
+  'between_dates' = 'between_dates',
+  'or' = 'or'
 }
 
 export interface EventConditionDataType {
   [EventConditionType.win]: {conditionType: EventConditionType.win, raceId: number, yearId: number},
+  [EventConditionType.obj_win]: {conditionType: EventConditionType.obj_win, raceId: number, yearId: number},
   [EventConditionType.do_not_win]: {conditionType: EventConditionType.do_not_win, raceId: number, yearId: number},
   [EventConditionType.race_w2]: {conditionType: EventConditionType.race_w2, raceId: number},
   [EventConditionType.lose]: {conditionType: EventConditionType.lose, raceId: number, yearId: number},
   [EventConditionType.win_on_streak]: {conditionType: EventConditionType.win_on_streak, raceId: number, yearId: number},
   [EventConditionType.participate]: {conditionType: EventConditionType.participate, raceId: number, yearId: number} | string,
+  [EventConditionType.obj_participate]: {conditionType: EventConditionType.obj_participate, raceId: number, yearId: number} | string,
   [EventConditionType.do_not_participate]: {conditionType: EventConditionType.do_not_participate, raceId: number, yearId: number} | string,
+  [EventConditionType.obj_race_place]: {conditionType: EventConditionType.obj_race_place, raceId: number, yearId: number, placement: number[]},
+  [EventConditionType.race_place]: {conditionType: EventConditionType.race_place, raceId: number, yearId: number, placement: number[]},
   [EventConditionType.lose_to_rival]: {conditionType: EventConditionType.lose_to_rival, raceId: number, yearId: number, rivalId: number},
   [EventConditionType.beat_rival]: {conditionType: EventConditionType.beat_rival, raceId: number, yearId: number, rivalId: number},
+  [EventConditionType.rival_wins]: {conditionType: EventConditionType.rival_wins, raceId: number, yearId: number, rivalId: number},
   [EventConditionType.rival_draw]: {conditionType: EventConditionType.rival_draw, raceId: number, yearId: number, rivalId: number},
   [EventConditionType.win_as_strat]: {conditionType: EventConditionType.win_as_strat, raceId: number, yearId: number, strategyId: number},
   [EventConditionType.win_g1_strat]: {conditionType: EventConditionType.win_g1_strat, strategyId: number, amountOfRaces?: number},
@@ -170,6 +183,7 @@ export interface EventConditionDataType {
   [EventConditionType.win_all]: {conditionType: EventConditionType.win_all, races: {raceId: number, yearId?: number}[]},
   [EventConditionType.dt_gn_race_w]: {conditionType: EventConditionType.dt_gn_race_w, numberOfRaces: number},   // ['dt_gn_race_w', 'trn'?, 2?, 100?win percent, 10 - num of races] - Hokko Tarumae
   [EventConditionType.gn_race_w]: {conditionType: EventConditionType.gn_race_w, numberOfRaces: number},   // ['gn_race_w', 100?percent, 9] Hokko Tarumae
+  [EventConditionType.or]: {conditionType: EventConditionType.or, eventConditions: EventConditionData[]},   // probly should include strings in the array
   // add more if needed
 }
 

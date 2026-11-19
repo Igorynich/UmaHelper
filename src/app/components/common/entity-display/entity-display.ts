@@ -13,6 +13,7 @@ import {Race} from '../../../interfaces/race';
 import {YEAR} from '../../../interfaces/year';
 import {STATUS_EFFECTS, StatusEffect} from '../../../interfaces/status-effects';
 import {IKImageDirective} from '@imagekit/angular';
+import {map} from 'rxjs/operators';
 
 export type DisplayMode = 'text' | 'img';
 export type EntityType = 'trainee' | 'support-card' | 'race' | 'status-effect';
@@ -36,6 +37,15 @@ export class EntityDisplay {
   statusEffectId = input<number | undefined>(undefined);
   mode = input<DisplayMode>('text');
 
+  // temporary list of umas that are not in database yet
+  readonly TEMP_TRAINEES: Record<string, Trainee> = {
+    '108501': {
+      itemData: {
+        name_en: 'Daiichi Ruby'
+      }
+    } as Trainee
+  };
+
   protected entityResource: ResourceRef<Trainee | SupportCard | Race | StatusEffect| null | undefined> = rxResource({
     params: () => ({
       id: (this.traineeId() || this.supportCardId() || this.raceId() || this.statusEffectId())?.toString()
@@ -44,7 +54,7 @@ export class EntityDisplay {
       if (!params.id) return of(null);
       let request: Observable<Trainee | SupportCard | Race | StatusEffect| null> = of(null);
       if (this.traineeId()) {
-        request = this.traineeService.getTraineeById(params.id);
+        request = this.traineeService.getTraineeById(params.id).pipe(map(tr => tr ?? this.TEMP_TRAINEES[params.id!]));
       }
       if (this.supportCardId()) {
         request = this.supportCardService.getSupportCardById(params.id);

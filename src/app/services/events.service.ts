@@ -4,7 +4,7 @@ import {combineLatest, defaultIfEmpty, filter, forkJoin, from, map, Observable, 
 import {
   DecodedEvent,
   DecodedEventsContainer,
-  EventChoice, EventConditionType,
+  EventChoice, EventConditionData, EventConditionType,
   EventReward, EventRewardDataType,
   EventRewardType,
   UmaEvent
@@ -21,6 +21,7 @@ import {TRACK} from '../interfaces/track';
 import {STRATEGY} from '../interfaces/strategy';
 import {STATUS_EFFECTS} from '../interfaces/status-effects';
 import {SURFACE} from '../interfaces/surface';
+import {MOOD} from '../interfaces/mood';
 
 export const eventTypes: Record<string, { name: string }> = {
   random: {
@@ -53,6 +54,9 @@ export const eventTypes: Record<string, { name: string }> = {
   },
   secret: {
     name: 'Secret Events'
+  },
+  race: {
+    name: 'Race Events'
   }
 };
 
@@ -187,7 +191,7 @@ export class EventsService {
       highest_facility: 'Highest Facility',
       fa: 'Fans',
       fd: 'Random Training Facilities Disabled',
-      rr: 'Race Rewards',      // ?
+      // rr: 'Race Rewards',      // ?
       expensive_races: 'Racing consumes more energy',
       result_good: 'Good Result',
       result_bad: 'Bad Result',
@@ -234,11 +238,316 @@ export class EventsService {
         // Get a Win Streak of 7+ G1 races as Front Runner
         return `Get a Win Streak of ${racesAmount}+ G${raceType} Races as Front Runner`;
       },
+      s_gn_race_w: (rewardData: any[]) => {
+        const strategyName = STRATEGY[rewardData[1]];
+        const winPercentage: number = rewardData[2];      // questionable - might be something else
+        const racesToWin = typeof rewardData[3] === 'string' ? rewardData[3] : Number(rewardData[3]) * Number(winPercentage) / 100;
+        // Get a Win Streak of 7+ G1 races as Front Runner
+        return `Win ${racesToWin} G1 races as ${strategyName}`;
+      },
+      race_w2: (rewardData: any[]) => {
+        const raceId: number = rewardData[1];
+        const raceName: string = RACES.find(race => Number(race.id) === Number(raceId))?.name_en || 'Unknown Race';
+        return `Win the ${raceName} twice`;
+      },
       lose: (rewardData: any[]) => {
         const raceId: number = rewardData[1];
         const raceName: string = RACES.find(race => Number(race.id) === Number(raceId))?.name_en || 'Unknown Race';
         return `Loose ${raceName}`;
+      },
+      use_strategy: (rewardData: any[]) => {
+        const strategyId: number = rewardData[1];
+        const strategyName: string = STRATEGY[strategyId];
+        return `Use the ${strategyName} strategy`;
+      },
+    };
+
+    const eventConditionsMapFn = (c: string): EventConditionData => {
+      let decoded: string | string[] = c;
+      try {
+        decoded = JSON.parse(c) as string[];
+      } catch (error) {
+        // If it's a regular string, return it as is
+        decoded = c;
       }
+      const conditionEncryptedName = (Array.isArray(decoded) ? decoded[0] : decoded) as EventConditionType;
+      const conditionName = conditionsMap[conditionEncryptedName];
+      let resultString = conditionName || c;
+      console.log('decoded', decoded);
+      switch (conditionEncryptedName) {
+        case EventConditionType.win:
+        case EventConditionType.do_not_win:
+        case EventConditionType.lose:
+        case EventConditionType.win_on_streak:
+        case EventConditionType.obj_win: {
+          const [raceId, yearId] = decoded[1].toString().indexOf('|') > -1 ? decoded[1].split('|') : [decoded[1], ''];
+          return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)}
+        }
+        case EventConditionType.race_w2: {
+          const [conditionType, raceId] = decoded;
+          return {conditionType: conditionEncryptedName, raceId: Number(raceId)}
+        }
+        case EventConditionType.do_not_race:
+        case EventConditionType.date: {
+          const [conditionType, year, month, half] = decoded;
+          const yearName = YEAR[Number(year)];
+          const monthName = new Date(2000, Number(month) - 1, 1).toLocaleString('en', { month: 'long' });
+          const halfName = Number(half) === 1 ? 'Early' : 'Late';
+          resultString = `${conditionName} in ${halfName} ${monthName}(${yearName} Year)`;
+          break;
+        }
+        case EventConditionType.between_dates: {
+          const [conditionType, date1, date2, eventCondition] = decoded;      // [2,6,1], [\"s_gn_race_w\",1,100,\"0+\"]
+
+          const date1Arr = JSON.parse(date1);
+          const yearName1 = YEAR[Number(date1Arr[0])];
+          const monthName1 = new Date(2000, Number(date1Arr[1]) - 1, 1).toLocaleString('en', { month: 'long' });
+          const halfName1 = Number(date1Arr[2]) === 1 ? 'Early' : 'Late';
+          const date1Str = `${halfName1} ${monthName1}(${yearName1} Year)`;
+
+          const date2Arr = JSON.parse(date2);
+          const yearName2 = YEAR[Number(date2Arr[0])];
+          const monthName2 = new Date(2000, Number(date2Arr[1]) - 1, 1).toLocaleString('en', { month: 'long' });
+          const halfName2 = Number(date2Arr[2]) === 1 ? 'Early' : 'Late';
+          const date2Str = `${halfName2} ${monthName2}(${yearName2} Year)`;
+
+          const evCond = JSON.parse(eventCondition);
+          const evCondStr = switchConditionMap[evCond[0]](evCond);
+          resultString = `${evCondStr} between ${date1Str} and ${date2Str}`;
+          break;
+        }
+        case EventConditionType.lose_to_rival:
+        case EventConditionType.beat_rival:
+        case EventConditionType.rival_wins:
+        case EventConditionType.rival_draw: {
+          const [conditionType, raceIdAndYearId, rivalTraineeShortId] = decoded;
+          const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
+          const race = RACES.find(r => r.id === Number(raceId));
+          // const raceName = race?.name_en || `Race ${raceId}`;
+          console.log('Data', data);
+          return {
+            conditionType: conditionEncryptedName,
+            raceId: Number(raceId),
+            yearId: Number(yearId),
+            rivalId: Number(`${rivalTraineeShortId}01`)
+          }
+        }
+        case EventConditionType.win_g1_year: {
+          const [conditionType, yearId, racesAmount] = decoded;
+          const yearName = YEAR[Number(yearId)];
+          return `Win ${racesAmount}+ G1 Races in ${yearName} Year`;
+        }
+        case EventConditionType.participate:
+        case EventConditionType.do_not_participate: {
+          const [conditionType, eventOrRaceIdAndYearId] = decoded;
+          const eventsMap: Record<string, string> = {
+            debut: 'Make Debut',
+          };
+          if (eventsMap[eventOrRaceIdAndYearId]) {
+            return `Participate in ${eventsMap[eventOrRaceIdAndYearId]}`;
+          }
+          const [raceId, yearId] = eventOrRaceIdAndYearId.toString().indexOf('|') > -1 ? eventOrRaceIdAndYearId.split('|') : [eventOrRaceIdAndYearId, ''];
+          return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)};
+        }
+        case EventConditionType.obj_participate: {
+          const [conditionType, eventOrRaceIdAndYearId] = decoded;
+          const eventsMap: Record<string, string> = {
+            debut: 'Make Debut',
+          };
+          if (eventsMap[eventOrRaceIdAndYearId]) {
+            return `Participate in ${eventsMap[eventOrRaceIdAndYearId]} objective race`;
+          }
+          const [raceId, yearId] = eventOrRaceIdAndYearId.toString().indexOf('|') > -1 ? eventOrRaceIdAndYearId.split('|') : [eventOrRaceIdAndYearId, ''];
+          return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)};
+        }
+        case EventConditionType.obj_race_place:
+        case EventConditionType.race_place:{
+          const [conditionType, eventOrRaceIdAndYearId, placementStr] = decoded;
+          const placement = JSON.parse(placementStr);
+          const [raceId, yearId] = eventOrRaceIdAndYearId.toString().indexOf('|') > -1 ? eventOrRaceIdAndYearId.split('|') : [eventOrRaceIdAndYearId, ''];
+          return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId), placement};
+        }
+        case EventConditionType.win_as_strat:
+        case EventConditionType.win_as_not_strat: {
+          const [conditionType, raceIdAndYearId, strategyId] = decoded;
+          const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
+          return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId), strategyId: Number(strategyId)}
+        }
+        case EventConditionType.pick_and_win:
+        case EventConditionType.dont_pick_and_win: {
+          const [conditionType, raceIdAndYearId] = decoded;
+          const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
+          return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)}
+        }
+        case EventConditionType.third_any_non_objective: {
+          return 'Finish 3rd in Any Non-Objective Race';
+        }
+        case EventConditionType.win_or: {
+          const [conditionType, race1IdAndYear1Id, race2IdAndYear2Id] = decoded;
+          const [race1Id, year1Id] = race1IdAndYear1Id.toString().indexOf('|') > -1 ? race1IdAndYear1Id.split('|') : [race1IdAndYear1Id, ''];
+          const [race2Id, year2Id] = race2IdAndYear2Id.toString().indexOf('|') > -1 ? race2IdAndYear2Id.split('|') : [race2IdAndYear2Id, ''];
+          return {conditionType: conditionEncryptedName, race1Id: Number(race1Id), year1Id: Number(year1Id), race2Id: Number(race2Id), year2Id: Number(year2Id)}
+        }
+        case EventConditionType.rn_race_w: {
+          const [conditionType, opponentsString, amountOfRaces] = decoded;
+          const opponentIds: number[] = JSON.parse(opponentsString);
+          return {conditionType: conditionEncryptedName, opponentIds: opponentIds.map(id => `${id.toString()}01`), amountOfRaces: Number(amountOfRaces)}
+        }
+        case EventConditionType['3_crown_route']: {
+          return 'Select the Triple Crown route';
+        }
+        case EventConditionType.win_g1_cnt_class_distance: {
+          const [conditionType, amountOfRaces, yearId, distanceIdsString] = decoded;
+          console.log('distanceIdsString', distanceIdsString);
+          const distanceIds: number[] = JSON.parse(distanceIdsString);
+          console.log('Distance IDs', distanceIds);
+          return {conditionType: conditionEncryptedName, amountOfRaces: Number(amountOfRaces), yearId: Number(yearId), distanceIds: distanceIds};
+        }
+        case EventConditionType.dist_wins_branch: {
+          const [conditionType, distanceId] = decoded;
+          return `Reward depends on amount of ${DISTANCE[Number(distanceId)]} wins`;
+        }
+        case EventConditionType.racetrack_wins_branch: {
+          const [conditionType, trackId] = decoded;
+          return `Reward depends on amount of wins at the ${TRACK[Number(trackId)]} track`;
+        }
+        case EventConditionType.win_g1_track: {
+          const [conditionType, trackId, amountOfRaces] = decoded;
+          return `Win ${amountOfRaces || 1} G1 race(s) at the ${TRACK[Number(trackId)]} track`;
+        }
+        case EventConditionType.win_g1_strat: {
+          const [conditionType, strategyId, amountOfRaces] = decoded;
+          return `Win ${amountOfRaces || 1} race(s) as ${STRATEGY[Number(strategyId)]}`;
+        }
+        case EventConditionType.win_g1: {
+          const [conditionType, amountOfRaces] = decoded;
+          let amount: number | number[];
+          try {
+            amount = JSON.parse(amountOfRaces) as number[];
+          } catch (error) {
+            // If it's a regular string, return it as is
+            amount = Number(amountOfRaces);
+          }
+          const amountString = Array.isArray(amount) ? `${amount[0]} - ${amount[1]}` : amount.toString();
+          return `Win ${amountString} G1 races`;
+        }
+        case EventConditionType.rt_race_w: {
+          const [conditionType, trackId, amountOfRaces] = decoded;
+          return `Win ${amountOfRaces} race at the ${TRACK[Number(trackId)]} track`;
+        }
+        case EventConditionType.race_pn: {
+          const [conditionType, raceIdAndYearId, position] = decoded;
+          const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
+          return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId), position: Number(position)};
+        }
+        case EventConditionType.or: {
+          const [conditionType, evCond1, evCond2] = decoded;
+          console.warn('evCond1', evCond1);   // ["do_not_participate","102301|2"]
+          console.warn('evCond2', evCond2);   // ["lose_to_rival","102301|2",1006]
+          const evCond1Decoded = eventConditionsMapFn(evCond1);
+          const evCond2Decoded = eventConditionsMapFn(evCond2);
+          console.warn('evCond1Decoded', evCond1Decoded);
+          console.warn('evCond2Decoded', evCond2Decoded);
+          return {
+            conditionType: conditionEncryptedName,
+            eventConditions: [evCond1Decoded, evCond2Decoded]
+          };
+          // const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
+          // return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId), position: Number(position)}
+          return 'OR LUL';
+        }
+        case EventConditionType.ev: {
+          const [conditionType, eventId] = decoded;
+          const eventsMap: {[key: number]: string} = {
+            501023520: '[Battle With a Raging Dragon]'
+          };
+          return `Trigger the ${eventsMap[Number(eventId)]} training event`;
+        }
+        case EventConditionType.fan: {
+          const [conditionType, fanAmount] = decoded;
+          return `Have at least ${fanAmount} fans`;
+        }
+        case EventConditionType.fans_before_finals: {
+          const [conditionType, fanAmount] = decoded;
+          return `Have at least ${fanAmount} fans before the finals`;
+        }
+        case EventConditionType.y_dt_gn_race_no_w: {
+          console.warn('CHECK criteria event', decoded);
+          const [conditionType, yearId, criteriaName, criteriaValue, criteriaBranch, numberOfRaces] = decoded;
+          const criterias: {[key: string]:  Record<number, string>} = {
+            dist: DISTANCE,
+            track: TRACK,
+            str: STRATEGY
+          };
+          return `Win ${numberOfRaces} non-objective ${criteriaBranch.toLocaleUpperCase()} ${criterias[criteriaName][Number(criteriaValue)]} race(s) in ${YEAR[Number(yearId)]} year`;
+        }
+        case EventConditionType.dt_gn_race_w: {
+          const [conditionType, a, surfaceId, percentage, numberOfRaces] = decoded;   // a - unknown, surfaceId - possible, percentage - mb
+          const surfaceName = SURFACE[Number(surfaceId)];
+          const racesToWin = Number(numberOfRaces) * Number(percentage) / 100;
+          return `Win ${racesToWin} G1 ${surfaceName} races`;
+        }
+        case EventConditionType.s_gn_race_w: {    // as of now not used anywhere - made for between_dates - duplicated in switchConditionMap
+          const [conditionType, strategyId, percentage, numberOfRaces] = decoded;   // percentage - mb
+          const strategyName = STRATEGY[Number(strategyId)];
+          const racesToWin = typeof numberOfRaces === 'string' ? numberOfRaces : Number(numberOfRaces) * Number(percentage) / 100;
+          return `Win ${racesToWin} G1 races as ${strategyName}`;
+        }
+        case EventConditionType.gn_race_w: {
+          const [conditionType, percentage, numberOfRaces] = decoded;   // percentage - mb
+          const racesToWin = Number(numberOfRaces) * Number(percentage) / 100;
+          return `Win ${racesToWin} G1 races`;
+        }
+        case EventConditionType.win_streak_graded: {
+          const [conditionType, numberOfRaces] = decoded;
+          return `Get a win streak of ${numberOfRaces} G races(G1, G2 or G3)`;
+        }
+        case EventConditionType.ct: {
+          const [conditionType, conditionString] = decoded;
+          return `${conditionString}`;
+        }
+        case EventConditionType.win_g1_length: {
+          const [conditionType, raceType, amountOfRaces] = decoded;
+          const raceTypeMap: {[key: number]: string} = {
+            4: 'Dirt',
+          };
+          const raceTypeString = raceTypeMap[Number(raceType)];
+          if (!raceTypeString) {
+            console.warn(`Unknown Race Type`, raceType);
+            return `Win ${amountOfRaces} races`;
+          }
+          return `Win ${amountOfRaces} ${raceTypeString} races`;
+        }
+        case EventConditionType.win_n_of: {
+          const [conditionType, amountOfRaces, racesArr] = decoded;
+          console.log('racesArr', racesArr);
+          const racesIdsWithYearId: (number | string)[] = JSON.parse(racesArr);
+          console.log('racesIdsWithYearId', racesIdsWithYearId);
+          const parsedRaces = racesIdsWithYearId.map(racesIdsWithYearId => {
+            const [raceId, yearId] = racesIdsWithYearId.toString().indexOf('|') > -1 ? racesIdsWithYearId.toString().split('|') : [racesIdsWithYearId, ''];
+            return {
+              raceId: Number(raceId),
+              yearId: yearId ? Number(yearId) : undefined
+            };
+          });
+          return {conditionType: EventConditionType.win_n_of, amountOfRaces: Number(amountOfRaces), races: parsedRaces};
+        }
+        case EventConditionType.win_all: {
+          const [conditionType, racesArr] = decoded;
+          console.log('racesArr', racesArr);
+          const racesIdsWithYearId: (number | string)[] = JSON.parse(racesArr);
+          console.log('racesIdsWithYearId', racesIdsWithYearId);
+          const parsedRaces = racesIdsWithYearId.map(racesIdsWithYearId => {
+            const [raceId, yearId] = racesIdsWithYearId.toString().indexOf('|') > -1 ? racesIdsWithYearId.toString().split('|') : [racesIdsWithYearId, ''];
+            return {
+              raceId: Number(raceId),
+              yearId: yearId ? Number(yearId) : undefined
+            };
+          });
+          return {conditionType: EventConditionType.win_all, races: parsedRaces};
+        }
+      }
+      return resultString;   // placeholder
     };
 
     const eventData = events.en || events;
@@ -250,231 +559,7 @@ export class EventsService {
           const [placement1, placement2] = altPlacement.placement;
           const altPlacementString = !placement2 ? `${placement1} place and below` : `${placement1} - ${placement2} place`;
           return {data: mapEvent(altPlacement.data), placementString: altPlacementString}}),
-        conditions: event.conditions?.map(c => {
-          let decoded: string | string[] = c;
-          try {
-            decoded = JSON.parse(c) as string[];
-          } catch (error) {
-            // If it's a regular string, return it as is
-            decoded = c;
-          }
-          const conditionEncryptedName = (Array.isArray(decoded) ? decoded[0] : decoded) as EventConditionType;
-          const conditionName = conditionsMap[conditionEncryptedName];
-          let resultString = conditionName || c;
-          console.log('decoded', decoded);
-          switch (conditionEncryptedName) {
-            case EventConditionType.win:
-            case EventConditionType.do_not_win:
-            case EventConditionType.lose:
-            case EventConditionType.win_on_streak: {
-              const [raceId, yearId] = decoded[1].toString().indexOf('|') > -1 ? decoded[1].split('|') : [decoded[1], ''];
-              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)}
-            }
-            case EventConditionType.race_w2: {
-              const [conditionType, raceId] = decoded;
-              return {conditionType: conditionEncryptedName, raceId: Number(raceId)}
-            }
-            case EventConditionType.do_not_race:
-            case EventConditionType.date: {
-              const [conditionType, year, month, half] = decoded;
-              const yearName = YEAR[Number(year)];
-              const monthName = new Date(2000, Number(month) - 1, 1).toLocaleString('en', { month: 'long' });
-              const halfName = Number(half) === 1 ? 'Early' : 'Late';
-              resultString = `${conditionName} in ${halfName} ${monthName}(${yearName} Year)`;
-              break;
-            }
-            case EventConditionType.lose_to_rival:
-            case EventConditionType.beat_rival:
-            case EventConditionType.rival_draw: {
-              const [conditionType, raceIdAndYearId, rivalTraineeShortId] = decoded;
-              const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
-              const race = RACES.find(r => r.id === Number(raceId));
-              // const raceName = race?.name_en || `Race ${raceId}`;
-              console.log('Data', data);
-              return {
-                conditionType: conditionEncryptedName,
-                raceId: Number(raceId),
-                yearId: Number(yearId),
-                rivalId: Number(`${rivalTraineeShortId}01`)
-              }
-            }
-            case EventConditionType.win_g1_year: {
-              const [conditionType, yearId, racesAmount] = decoded;
-              const yearName = YEAR[Number(yearId)];
-              return `Win ${racesAmount}+ G1 Races in ${yearName} Year`;
-            }
-            case EventConditionType.participate:
-            case EventConditionType.do_not_participate: {
-              const [conditionType, eventOrRaceIdAndYearId] = decoded;
-              const eventsMap: Record<string, string> = {
-                debut: 'Make Debut',
-              };
-              if (eventsMap[eventOrRaceIdAndYearId]) {
-                return `Participate in ${eventsMap[eventOrRaceIdAndYearId]}`;
-              }
-              const [raceId, yearId] = eventOrRaceIdAndYearId.toString().indexOf('|') > -1 ? eventOrRaceIdAndYearId.split('|') : [eventOrRaceIdAndYearId, ''];
-              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)};
-            }
-            case EventConditionType.win_as_strat:
-            case EventConditionType.win_as_not_strat: {
-              const [conditionType, raceIdAndYearId, strategyId] = decoded;
-              const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
-              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId), strategyId: Number(strategyId)}
-            }
-            case EventConditionType.pick_and_win:
-            case EventConditionType.dont_pick_and_win: {
-              const [conditionType, raceIdAndYearId] = decoded;
-              const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
-              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId)}
-            }
-            case EventConditionType.third_any_non_objective: {
-              return 'Finish 3rd in Any Non-Objective Race';
-            }
-            case EventConditionType.win_or: {
-              const [conditionType, race1IdAndYear1Id, race2IdAndYear2Id] = decoded;
-              const [race1Id, year1Id] = race1IdAndYear1Id.toString().indexOf('|') > -1 ? race1IdAndYear1Id.split('|') : [race1IdAndYear1Id, ''];
-              const [race2Id, year2Id] = race2IdAndYear2Id.toString().indexOf('|') > -1 ? race2IdAndYear2Id.split('|') : [race2IdAndYear2Id, ''];
-              return {conditionType: conditionEncryptedName, race1Id: Number(race1Id), year1Id: Number(year1Id), race2Id: Number(race2Id), year2Id: Number(year2Id)}
-            }
-            case EventConditionType.rn_race_w: {
-              const [conditionType, opponentsString, amountOfRaces] = decoded;
-              const opponentIds: number[] = JSON.parse(opponentsString);
-              return {conditionType: conditionEncryptedName, opponentIds: opponentIds.map(id => `${id.toString()}01`), amountOfRaces: Number(amountOfRaces)}
-            }
-            case EventConditionType['3_crown_route']: {
-              return 'Select the Triple Crown route';
-            }
-            case EventConditionType.win_g1_cnt_class_distance: {
-              const [conditionType, amountOfRaces, yearId, distanceIdsString] = decoded;
-              console.log('distanceIdsString', distanceIdsString);
-              const distanceIds: number[] = JSON.parse(distanceIdsString);
-              console.log('Distance IDs', distanceIds);
-              return {conditionType: conditionEncryptedName, amountOfRaces: Number(amountOfRaces), yearId: Number(yearId), distanceIds: distanceIds};
-            }
-            case EventConditionType.dist_wins_branch: {
-              const [conditionType, distanceId] = decoded;
-              return `Reward depends on amount of ${DISTANCE[Number(distanceId)]} wins`;
-            }
-            case EventConditionType.racetrack_wins_branch: {
-              const [conditionType, trackId] = decoded;
-              return `Reward depends on amount of wins at the ${TRACK[Number(trackId)]} track`;
-            }
-            case EventConditionType.win_g1_track: {
-              const [conditionType, trackId, amountOfRaces] = decoded;
-              return `Win ${amountOfRaces || 1} G1 race(s) at the ${TRACK[Number(trackId)]} track`;
-            }
-            case EventConditionType.win_g1_strat: {
-              const [conditionType, strategyId, amountOfRaces] = decoded;
-              return `Win ${amountOfRaces || 1} race(s) as ${STRATEGY[Number(strategyId)]}`;
-            }
-            case EventConditionType.win_g1: {
-              const [conditionType, amountOfRaces] = decoded;
-              let amount: number | number[];
-              try {
-                amount = JSON.parse(amountOfRaces) as number[];
-              } catch (error) {
-                // If it's a regular string, return it as is
-                amount = Number(amountOfRaces);
-              }
-              const amountString = Array.isArray(amount) ? `${amount[0]} - ${amount[1]}` : amount.toString();
-              return `Win ${amountString} G1 races`;
-            }
-            case EventConditionType.rt_race_w: {
-              const [conditionType, trackId, amountOfRaces] = decoded;
-              return `Win ${amountOfRaces} race at the ${TRACK[Number(trackId)]} track`;
-            }
-            case EventConditionType.race_pn: {
-              const [conditionType, raceIdAndYearId, position] = decoded;
-              const [raceId, yearId] = raceIdAndYearId.toString().indexOf('|') > -1 ? raceIdAndYearId.split('|') : [raceIdAndYearId, ''];
-              return {conditionType: conditionEncryptedName, raceId: Number(raceId), yearId: Number(yearId), position: Number(position)}
-            }
-            case EventConditionType.ev: {
-              const [conditionType, eventId] = decoded;
-              const eventsMap: {[key: number]: string} = {
-                501023520: '[Battle With a Raging Dragon]'
-              };
-              return `Trigger the ${eventsMap[Number(eventId)]} training event`;
-            }
-            case EventConditionType.fan: {
-              const [conditionType, fanAmount] = decoded;
-              return `Have at least ${fanAmount} fans`;
-            }
-            case EventConditionType.fans_before_finals: {
-              const [conditionType, fanAmount] = decoded;
-              return `Have at least ${fanAmount} fans before the finals`;
-            }
-            case EventConditionType.y_dt_gn_race_no_w: {
-              console.warn('CHECK criteria event', decoded);
-              const [conditionType, yearId, criteriaName, criteriaValue, criteriaBranch, numberOfRaces] = decoded;
-              const criterias: {[key: string]:  Record<number, string>} = {
-                dist: DISTANCE,
-                track: TRACK,
-                str: STRATEGY
-              };
-              return `Win ${numberOfRaces} non-objective ${criteriaBranch.toLocaleUpperCase()} ${criterias[criteriaName][Number(criteriaValue)]} race(s) in ${YEAR[Number(yearId)]} year`;
-            }
-            case EventConditionType.dt_gn_race_w: {
-              const [conditionType, a, surfaceId, percentage, numberOfRaces] = decoded;   // a - unknown, surfaceId - possible, percentage - mb
-              const surfaceName = SURFACE[Number(surfaceId)];
-              const racesToWin = Number(numberOfRaces) * Number(percentage) / 100;
-              return `Win ${racesToWin} G1 ${surfaceName} races`;
-            }
-            case EventConditionType.gn_race_w: {
-              const [conditionType, percentage, numberOfRaces] = decoded;   // percentage - mb
-              const racesToWin = Number(numberOfRaces) * Number(percentage) / 100;
-              return `Win ${racesToWin} G1 races`;
-            }
-            case EventConditionType.win_streak_graded: {
-              const [conditionType, numberOfRaces] = decoded;
-              return `Get a win streak of ${numberOfRaces} G races(G1, G2 or G3)`;
-            }
-            case EventConditionType.ct: {
-              const [conditionType, conditionString] = decoded;
-              return `${conditionString}`;
-            }
-            case EventConditionType.win_g1_length: {
-              const [conditionType, raceType, amountOfRaces] = decoded;
-              const raceTypeMap: {[key: number]: string} = {
-                4: 'Dirt',
-              };
-              const raceTypeString = raceTypeMap[Number(raceType)];
-              if (!raceTypeString) {
-                console.warn(`Unknown Race Type`, raceType);
-                return `Win ${amountOfRaces} races`;
-              }
-              return `Win ${amountOfRaces} ${raceTypeString} races`;
-            }
-            case EventConditionType.win_n_of: {
-              const [conditionType, amountOfRaces, racesArr] = decoded;
-              console.log('racesArr', racesArr);
-              const racesIdsWithYearId: (number | string)[] = JSON.parse(racesArr);
-              console.log('racesIdsWithYearId', racesIdsWithYearId);
-              const parsedRaces = racesIdsWithYearId.map(racesIdsWithYearId => {
-                const [raceId, yearId] = racesIdsWithYearId.toString().indexOf('|') > -1 ? racesIdsWithYearId.toString().split('|') : [racesIdsWithYearId, ''];
-                return {
-                  raceId: Number(raceId),
-                  yearId: yearId ? Number(yearId) : undefined
-                };
-              });
-              return {conditionType: EventConditionType.win_n_of, amountOfRaces: Number(amountOfRaces), races: parsedRaces};
-            }
-            case EventConditionType.win_all: {
-              const [conditionType, racesArr] = decoded;
-              console.log('racesArr', racesArr);
-              const racesIdsWithYearId: (number | string)[] = JSON.parse(racesArr);
-              console.log('racesIdsWithYearId', racesIdsWithYearId);
-              const parsedRaces = racesIdsWithYearId.map(racesIdsWithYearId => {
-                const [raceId, yearId] = racesIdsWithYearId.toString().indexOf('|') > -1 ? racesIdsWithYearId.toString().split('|') : [racesIdsWithYearId, ''];
-                return {
-                  raceId: Number(raceId),
-                  yearId: yearId ? Number(yearId) : undefined
-                };
-              });
-              return {conditionType: EventConditionType.win_all, races: parsedRaces};
-            }
-          }
-          return resultString;   // placeholder
-        }),
+        conditions: event.conditions?.map(eventConditionsMapFn),
         choices: event.c.map((choice: EventChoice) => ({
           text: choice.o,
           rewards: choice.r.map((reward: EventReward) => {
@@ -606,6 +691,38 @@ export class EventsService {
                 return {
                   type: EventRewardType.supportString
                 };
+              case 'mood_max': {
+                const moodId = reward.d;
+                const moodStr = moodId ? MOOD[moodId] : 'Unknown Mood';
+                return {
+                  type: EventRewardType.supportString,
+                  value: `Mood is ${moodStr} or lower`,
+                  prefix: '※'
+                }
+              }
+
+              case 'mood_exact': {
+                const moodId = reward.d;
+                const moodStr = moodId ? MOOD[moodId] : 'Unknown Mood';
+                return {
+                  type: EventRewardType.supportString,
+                  value: `Mood is ${moodStr}`,
+                  prefix: '※'
+                }
+              }
+              case 'mood_or': {
+                const moodIds = reward.d as any as number[];
+                const resMood = moodIds.reduce((prev, cur, curIndex) => {
+                  const moodString = MOOD[cur];
+                  return `${prev}${curIndex > 0 ? ' or ' : ' '}${moodString}`;
+                }, '');
+                return {
+                  type: EventRewardType.supportString,
+                  value: `Mood is ${resMood}`,
+                  prefix: '※'
+                }
+              }
+
               case 'sc':
                 if (Array.isArray(reward.d) && reward.d.length) {
                   const conditionType: string = reward.d[0];
@@ -754,6 +871,14 @@ export class EventsService {
                     value: `Standard Race Rewards`
                   };
                 }
+                // for Daitaku Helios initially
+                const rewardD: number | string = reward.d as number | string;
+                if (typeof rewardD === "string") {
+                  return {
+                    type: EventRewardType.simpleString,
+                    value: `Standard Race Rewards`
+                  };
+                }
                 const [energy, randomStat, skillPoints] = reward.d?.toString().split('_')!;
                 return {
                   type: EventRewardType.simpleString,
@@ -778,11 +903,14 @@ export class EventsService {
                   value: 'Unknown Heal Reward'
                 };
               }
-              case 'ct': {
+              case 'ct':
+              case 'w_e': {
                 // console.warn('CHECK CT Reward', reward, event.n);
+                const winsAmount: string | number | number[] = reward.d as any as string | number | number[];
+                const resStr = Array.isArray(winsAmount) ? winsAmount.join('-') : winsAmount.toString();
                 return {
                   type: EventRewardType.supportString,
-                  value: `${reward.d} wins`
+                  value: `${resStr} wins`
                 };
               }
               case 'result_good':

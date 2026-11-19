@@ -47,7 +47,7 @@ export interface TraineeItemData {
   // Example: [200142, 200582, 201152]
   skills_event: number[];
   // Example: [{old: 200351, new: 101502111}, ...]
-  skills_evo: TraineeSkillEvo[];
+  skills_evo?: TraineeSkillEvo[];
   // Example: [201312, 202012, 200352]
   skills_innate: number[];
   // Example: [110151]
